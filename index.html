@@ -1,12 +1,14 @@
 <!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BirdRoute · 观鸟行程规划与野外清单</title>
 
-<!-- saved from url=(0064)file:///home/jzhang/Downloads/birdroute_cn_empty_hero%20(1).html -->
-<html lang="zh-CN"><head><meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>BirdRoute · 台湾观鸟 8 天行程</title>
-<link href="./BirdRoute · 台湾观鸟 8 天行程_files/leaflet.css" rel="stylesheet"/>
-<script src="./BirdRoute · 台湾观鸟 8 天行程_files/leaflet.js"></script>
-<style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
     :root {
       --bg: #f6f7f2;
       --card: #ffffff;
@@ -494,379 +496,442 @@
       .budget-grid { grid-template-columns: 1fr; }
     }
   </style>
+
+<script>
+window.addEventListener("load", function () {
+  if (typeof L === "undefined") {
+    var s = document.createElement("script");
+    s.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+    document.head.appendChild(s);
+  }
+});
+</script>
+
 </head>
-<body class="has-trip">
+
+<body class="no-trip">
 <header>
-<div>
-<h1 id="pageTitle">BirdRoute · 台湾观鸟 8 天行程</h1>
-<div class="subtitle" id="pageSubtitle">香港出发｜公共交通为主｜大雪山包车｜垦丁猛禽迁徙｜10月初</div>
-</div>
-<div class="right">
-<div class="subtitle">规划路线、目标鸟种、预算与每日观察清单</div>
-<div class="subtitle">面向开源｜创建或导入行程后开始使用</div>
-</div>
+  <div>
+    <h1 id="pageTitle">BirdRoute</h1>
+    <div class="subtitle" id="pageSubtitle">观鸟行程规划与野外清单</div>
+  </div>
+  <div class="right">
+    <div class="subtitle">规划路线、目标鸟种、预算与每日观察清单</div>
+    <div class="subtitle">面向开源｜创建或导入行程后开始使用</div>
+  </div>
 </header>
+
 <div class="layout">
-<aside>
-<div class="empty-hero" id="emptyHero">
-<h2>欢迎使用 BirdRoute</h2>
-<p>创建一个观鸟行程，或导入已有 JSON 文件后开始规划。</p>
-<div class="hero-actions">
-<button class="primary" onclick="openTripDialog()">＋ 创建行程</button>
-<label class="file-label blue">
+  <aside>
+    <div id="emptyHero" class="empty-hero">
+      <h2>欢迎使用 BirdRoute</h2>
+      <p>创建一个观鸟行程，或导入已有 JSON 文件后开始规划。</p>
+      <div class="hero-actions">
+        <button class="primary" onclick="openTripDialog()">＋ 创建行程</button>
+        <label class="file-label blue">
           📂 导入 JSON
-          <input accept="application/json,.json" onchange="importTrips(event)" type="file"/>
-</label>
-</div>
-</div>
-<div class="panel app-panel">
-<h2>整体行程</h2>
-<div class="row">
-<select class="full" id="tripSelect" onchange="switchTrip(Number(this.value))"><option value="0">台湾观鸟 8 天行程</option></select>
-</div>
-<div class="row">
-<button class="primary" onclick="openTripDialog()">＋ 新增整体行程</button>
-<button onclick="openTripDialog(currentTripIndex)">修改标题</button>
-<button class="danger" onclick="deleteTrip()">删除整体行程</button>
-</div>
-</div>
-<div class="panel app-panel">
-<h2>预算币种与实时汇率</h2>
-<div class="row">
-<select class="full" id="displayCurrencySelect" onchange="setDisplayCurrency(this.value)">
-<option value="">使用行程原币种</option>
-<option value="CNY">CNY 人民币</option>
-<option value="HKD">HKD 港币</option>
-<option value="TWD">TWD 新台币</option>
-<option value="EUR">EUR 欧元</option>
-<option value="USD">USD 美元</option>
-<option value="JPY">JPY 日元</option>
-<option value="PLN">PLN 波兰兹罗提</option>
-<option value="GBP">GBP 英镑</option>
-</select>
-</div>
-<div class="row">
-<button class="blue" onclick="refreshExchangeRates()">刷新实时汇率</button>
-<span class="hint" id="fxStatus">汇率状态：使用原币种 CNY</span>
-</div>
-<div class="hint">
+          <input type="file" accept="application/json,.json" onchange="importTrips(event)">
+        </label>
+      </div>
+    </div>
+
+    <div class="panel app-panel">
+      <h2>整体行程</h2>
+      <div class="row">
+        <select id="tripSelect" class="full" onchange="switchTrip(Number(this.value))"></select>
+      </div>
+      <div class="row">
+        <button class="primary" onclick="openTripDialog()">＋ 新增整体行程</button>
+        <button onclick="openTripDialog(currentTripIndex)">修改标题</button>
+        <button class="danger" onclick="deleteTrip()">删除整体行程</button>
+      </div>
+    </div>
+
+    <div class="panel app-panel">
+      <h2>预算币种与实时汇率</h2>
+      <div class="row">
+        <select id="displayCurrencySelect" class="full" onchange="setDisplayCurrency(this.value)">
+          <option value="">使用行程原币种</option>
+          <option value="CNY">CNY 人民币</option>
+          <option value="HKD">HKD 港币</option>
+          <option value="TWD">TWD 新台币</option>
+          <option value="EUR">EUR 欧元</option>
+          <option value="USD">USD 美元</option>
+          <option value="JPY">JPY 日元</option>
+          <option value="PLN">PLN 波兰兹罗提</option>
+          <option value="GBP">GBP 英镑</option>
+        </select>
+      </div>
+      <div class="row">
+        <button class="blue" onclick="refreshExchangeRates()">刷新实时汇率</button>
+        <span class="hint" id="fxStatus">汇率状态：未查询</span>
+      </div>
+      <div class="hint">
         活动预算按行程原币种保存；切换显示币种只改变页面显示和预算统计，不修改原始预算数据。
       </div>
-</div>
-<div class="panel app-panel">
-<h2>按天查看</h2>
-<div class="day-buttons" id="dayButtons"><button class="active">全部</button><button class="">D1</button><button class="">D2</button><button class="">D3</button><button class="">D4</button><button class="">D5</button><button class="">D6</button><button class="">D7</button><button class="">D8</button></div>
-<div class="legend">
-<span class="bird">鸟点</span>
-<span class="hotel">住宿</span>
-<span class="transport">交通</span>
-<span class="airport">机场</span>
-<span class="ebirdDot">eBird</span>
-</div>
-</div>
-<div class="panel app-panel">
-<h2>行程管理</h2>
-<div class="row">
-<button class="primary" onclick="openAddDialog()">＋ 新增活动</button>
-<button onclick="openDayDialog()">＋ 新增一天</button>
-<button onclick="exportCurrentTrip()">导出当前行程</button>
-<button onclick="exportAllTrips()">导出全部</button>
-<label class="file-label">导入 JSON
-          <input accept="application/json,.json" id="importFile" onchange="importTrips(event)" type="file"/>
-</label>
-<button class="warn" onclick="resetAll()">恢复默认</button>
-</div>
-<div class="row">
-<button class="blue" onclick="openChecklist()">生成每日鸟种 Checklist</button>
-</div>
-<div class="hint">
+    </div>
+
+    <div class="panel app-panel">
+      <h2>按天查看</h2>
+      <div class="day-buttons" id="dayButtons"></div>
+      <div class="legend">
+        <span class="bird">鸟点</span>
+        <span class="hotel">住宿</span>
+        <span class="transport">交通</span>
+        <span class="airport">机场</span>
+        <span class="ebirdDot">eBird</span>
+      </div>
+    </div>
+
+    <div class="panel app-panel">
+      <h2>行程管理</h2>
+      <div class="row">
+        <button class="primary" onclick="openAddDialog()">＋ 新增活动</button>
+        <button onclick="openDayDialog()">＋ 新增一天</button>
+        <button onclick="exportCurrentTrip()">导出当前行程</button>
+        <button onclick="exportAllTrips()">导出全部</button>
+        <label class="file-label">导入 JSON
+          <input id="importFile" type="file" accept="application/json,.json" onchange="importTrips(event)">
+        </label>
+        <button class="warn" onclick="resetAll()">恢复默认</button>
+      </div>
+      <div class="row">
+        <button class="blue" onclick="openChecklist()">生成每日鸟种 Checklist</button>
+      </div>
+      <div class="hint">
         新增活动可先输入地点名并点击“联网查询坐标”，也可以直接点击地图新增并自动填入坐标。
       </div>
-</div>
-<div class="panel app-panel">
-<h2>eBird 热点图层 <button class="small-btn ebird" onclick="openEbirdHelp()" title="如何获取 eBird API Token">?</button></h2>
-<input class="full" id="ebirdTokenInput" placeholder="填写 eBird API Token（可选）"/>
-<div class="row">
-<button class="ebird" onclick="loadEbirdHotspots()">加载当前地图范围热点</button>
-<button onclick="clearEbirdHotspots()">清除热点</button>
-</div>
-<div class="hint">
+    </div>
+
+    <div class="panel app-panel">
+      <h2>eBird 热点图层 <button class="small-btn ebird" onclick="openEbirdHelp()" title="如何获取 eBird API Token">?</button></h2>
+      <input id="ebirdTokenInput" class="full" placeholder="填写 eBird API Token（可选）">
+      <div class="row">
+        <button class="ebird" onclick="loadEbirdHotspots()">加载当前地图范围热点</button>
+        <button onclick="clearEbirdHotspots()">清除热点</button>
+      </div>
+      <div class="hint">
         eBird 官方 API 需要 token。获取后填入即可加载当前地图视野附近热点；不填 token 时无法从 eBird 官方 API 拉取。
       </div>
-</div>
-<div class="panel app-panel">
-<h2>xeno-canto 鸟声 API</h2>
-<input class="full" id="xcTokenInput" oninput="saveXcToken()" placeholder="填写 xeno-canto API key（推荐，用于鸟种预习）"/>
-<div class="row">
-<button class="blue" onclick="openXcHelp()">如何获取？</button>
-<button onclick="clearXcToken()">清除 key</button>
-</div>
-<div class="hint">
+    </div>
+
+    <div class="panel app-panel">
+      <h2>xeno-canto 鸟声 API</h2>
+      <input id="xcTokenInput" class="full" placeholder="填写 xeno-canto API key（推荐，用于鸟种预习）" oninput="saveXcToken()">
+      <div class="row">
+        <button class="blue" onclick="openXcHelp()">如何获取？</button>
+        <button onclick="clearXcToken()">清除 key</button>
+      </div>
+      <div class="hint">
         鸟种预习会优先使用 API v3 + key 查询鸟声；没有 key 时尝试旧接口并提供 xeno-canto 搜索链接。
       </div>
-</div>
-<div class="summary-card app-panel">
-<strong id="tripSummaryTitle">台湾观鸟 8 天行程</strong><br/>
-<span id="tripSummaryText">香港 → 台北植物园 / 大安森林公园 → 大雪山 23K / 35K / 43K / 47K / 49.5K → 台中 → 垦丁龙銮潭 / 龙磐 / 风吹砂 / 社顶 / 垦丁国家森林游乐区 → 高雄 → 香港。</span>
-<div class="budget-grid">
-<div class="budget-box"><strong id="costMin">7,280 CNY</strong>最低预算估算</div>
-<div class="budget-box"><strong id="costMax">13,760 CNY</strong>最高预算估算</div>
-</div>
-<div class="hint">预算来自每个活动的“最低费用/最高费用”，币种按行程设置显示，不做自动汇率换算。</div>
-</div>
-<div id="itinerary"></div>
-</aside>
-<main class="map-wrap">
-<div id="mapError">
-      地图资源加载失败。请确认打开 HTML 时有网络连接；如果使用浏览器安全策略较严格，建议用 Chrome/Edge 打开。
     </div>
-<div id="map"></div>
-</main>
+
+    <div class="summary-card app-panel">
+      <strong id="tripSummaryTitle">路线概览</strong><br/>
+      <span id="tripSummaryText"></span>
+      <div class="budget-grid">
+        <div class="budget-box"><strong id="costMin">-</strong>最低预算估算</div>
+        <div class="budget-box"><strong id="costMax">-</strong>最高预算估算</div>
+      </div>
+      <div class="hint">预算来自每个活动的“最低费用/最高费用”，币种按行程设置显示，不做自动汇率换算。</div>
+    </div>
+
+    <div id="itinerary"></div>
+  </aside>
+
+  <main class="map-wrap">
+    <div id="mapError">
+      地图资源加载失败。请检查 Leaflet CDN 是否可访问，或将 Leaflet 静态文件放入仓库并改为本地引用。
+    </div>
+    <div id="map"></div>
+  </main>
 </div>
+
 <!-- 活动编辑 -->
 <dialog id="editDialog">
-<form method="dialog" onsubmit="event.preventDefault(); saveStopFromDialog();">
-<div class="modal-header">
-<h3 id="dialogTitle">新增活动</h3>
-</div>
-<div class="modal-body">
-<input id="editDayIndex" type="hidden" value="0"/>
-<input id="editStopIndex" type="hidden" value=""/>
-<div class="form-grid">
-<div class="form-field">
-<label for="daySelect">所属日期</label>
-<select id="daySelect"><option value="0">D1｜香港 → 台北｜台北植物园热身</option><option value="1">D2｜台北城市观鸟｜轻松不赶路</option><option value="2">D3｜台北 → 大雪山｜包车上山</option><option value="3">D4｜大雪山核心观鸟日｜特有种重点</option><option value="4">D5｜大雪山补种 → 台中</option><option value="5">D6｜台中 → 垦丁｜龙銮潭水鸟</option><option value="6">D7｜垦丁国家公园｜猛禽迁徙与珊瑚礁森林</option><option value="7">D8｜垦丁 → 高雄 → 香港</option></select>
-</div>
-<div class="form-field">
-<label for="timeInput">时间段</label>
-<input id="timeInput" placeholder="例如：06:00–09:00"/>
-</div>
-<div class="form-field">
-<label for="nameInput">地点/活动名称</label>
-<input id="nameInput" placeholder="例如：台北植物园"/>
-</div>
-<div class="form-field">
-<label for="typeInput">类型</label>
-<select id="typeInput" onchange="updateTypeHelp()">
-<option value="bird">鸟点</option>
-<option value="hotel">住宿</option>
-<option value="transport">交通节点</option>
-<option value="airport">机场/航班</option>
-</select>
-</div>
-<div class="form-field">
-<label for="latInput">纬度 lat</label>
-<input id="latInput" placeholder="25.0318" step="0.000001" type="number"/>
-</div>
-<div class="form-field">
-<label for="lngInput">经度 lng</label>
-<input id="lngInput" placeholder="121.5108" step="0.000001" type="number"/>
-</div>
-<div class="form-field full">
-<button class="blue" onclick="geocodeIntoForm()" type="button">联网查询坐标</button>
-<span class="hint">使用地点名查询 OpenStreetMap 坐标。</span>
-<div class="search-results" id="geocodeResults"></div>
-</div>
-<div class="form-field full">
-<label for="birdsInput" id="birdsLabel">目标鸟种 / 活动内容</label>
-<textarea id="birdsInput" placeholder="鸟点：黑冠麻鹭、五色鸟；交通/住宿：说明内容"></textarea>
-</div>
-<div class="form-field full">
-<label for="transportInput">交通方式</label>
-<textarea id="transportInput" placeholder="例如：台北车站 → MRT小南门站 → 步行约10分钟"></textarea>
-</div>
-<div class="form-field full">
-<label for="noteInput">备注</label>
-<textarea id="noteInput" placeholder="例如：清晨鸟活跃，适合拍摄"></textarea>
-</div>
-<div class="form-field">
-<label for="costMinInput">预算最低费用</label>
-<input id="costMinInput" min="0" placeholder="例如：300" step="1" type="number"/>
-</div>
-<div class="form-field">
-<label for="costMaxInput">预算最高费用</label>
-<input id="costMaxInput" min="0" placeholder="例如：500" step="1" type="number"/>
-</div>
-<div class="form-field full">
-<div class="hint" id="typeHelp">
+  <form method="dialog" onsubmit="event.preventDefault(); saveStopFromDialog();">
+    <div class="modal-header">
+      <h3 id="dialogTitle">编辑活动</h3>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editDayIndex">
+      <input type="hidden" id="editStopIndex">
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="daySelect">所属日期</label>
+          <select id="daySelect"></select>
+        </div>
+
+        <div class="form-field">
+          <label for="timeInput">时间段</label>
+          <input id="timeInput" placeholder="例如：06:00–09:00">
+        </div>
+
+        <div class="form-field">
+          <label for="nameInput">地点/活动名称</label>
+          <input id="nameInput" placeholder="例如：台北植物园">
+        </div>
+
+        <div class="form-field">
+          <label for="typeInput">类型</label>
+          <select id="typeInput" onchange="updateTypeHelp()">
+            <option value="bird">鸟点</option>
+            <option value="hotel">住宿</option>
+            <option value="transport">交通节点</option>
+            <option value="airport">机场/航班</option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for="latInput">纬度 lat</label>
+          <input id="latInput" type="number" step="0.000001" placeholder="25.0318">
+        </div>
+
+        <div class="form-field">
+          <label for="lngInput">经度 lng</label>
+          <input id="lngInput" type="number" step="0.000001" placeholder="121.5108">
+        </div>
+
+        <div class="form-field full">
+          <button type="button" class="blue" onclick="geocodeIntoForm()">联网查询坐标</button>
+          <span class="hint">使用地点名查询 OpenStreetMap 坐标。</span>
+          <div id="geocodeResults" class="search-results"></div>
+        </div>
+
+        <div class="form-field full">
+          <label for="birdsInput" id="birdsLabel">目标鸟种 / 活动内容</label>
+          <textarea id="birdsInput" placeholder="鸟点：黑冠麻鹭、五色鸟；交通/住宿：说明内容"></textarea>
+        </div>
+
+        <div class="form-field full">
+          <label for="transportInput">交通方式</label>
+          <textarea id="transportInput" placeholder="例如：台北车站 → MRT小南门站 → 步行约10分钟"></textarea>
+        </div>
+
+        <div class="form-field full">
+          <label for="noteInput">备注</label>
+          <textarea id="noteInput" placeholder="例如：清晨鸟活跃，适合拍摄"></textarea>
+        </div>
+
+        <div class="form-field">
+          <label for="costMinInput">预算最低费用</label>
+          <input id="costMinInput" type="number" step="1" min="0" placeholder="例如：300">
+        </div>
+
+        <div class="form-field">
+          <label for="costMaxInput">预算最高费用</label>
+          <input id="costMaxInput" type="number" step="1" min="0" placeholder="例如：500">
+        </div>
+
+        <div class="form-field full">
+          <div class="hint" id="typeHelp">
             鸟点：重点填写目标鸟种；住宿/交通/机场：重点填写预算。预算会计入总预算统计。
           </div>
-</div>
-</div>
-</div>
-<div class="modal-actions">
-<button onclick="closeDialog()" type="button">取消</button>
-<button class="primary" type="submit">保存</button>
-</div>
-</form>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" onclick="closeDialog()">取消</button>
+      <button type="submit" class="primary">保存</button>
+    </div>
+  </form>
 </dialog>
+
 <!-- 天编辑 -->
 <dialog id="dayDialog">
-<form method="dialog" onsubmit="event.preventDefault(); saveDayFromDialog();">
-<div class="modal-header">
-<h3 id="dayDialogTitle">编辑一天</h3>
-</div>
-<div class="modal-body">
-<input id="editDayOnlyIndex" type="hidden"/>
-<div class="form-grid">
-<div class="form-field">
-<label for="dayCodeInput">日期编号</label>
-<input id="dayCodeInput" placeholder="例如：D9"/>
-</div>
-<div class="form-field">
-<label for="dayTitleInput">当天标题</label>
-<input id="dayTitleInput" placeholder="例如：台北自由观鸟日"/>
-</div>
-<div class="form-field full">
-<label for="dayStayInput">住宿/当天说明</label>
-<input id="dayStayInput" placeholder="例如：住宿：台北车站周边"/>
-</div>
-</div>
-</div>
-<div class="modal-actions">
-<button onclick="closeDayDialog()" type="button">取消</button>
-<button class="primary" type="submit">保存</button>
-</div>
-</form>
+  <form method="dialog" onsubmit="event.preventDefault(); saveDayFromDialog();">
+    <div class="modal-header">
+      <h3 id="dayDialogTitle">编辑一天</h3>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editDayOnlyIndex">
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="dayCodeInput">日期编号</label>
+          <input id="dayCodeInput" placeholder="例如：D9">
+        </div>
+
+        <div class="form-field">
+          <label for="dayTitleInput">当天标题</label>
+          <input id="dayTitleInput" placeholder="例如：台北自由观鸟日">
+        </div>
+
+        <div class="form-field full">
+          <label for="dayStayInput">住宿/当天说明</label>
+          <input id="dayStayInput" placeholder="例如：住宿：台北车站周边">
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" onclick="closeDayDialog()">取消</button>
+      <button type="submit" class="primary">保存</button>
+    </div>
+  </form>
 </dialog>
+
 <!-- 整体行程编辑 -->
 <dialog id="tripDialog">
-<form method="dialog" onsubmit="event.preventDefault(); saveTripFromDialog();">
-<div class="modal-header">
-<h3 id="tripDialogTitle">编辑整体行程</h3>
-</div>
-<div class="modal-body">
-<input id="editTripIndex" type="hidden"/>
-<div class="form-grid">
-<div class="form-field">
-<label for="tripTitleInput">行程标题</label>
-<input id="tripTitleInput" placeholder="例如：华沙八天行程"/>
-</div>
-<div class="form-field">
-<label for="tripCurrencyInput">预算原币种代码</label>
-<input id="tripCurrencyInput" placeholder="例如：CNY / EUR / TWD / HKD"/>
-</div>
-<div class="form-field full">
-<label for="tripSubtitleInput">副标题</label>
-<input id="tripSubtitleInput" placeholder="例如：城市漫游｜博物馆｜公园｜公共交通"/>
-</div>
-<div class="form-field full">
-<label for="tripSummaryInput">行程概览</label>
-<textarea id="tripSummaryInput" placeholder="例如：香港 → 华沙 → 老城 → 肖邦博物馆..."></textarea>
-</div>
-<div class="form-field">
-<label for="tripCenterLatInput">默认中心纬度</label>
-<input id="tripCenterLatInput" placeholder="52.2297" step="0.000001" type="number"/>
-</div>
-<div class="form-field">
-<label for="tripCenterLngInput">默认中心经度</label>
-<input id="tripCenterLngInput" placeholder="21.0122" step="0.000001" type="number"/>
-</div>
-</div>
-<div class="hint">
+  <form method="dialog" onsubmit="event.preventDefault(); saveTripFromDialog();">
+    <div class="modal-header">
+      <h3 id="tripDialogTitle">编辑整体行程</h3>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editTripIndex">
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="tripTitleInput">行程标题</label>
+          <input id="tripTitleInput" placeholder="例如：华沙八天行程">
+        </div>
+
+        <div class="form-field">
+          <label for="tripCurrencyInput">预算原币种代码</label>
+          <input id="tripCurrencyInput" placeholder="例如：CNY / EUR / TWD / HKD">
+        </div>
+
+        <div class="form-field full">
+          <label for="tripSubtitleInput">副标题</label>
+          <input id="tripSubtitleInput" placeholder="例如：城市漫游｜博物馆｜公园｜公共交通">
+        </div>
+
+        <div class="form-field full">
+          <label for="tripSummaryInput">行程概览</label>
+          <textarea id="tripSummaryInput" placeholder="例如：香港 → 华沙 → 老城 → 肖邦博物馆..."></textarea>
+        </div>
+
+        <div class="form-field">
+          <label for="tripCenterLatInput">默认中心纬度</label>
+          <input id="tripCenterLatInput" type="number" step="0.000001" placeholder="52.2297">
+        </div>
+
+        <div class="form-field">
+          <label for="tripCenterLngInput">默认中心经度</label>
+          <input id="tripCenterLngInput" type="number" step="0.000001" placeholder="21.0122">
+        </div>
+      </div>
+
+      <div class="hint">
         新增整体行程会自动创建 D1。之后你可以继续新增天和活动；页面标题会随行程标题自动变化。
       </div>
-</div>
-<div class="modal-actions">
-<button onclick="closeTripDialog()" type="button">取消</button>
-<button class="primary" type="submit">保存</button>
-</div>
-</form>
+    </div>
+    <div class="modal-actions">
+      <button type="button" onclick="closeTripDialog()">取消</button>
+      <button type="submit" class="primary">保存</button>
+    </div>
+  </form>
 </dialog>
+
+
 <!-- 鸟种预习 -->
 <dialog id="birdPreviewDialog">
-<div class="modal-header">
-<h3 id="birdPreviewTitle">鸟种预习</h3>
-</div>
-<div class="modal-body">
-<div class="hint">
+  <div class="modal-header">
+    <h3 id="birdPreviewTitle">鸟种预习</h3>
+  </div>
+  <div class="modal-body">
+    <div class="hint">
       图片来源：Wikimedia/Wikipedia；鸟声来源：xeno-canto。系统会优先用学名和英文名检索，中文名作为兜底；大多数情况下不需要 token。
     </div>
-<div class="bird-preview-grid" id="birdPreviewContent"></div>
-</div>
-<div class="modal-actions">
-<button onclick="closeBirdPreview()" type="button">关闭</button>
-</div>
+    <div id="birdPreviewContent" class="bird-preview-grid"></div>
+  </div>
+  <div class="modal-actions">
+    <button type="button" onclick="closeBirdPreview()">关闭</button>
+  </div>
 </dialog>
+
+
 <!-- eBird API 帮助 -->
 <dialog id="ebirdHelpDialog">
-<div class="modal-header">
-<h3>获取 eBird API Token</h3>
-</div>
-<div class="modal-body">
-<p>登录 eBird 后访问：</p>
-<p>
-<a href="https://ebird.org/api/keygen" rel="noopener" target="_blank">
+  <div class="modal-header">
+    <h3>获取 eBird API Token</h3>
+  </div>
+  <div class="modal-body">
+    <p>登录 eBird 后访问：</p>
+
+    <p>
+      <a href="https://ebird.org/api/keygen"
+         target="_blank"
+         rel="noopener">
         https://ebird.org/api/keygen
       </a>
-</p>
-<p>
+    </p>
+
+    <p>
       复制生成的 API Key，粘贴到左侧输入框即可使用 eBird 热点图层。
     </p>
-<div class="hint">
+
+    <div class="hint">
       API Key 与你的 eBird 账号绑定，请勿公开分享。
     </div>
-</div>
-<div class="modal-actions">
-<button onclick="closeEbirdHelp()" type="button">关闭</button>
-</div>
+  </div>
+  <div class="modal-actions">
+    <button type="button" onclick="closeEbirdHelp()">关闭</button>
+  </div>
 </dialog>
+
 <!-- xeno-canto API 帮助 -->
 <dialog id="xcHelpDialog">
-<div class="modal-header">
-<h3>如何获取 xeno-canto API Key</h3>
-</div>
-<div class="modal-body">
-<div class="summary-card" style="box-shadow:none;margin:0 0 12px 0;">
+  <div class="modal-header">
+    <h3>如何获取 xeno-canto API Key</h3>
+  </div>
+  <div class="modal-body">
+    <div class="summary-card" style="box-shadow:none;margin:0 0 12px 0;">
       xeno-canto API v3 推荐/要求使用个人 API key。旧的 API v2 在某些情况下仍能访问，但浏览器本地 HTML 更容易遇到跨域、重定向或格式变化问题。
     </div>
-<h4>获取步骤</h4>
-<ol style="line-height:1.7;font-size:14px;">
-<li>打开 xeno-canto：<a href="https://xeno-canto.org/" rel="noopener" target="_blank">https://xeno-canto.org</a></li>
-<li>注册账号并验证邮箱，或登录已有账号。</li>
-<li>进入个人 Account / Profile 页面。</li>
-<li>查找 API key / API v3 key。第三方库文档也说明 API v3 key 可在 Account Page 获得。</li>
-<li>复制 key，粘贴到本页面左侧“xeno-canto 鸟声 API”输入框。</li>
-<li>再点击鸟点卡片里的“鸟种预习”。</li>
-</ol>
-<h4>本页面调用方式</h4>
-<pre style="white-space:pre-wrap;background:#f3f5f1;padding:12px;border-radius:10px;font-size:13px;">GET https://xeno-canto.org/api/3/recordings?query=Butastur%20indicus&amp;key=你的APIkey
+
+    <h4>获取步骤</h4>
+    <ol style="line-height:1.7;font-size:14px;">
+      <li>打开 xeno-canto：<a href="https://xeno-canto.org" target="_blank" rel="noopener">https://xeno-canto.org</a></li>
+      <li>注册账号并验证邮箱，或登录已有账号。</li>
+      <li>进入个人 Account / Profile 页面。</li>
+      <li>查找 API key / API v3 key。第三方库文档也说明 API v3 key 可在 Account Page 获得。</li>
+      <li>复制 key，粘贴到本页面左侧“xeno-canto 鸟声 API”输入框。</li>
+      <li>再点击鸟点卡片里的“鸟种预习”。</li>
+    </ol>
+
+    <h4>本页面调用方式</h4>
+    <pre style="white-space:pre-wrap;background:#f3f5f1;padding:12px;border-radius:10px;font-size:13px;">GET https://xeno-canto.org/api/3/recordings?query=Butastur%20indicus&key=你的APIkey
 
 优先检索顺序：
 1. 学名，例如 Butastur indicus
 2. 英文名，例如 Gray-faced Buzzard
 3. 中文名兜底</pre>
-<h4>常见问题</h4>
-<ul style="line-height:1.7;font-size:14px;">
-<li><b>网页能搜到，但本页面显示没有鸟声：</b>通常是 API key、CORS、接口版本或查询语法问题，不代表 XC 没有记录。</li>
-<li><b>401 / 403：</b>key 无效、未登录验证、key 复制错误。</li>
-<li><b>无法播放但有链接：</b>点击“打开 xeno-canto 记录”即可在官网播放。</li>
-<li><b>本地 HTML 限制：</b>若浏览器安全策略严格，可以用本地服务器打开，例如 <code>python3 -m http.server</code>。</li>
-</ul>
-</div>
-<div class="modal-actions">
-<button onclick="closeXcHelp()" type="button">关闭</button>
-</div>
+
+    <h4>常见问题</h4>
+    <ul style="line-height:1.7;font-size:14px;">
+      <li><b>网页能搜到，但本页面显示没有鸟声：</b>通常是 API key、CORS、接口版本或查询语法问题，不代表 XC 没有记录。</li>
+      <li><b>401 / 403：</b>key 无效、未登录验证、key 复制错误。</li>
+      <li><b>无法播放但有链接：</b>点击“打开 xeno-canto 记录”即可在官网播放。</li>
+      <li><b>本地 HTML 限制：</b>若浏览器安全策略严格，可以用本地服务器打开，例如 <code>python3 -m http.server</code>。</li>
+    </ul>
+  </div>
+  <div class="modal-actions">
+    <button type="button" onclick="closeXcHelp()">关闭</button>
+  </div>
 </dialog>
+
+
 <!-- 每日 Checklist -->
 <dialog id="checklistDialog">
-<div class="modal-header">
-<h3>每日鸟种 Checklist</h3>
-</div>
-<div class="modal-body">
-<div class="hint">
+  <div class="modal-header">
+    <h3>每日鸟种 Checklist</h3>
+  </div>
+  <div class="modal-body">
+    <div class="hint">
       根据每个鸟点活动的“目标鸟种”字段自动汇总；适合作为出发前预习清单。非鸟点活动不会计入。
     </div>
-<div id="checklistContent"></div>
-</div>
-<div class="modal-actions">
-<button onclick="exportChecklist()" type="button">导出 Checklist JSON</button>
-<button onclick="closeChecklist()" type="button">关闭</button>
-</div>
+    <div id="checklistContent"></div>
+  </div>
+  <div class="modal-actions">
+    <button type="button" onclick="exportChecklist()">导出 Checklist JSON</button>
+    <button type="button" onclick="closeChecklist()">关闭</button>
+  </div>
 </dialog>
+
 <div class="toast" id="toast"></div>
+
 <script>
-const STORAGE_KEY = "multi_trip_map_planner_v2";
+const STORAGE_KEY = "birdroute_open_source_empty_v1";
 
 const taiwanTemplateTrips = [
   {
@@ -1164,50 +1229,6 @@ function makeEbirdIcon() {
     iconAnchor: [9, 9]
   });
 }
-
-
-function stopMainLabel(stop) {
-  if (!stop) return "内容";
-  if (stop.type === "bird") return "目标鸟种";
-  if (stop.type === "hotel") return "住宿说明";
-  if (stop.type === "transport") return "交通说明";
-  if (stop.type === "airport") return "航班/机场说明";
-  return "内容";
-}
-
-function stopBudgetLabel(stop) {
-  if (!stop) return "预算";
-  if (stop.type === "hotel") return "住宿预算";
-  if (stop.type === "transport") return "交通预算";
-  if (stop.type === "airport") return "航班/机场预算";
-  if (stop.type === "bird") return "鸟点相关费用";
-  return "预算";
-}
-
-function updateTypeHelp() {
-  const type = document.getElementById("typeInput")?.value;
-  const birdsLabel = document.getElementById("birdsLabel");
-  const typeHelp = document.getElementById("typeHelp");
-  if (!birdsLabel || !typeHelp) return;
-
-  if (type === "bird") {
-    birdsLabel.textContent = "目标鸟种";
-    typeHelp.textContent = "鸟点：请重点填写目标鸟种；预算可用于门票、打车、向导费等。";
-  } else if (type === "hotel") {
-    birdsLabel.textContent = "住宿说明";
-    typeHelp.textContent = "住宿节点：请填写住宿预算最低/最高费用，这会计入总预算统计。";
-  } else if (type === "transport") {
-    birdsLabel.textContent = "交通说明";
-    typeHelp.textContent = "交通节点：请填写交通预算最低/最高费用，例如高铁、巴士、包车、出租车。";
-  } else if (type === "airport") {
-    birdsLabel.textContent = "航班/机场说明";
-    typeHelp.textContent = "机场/航班节点：请填写机票或机场交通预算，这会计入总预算统计。";
-  } else {
-    birdsLabel.textContent = "目标鸟种 / 活动内容";
-    typeHelp.textContent = "鸟点：重点填写目标鸟种；住宿/交通/机场：重点填写预算。预算会计入总预算统计。";
-  }
-}
-
 
 function popupHtml(stop, day) {
   return `
@@ -2551,4 +2572,5 @@ function init() {
 
 window.addEventListener("load", init);
 </script>
-</body></html>
+</body>
+</html>
