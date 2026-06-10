@@ -51,6 +51,121 @@
     header h1 { margin: 0; font-size: 22px; }
     header .subtitle { margin-top: 4px; font-size: 13px; opacity: .9; }
     header .right { text-align: right; }
+    .session-row {
+      margin-top: 8px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .sync-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.14);
+      border: 1px solid rgba(255,255,255,.24);
+      color: white;
+      font-size: 12px;
+    }
+
+    body.welcome-mode header,
+    body.welcome-mode .layout {
+      display: none;
+    }
+
+    body:not(.welcome-mode) #welcomePage {
+      display: none;
+    }
+
+    .welcome-page {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1f4f38, #4c8b5e);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 18px;
+    }
+
+    .welcome-shell {
+      width: min(940px, 100%);
+    }
+
+    .welcome-title {
+      margin-bottom: 22px;
+      max-width: 620px;
+    }
+
+    .welcome-title h1 {
+      margin: 0 0 10px;
+      font-size: 38px;
+      letter-spacing: 0;
+    }
+
+    .welcome-title p {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.7;
+      opacity: .9;
+    }
+
+    .welcome-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .welcome-card {
+      background: rgba(255,255,255,.96);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,.38);
+      border-radius: 16px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.22);
+      padding: 18px;
+    }
+
+    .welcome-card h2 {
+      margin: 0 0 8px;
+      font-size: 18px;
+      color: var(--green);
+    }
+
+    .welcome-card p {
+      margin: 0 0 14px;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 13px;
+    }
+
+    .welcome-public-card {
+      grid-column: 1 / -1;
+    }
+
+    .auth-form {
+      display: grid;
+      gap: 9px;
+    }
+
+    .auth-form input {
+      width: 100%;
+    }
+
+    .auth-status {
+      margin-top: 14px;
+      min-height: 20px;
+      color: rgba(255,255,255,.9);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .auth-status.error {
+      color: #ffe1dc;
+    }
 
     .layout {
       display: grid;
@@ -121,6 +236,13 @@
     }
 
     button:hover, .file-label:hover { transform: translateY(-1px); }
+    button:disabled {
+      cursor: not-allowed;
+      opacity: .58;
+      transform: none;
+    }
+
+    button:disabled:hover { transform: none; }
     button.active { background: var(--green); color: white; border-color: var(--green); }
     button.primary { background: var(--green); color: white; border-color: var(--green); }
     button.warn { background: #fff5ef; color: #8b421c; border-color: #f0c8ad; }
@@ -129,6 +251,24 @@
     button.ebird { background: #eef8ff; color: var(--ebird); border-color: #bee0f5; }
 
     .small-btn { padding: 5px 8px; font-size: 12px; }
+
+    a.small-btn {
+      text-decoration: none;
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--text);
+      padding: 5px 8px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: .15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    a.small-btn:hover { transform: translateY(-1px); }
+    a.small-btn.blue { background: #f1f6ff; color: var(--blue); border-color: #c8d8ef; }
+
     input[type="file"] { display: none; }
 
     select, input, textarea {
@@ -267,6 +407,13 @@
     }
     .popup-line { font-size: 13px; margin: 3px 0; }
     .popup-birds { font-size: 12px; color: #35443b; line-height: 1.45; margin-top: 6px; }
+    .popup-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-top: 8px;
+    }
 
     dialog {
       border: none;
@@ -313,6 +460,160 @@
       background: #fbfcf8;
     }
 
+    #settingsDialog .modal-body {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+      max-height: 76vh;
+    }
+
+    #settingsDialog .panel {
+      box-shadow: none;
+      border: 1px solid var(--line);
+      margin-bottom: 0;
+      padding: 16px;
+    }
+
+    #settingsDialog h2 {
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    #settingsDialog .row {
+      margin-top: 10px;
+    }
+
+    #settingsDialog label {
+      margin-top: 12px;
+      font-weight: 650;
+    }
+
+    #settingsDialog input,
+    #settingsDialog select,
+    #settingsDialog textarea {
+      min-height: 40px;
+    }
+
+    #settingsDialog input.secret-display {
+      background: #eef1ed;
+      color: var(--muted);
+      cursor: pointer;
+      border-style: dashed;
+    }
+
+    #settingsDialog input.secret-display:focus {
+      outline: 2px solid rgba(49, 95, 136, .18);
+    }
+
+    #settingsDialog textarea {
+      min-height: 150px;
+    }
+
+    #settingsDialog .settings-wide {
+      grid-column: 1 / -1;
+    }
+
+    .settings-subtitle {
+      margin: 16px 0 8px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--line);
+      color: var(--green);
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .settings-callout {
+      margin-top: 10px;
+      border-left: 4px solid var(--blue);
+      background: #f1f6ff;
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: var(--blue);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .settings-inline-input {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .settings-compact-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .settings-compact-grid label {
+      margin-top: 0;
+    }
+
+    .api-param-editor {
+      margin-top: 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px;
+      background: #fbfcf8;
+    }
+
+    .api-param-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: var(--green);
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .api-param-row {
+      display: grid;
+      grid-template-columns: auto minmax(110px, 1fr) minmax(140px, 1.2fr) minmax(150px, 1.3fr) auto;
+      gap: 8px;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    .api-param-row input[type="checkbox"] {
+      width: auto;
+      min-height: auto;
+    }
+
+    @media (max-width: 720px) {
+      .api-param-row {
+        grid-template-columns: auto 1fr;
+      }
+      .api-param-row .param-note,
+      .api-param-row .param-value {
+        grid-column: 2 / -1;
+      }
+    }
+
+    .settings-check-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      line-height: 1.45;
+    }
+
+    #settingsDialog .settings-check-row input[type="checkbox"] {
+      flex: 0 0 auto;
+      width: 16px;
+      height: 16px;
+      min-height: 0;
+      margin: 0;
+    }
+
+    #settingsDialog .research-source-row input[type="checkbox"] {
+      min-height: auto;
+      width: auto;
+    }
+
     .hint {
       margin-top: 9px;
       color: var(--muted);
@@ -350,6 +651,56 @@
     }
 
     .search-result:hover { background: #eef4ec; }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #f7faf5;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.2;
+    }
+
+    .chip.public { background: #eef8f1; color: var(--green); border-color: #bdd8c6; }
+    .chip.private { background: #f4f2ef; color: #7b6b59; border-color: #ddd2c4; }
+    .chip.copy { background: #fff7ef; color: #8b421c; border-color: #f0c8ad; }
+
+    .public-trip-results {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .public-trip-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 11px 12px;
+      background: #fbfcf8;
+    }
+
+    .public-trip-card h3 {
+      margin: 0 0 4px;
+      font-size: 15px;
+      color: var(--green);
+    }
+
+    .public-trip-card p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
 
 
     .bird-preview-grid {
@@ -408,6 +759,224 @@
       color: var(--blue);
     }
 
+    .bird-mapping-table {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .bird-mapping-row {
+      display: grid;
+      grid-template-columns: minmax(110px, .8fr) minmax(110px, .8fr) minmax(140px, 1fr) minmax(140px, 1fr);
+      gap: 8px;
+      align-items: end;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px;
+      background: #fbfcf8;
+    }
+
+    .bird-mapping-row label {
+      margin-top: 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .bird-mapping-row input {
+      margin-top: 4px;
+    }
+
+    .bird-mapping-meta {
+      grid-column: 1 / -1;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 680px) {
+      .bird-mapping-row {
+        grid-template-columns: 1fr;
+      }
+      .bird-mapping-meta {
+        grid-column: auto;
+      }
+    }
+
+    .research-toolbar {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .research-source-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .research-source-row label {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin: 0;
+    }
+
+    .research-source-row input {
+      width: auto;
+    }
+
+    .research-progress {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid #c8d8ef;
+      border-radius: 10px;
+      background: #f6f9ff;
+      color: var(--blue);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .research-progress.active {
+      display: flex;
+    }
+
+    .research-spinner {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+      border: 2px solid #c8d8ef;
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+
+    .research-progress-text {
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .research-progress-bar {
+      position: relative;
+      flex: 0 1 120px;
+      min-width: 80px;
+      height: 4px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #e2ebf7;
+    }
+
+    .research-progress-bar::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 42%;
+      border-radius: inherit;
+      background: var(--blue);
+      animation: progressSlide 1.2s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes progressSlide {
+      0% { transform: translateX(-120%); }
+      50% { transform: translateX(80%); }
+      100% { transform: translateX(260%); }
+    }
+
+    .research-keyword-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 8px;
+    }
+
+    .research-keyword-chip {
+      min-height: 28px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #f6f8f4;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .research-keyword-chip.active {
+      background: #e7f2e8;
+      border-color: #9cc6a6;
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    .research-article {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fbfcf8;
+      padding: 10px 12px;
+      margin-bottom: 9px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .research-article-title {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      justify-content: space-between;
+      font-weight: 700;
+      color: var(--green);
+    }
+
+    .research-article-title label {
+      display: flex;
+      align-items: flex-start;
+      gap: 7px;
+      margin: 0;
+      color: var(--green);
+    }
+
+    .research-article-title input {
+      width: auto;
+      margin-top: 3px;
+    }
+
+    .research-article-meta {
+      color: var(--muted);
+      word-break: break-all;
+    }
+
+    .research-summary {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      padding: 12px;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .research-summary h1,
+    .research-summary h2,
+    .research-summary h3 {
+      color: var(--green);
+      margin: 12px 0 8px;
+    }
+
+    .research-summary h1 { font-size: 20px; }
+    .research-summary h2 { font-size: 16px; }
+    .research-summary h3 { font-size: 14px; }
+    .research-summary p { margin: 8px 0; }
+    .research-summary ul,
+    .research-summary ol { padding-left: 22px; margin: 8px 0; }
+    .research-summary a { color: var(--blue); }
+
     @media (max-width: 680px) {
       .bird-preview-body {
         grid-template-columns: 1fr;
@@ -456,6 +1025,10 @@
       display: none;
     }
 
+    body.no-trip .app-panel.always-panel {
+      display: block;
+    }
+
     body.has-trip #emptyHero {
       display: none;
     }
@@ -484,6 +1057,7 @@
     @media (max-width: 1050px) {
       header { height: auto; display: block; }
       header .right { text-align: left; margin-top: 6px; }
+      .session-row { justify-content: flex-start; }
       .layout { display: block; height: auto; }
       aside {
         height: auto;
@@ -494,6 +1068,8 @@
       .map-wrap { height: 70vh; min-height: 520px; }
       .form-grid { grid-template-columns: 1fr; }
       .budget-grid { grid-template-columns: 1fr; }
+      .welcome-grid { grid-template-columns: 1fr; }
+      .welcome-title h1 { font-size: 30px; }
     }
   </style>
 
@@ -509,7 +1085,53 @@ window.addEventListener("load", function () {
 
 </head>
 
-<body class="no-trip">
+<body class="no-trip welcome-mode">
+<div id="welcomePage" class="welcome-page">
+  <div class="welcome-shell">
+    <div class="welcome-title">
+      <h1>BirdRoute</h1>
+      <p>规划观鸟路线、保存每日鸟点、预算、目标鸟种和野外 checklist。你可以先以游客身份在本机浏览器使用，也可以注册账号，把行程 JSON 保存到本地 Python 后端的用户目录里。</p>
+    </div>
+
+    <div class="welcome-grid">
+      <div class="welcome-card">
+        <h2>游客模式</h2>
+        <p>不登录，行程只保存在本次页面内存中，不写入浏览器缓存。适合快速试用，离开前请导出 JSON。</p>
+        <button class="primary" onclick="continueAsGuest()">以游客身份使用</button>
+      </div>
+
+      <div class="welcome-card">
+        <h2>登录 / 注册</h2>
+        <p>登录后可以同步保存行程、API 配置和攻略结果，并在不同设备或浏览器会话中继续编辑。</p>
+        <div class="auth-form">
+          <input id="authUsernameInput" autocomplete="username" placeholder="用户名：3-32 位字母/数字/下划线/短横线">
+          <input id="authPasswordInput" type="password" autocomplete="current-password" placeholder="密码：至少 6 位">
+          <div class="row">
+            <button class="primary" onclick="loginAccount()">登录</button>
+            <button onclick="registerAccount()">注册并登录</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="welcome-card welcome-public-card">
+        <h2>公开行程检索</h2>
+        <p>不用登录也可以搜索公开行程并导入为本次临时行程；游客模式仍然不会写入浏览器缓存，离开前请导出 JSON。</p>
+        <div class="auth-form">
+          <input id="welcomePublicTripSearchInput" placeholder="按行程名称、地点、属性、目标鸟种搜索" onkeydown="if(event.key==='Enter') searchPublicTrips('welcome');">
+          <div class="row">
+            <button class="blue" onclick="searchPublicTrips('welcome')">搜索公开行程</button>
+          </div>
+        </div>
+        <div class="hint" id="welcomePublicTripSearchStatus">可直接搜索公开行程，导入后进入游客临时行程。</div>
+        <div id="welcomePublicTripSearchResults" class="public-trip-results"></div>
+      </div>
+
+    </div>
+
+    <div id="authStatus" class="auth-status">正在检查本地后端登录状态...</div>
+  </div>
+</div>
+
 <header>
   <div>
     <h1 id="pageTitle">BirdRoute</h1>
@@ -518,6 +1140,11 @@ window.addEventListener("load", function () {
   <div class="right">
     <div class="subtitle">规划路线、目标鸟种、预算与每日观察清单</div>
     <div class="subtitle">面向开源｜创建或导入行程后开始使用</div>
+    <div class="session-row">
+      <span id="accountStatus" class="sync-pill">会话初始化中</span>
+      <button id="guestLoginButton" class="small-btn blue" onclick="returnToWelcomeForLogin()" style="display:none;">登录 / 注册</button>
+      <button id="logoutButton" class="small-btn" onclick="logoutAccount()" style="display:none;">退出登录</button>
+    </div>
   </div>
 </header>
 
@@ -525,29 +1152,58 @@ window.addEventListener("load", function () {
   <aside>
     <div id="emptyHero" class="empty-hero">
       <h2>欢迎使用 BirdRoute</h2>
-      <p>创建一个观鸟行程，或导入已有 JSON 文件后开始规划。</p>
-      <div class="hero-actions">
-        <button class="primary" onclick="openTripDialog()">＋ 创建行程</button>
-        <label class="file-label blue">
-          📂 导入 JSON
-          <input type="file" accept="application/json,.json" onchange="importTrips(event)">
-        </label>
-      </div>
+      <p>创建一个观鸟行程，或导入已有 JSON 文件后开始规划。游客模式不会缓存行程，请记得导出。</p>
     </div>
 
-    <div class="panel app-panel">
+    <div class="panel app-panel always-panel">
       <h2>整体行程</h2>
       <div class="row">
         <select id="tripSelect" class="full" onchange="switchTrip(Number(this.value))"></select>
       </div>
       <div class="row">
         <button class="primary" onclick="openTripDialog()">＋ 新增整体行程</button>
-        <button onclick="openTripDialog(currentTripIndex)">修改标题</button>
-        <button class="danger" onclick="deleteTrip()">删除整体行程</button>
+        <label class="file-label blue">导入 JSON
+          <input id="importFile" type="file" accept="application/json,.json" onchange="importTrips(event)">
+        </label>
+        <button onclick="openTripDialog(currentTripIndex)">修改行程</button>
+        <button class="danger" onclick="deleteTrip()">删除当前行程</button>
       </div>
     </div>
 
-    <div class="panel app-panel">
+    <div class="panel app-panel always-panel">
+      <h2>设置</h2>
+      <div class="row">
+        <button class="blue" onclick="openSettingsDialog()">打开设置</button>
+        <button onclick="openPublicTripSearchDialog()">公开行程检索</button>
+      </div>
+      <div class="hint">
+        地图、汇率、eBird、xeno-canto、内容源和 AI 解析配置都在这里。
+      </div>
+    </div>
+
+    <div class="panel app-panel settings-panel">
+      <h2>地图设置</h2>
+      <div class="row">
+        <select id="mapTileEngineSelect" class="full" onchange="setMapTileEngine(this.value)">
+          <option value="leaflet_osm">默认 Leaflet / OpenStreetMap 底图</option>
+          <option value="gaode_road">高德路网底图</option>
+          <option value="gaode_satellite">高德卫星影像</option>
+        </select>
+      </div>
+      <div class="row">
+        <select id="navigationEngineSelect" class="full" onchange="setNavigationEngine(this.value)">
+          <option value="google">默认 Google 地图导航</option>
+          <option value="gaode">高德地图导航</option>
+          <option value="baidu">百度地图导航</option>
+          <option value="osm">OpenStreetMap 打开</option>
+        </select>
+      </div>
+      <div class="hint" id="mapEngineStatus">
+        底图组件仍由 Leaflet 承载；这里切换瓦片来源和点位外部导航链接。
+      </div>
+    </div>
+
+    <div class="panel app-panel settings-panel">
       <h2>预算币种与实时汇率</h2>
       <div class="row">
         <select id="displayCurrencySelect" class="full" onchange="setDisplayCurrency(this.value)">
@@ -588,11 +1244,9 @@ window.addEventListener("load", function () {
       <div class="row">
         <button class="primary" onclick="openAddDialog()">＋ 新增活动</button>
         <button onclick="openDayDialog()">＋ 新增一天</button>
+        <button id="saveCurrentTripButton" class="blue" onclick="saveCurrentTripToBackend()" style="display:none;">保存当前行程到账号</button>
         <button onclick="exportCurrentTrip()">导出当前行程</button>
         <button onclick="exportAllTrips()">导出全部</button>
-        <label class="file-label">导入 JSON
-          <input id="importFile" type="file" accept="application/json,.json" onchange="importTrips(event)">
-        </label>
         <button class="warn" onclick="resetAll()">恢复默认</button>
       </div>
       <div class="row">
@@ -603,22 +1257,37 @@ window.addEventListener("load", function () {
       </div>
     </div>
 
-    <div class="panel app-panel">
+    <div class="panel app-panel settings-panel">
+      <h2>账号 API 配置管理</h2>
+      <div class="row">
+        <button class="blue" onclick="saveAllApiSettings()">保存全部 API 配置</button>
+        <button onclick="loadAllAccountApiSettings()">重新载入全部</button>
+        <button class="danger" onclick="clearAllAccountApiSecrets()">清空全部 API Key</button>
+      </div>
+      <div class="hint" id="apiSettingsStatus">
+        登录后会自动载入账号下保存的 API 配置；游客模式不保存 API Key。
+      </div>
+    </div>
+
+    <div class="panel app-panel settings-panel">
       <h2>eBird 热点图层 <button class="small-btn ebird" onclick="openEbirdHelp()" title="如何获取 eBird API Token">?</button></h2>
       <input id="ebirdTokenInput" class="full" placeholder="填写 eBird API Token（可选）">
       <div class="row">
+        <button class="blue" onclick="saveAccountApiCredentials()">保存 eBird / XC Key</button>
         <button class="ebird" onclick="loadEbirdHotspots()">加载当前地图范围热点</button>
         <button onclick="clearEbirdHotspots()">清除热点</button>
+        <button class="danger" onclick="clearEbirdToken()">清空 eBird Token</button>
       </div>
       <div class="hint">
         eBird 官方 API 需要 token。获取后填入即可加载当前地图视野附近热点；不填 token 时无法从 eBird 官方 API 拉取。
       </div>
     </div>
 
-    <div class="panel app-panel">
+    <div class="panel app-panel settings-panel">
       <h2>xeno-canto 鸟声 API</h2>
-      <input id="xcTokenInput" class="full" placeholder="填写 xeno-canto API key（推荐，用于鸟种预习）" oninput="saveXcToken()">
+      <input id="xcTokenInput" class="full" placeholder="填写 xeno-canto API key（推荐，用于鸟种预习）">
       <div class="row">
+        <button class="blue" onclick="saveAccountApiCredentials()">保存 eBird / XC Key</button>
         <button class="blue" onclick="openXcHelp()">如何获取？</button>
         <button onclick="clearXcToken()">清除 key</button>
       </div>
@@ -627,9 +1296,314 @@ window.addEventListener("load", function () {
       </div>
     </div>
 
+    <div class="panel app-panel settings-panel settings-wide">
+      <h2>内容源接入设置</h2>
+      <div class="row">
+        <select id="contentSearchProviderInput" class="full" onchange="updateContentSearchApiKeyPlaceholder()">
+          <option value="html">默认 HTML 搜索（Bing / DuckDuckGo，无需 Key）</option>
+          <option value="brave">Brave Search API</option>
+          <option value="bing_api">Bing Web Search API</option>
+          <option value="serpapi">SerpAPI</option>
+          <option value="tavily">Tavily Search API</option>
+        </select>
+      </div>
+      <div class="settings-compact-grid">
+        <div>
+          <label for="braveApiKeyInput">Brave API Key</label>
+          <input id="braveApiKeyInput" class="full" placeholder="Brave Search API Key">
+        </div>
+        <div>
+          <label for="bingApiKeyInput">Bing API Key</label>
+          <input id="bingApiKeyInput" class="full" placeholder="Bing Web Search API Key">
+        </div>
+        <div>
+          <label for="serpApiKeyInput">SerpAPI Key</label>
+          <input id="serpApiKeyInput" class="full" placeholder="SerpAPI Key">
+        </div>
+        <div>
+          <label for="tavilyApiKeyInput">Tavily API Key</label>
+          <input id="tavilyApiKeyInput" class="full" placeholder="Tavily API Key">
+        </div>
+      </div>
+      <div class="row">
+        <input id="contentBingEndpointInput" class="full" placeholder="Bing API Endpoint，可留默认">
+      </div>
+      <div class="research-source-row">
+        <label><input id="contentDefaultWechatInput" type="checkbox" checked> 默认勾选微信公众号</label>
+        <label><input id="contentDefaultXhsInput" type="checkbox" checked> 默认勾选小红书</label>
+        <label><input id="contentDefaultBlogInput" type="checkbox" checked> 默认勾选博客</label>
+        <label><input id="contentDefaultWebInput" type="checkbox" checked> 默认勾选全网</label>
+      </div>
+      <div class="settings-subtitle">微信公众号</div>
+      <label for="wechatModeInput">接入方式</label>
+      <div class="row">
+        <select id="wechatModeInput" class="full" onchange="updateWechatModeHelp()">
+          <option value="search_index">搜索引擎索引 mp.weixin.qq.com</option>
+          <option value="sogou_weixin">搜狗微信搜索</option>
+          <option value="official_api">官方接口 / 授权公众号</option>
+          <option value="third_party">第三方数据 API</option>
+          <option value="disabled">禁用微信公众号来源</option>
+        </select>
+      </div>
+      <div id="wechatOfficialSettings" style="display:none;">
+        <div class="row">
+          <input id="wechatAppIdInput" class="full" placeholder="微信公众号 AppID / 第三方平台 AppID（可选）">
+        </div>
+        <div class="row">
+          <input id="wechatAppSecretInput" class="full" placeholder="微信公众号 AppSecret">
+        </div>
+      </div>
+      <div id="wechatSogouSettings" style="display:none;">
+        <div class="row">
+          <input id="wechatSogouSearchUrlInput" class="full" placeholder="https://weixin.sogou.com/weixin">
+        </div>
+        <div class="grid two">
+          <label for="wechatSogouPagesInput">检索页数
+            <input id="wechatSogouPagesInput" type="number" min="1" max="5" step="1" placeholder="3">
+          </label>
+          <label for="wechatSogouResultLimitInput">结果上限
+            <input id="wechatSogouResultLimitInput" type="number" min="8" max="40" step="1" placeholder="18">
+          </label>
+        </div>
+        <div class="api-param-editor">
+          <div class="api-param-title">
+            <span>查询参数</span>
+            <button class="small-btn" onclick="resetApiParamRows('wechatSogou')">恢复默认</button>
+          </div>
+          <div id="wechatSogouParamRows"></div>
+          <button class="small-btn blue" onclick="addApiParamRow('wechatSogou')">添加参数</button>
+        </div>
+      </div>
+      <div id="wechatThirdPartySettings" style="display:none;">
+        <div class="row">
+          <input id="wechatThirdPartyBaseUrlInput" class="full" placeholder="微信公众号第三方数据 API Base URL（可选）">
+        </div>
+        <div class="row">
+          <input id="wechatThirdPartyApiKeyInput" class="full" placeholder="微信公众号第三方 API Key">
+        </div>
+        <div class="settings-compact-grid">
+          <div>
+            <label for="wechatThirdPartyKeyModeInput">Key 传递方式</label>
+            <select id="wechatThirdPartyKeyModeInput" class="full">
+              <option value="authorization_bearer">Authorization: Bearer</option>
+              <option value="x_api_key">X-API-Key</option>
+              <option value="header">自定义 Header</option>
+              <option value="query_param">URL 查询参数</option>
+              <option value="none">不发送 Key</option>
+            </select>
+          </div>
+          <div>
+            <label for="wechatThirdPartyKeyHeaderInput">Key Header</label>
+            <input id="wechatThirdPartyKeyHeaderInput" class="full" placeholder="Authorization">
+          </div>
+          <div>
+            <label for="wechatThirdPartyKeyParamInput">Key 参数名</label>
+            <input id="wechatThirdPartyKeyParamInput" class="full" placeholder="api_key">
+          </div>
+        </div>
+        <div class="api-param-editor">
+          <div class="api-param-title">
+            <span>查询参数</span>
+            <button class="small-btn" onclick="resetApiParamRows('wechatThirdParty')">恢复默认</button>
+          </div>
+          <div id="wechatThirdPartyParamRows"></div>
+          <button class="small-btn blue" onclick="addApiParamRow('wechatThirdParty')">添加参数</button>
+        </div>
+      </div>
+      <div class="settings-callout" id="wechatModeHelp">
+        当前默认通过搜索引擎索引查找 mp.weixin.qq.com 公开文章；正文抓取可能受平台限制。
+      </div>
+
+      <div class="settings-subtitle">小红书</div>
+      <label for="xhsModeInput">接入方式</label>
+      <div class="row">
+        <select id="xhsModeInput" class="full" onchange="updateXhsModeHelp()">
+          <option value="search_index">搜索引擎索引 xiaohongshu.com</option>
+          <option value="open_platform">开放平台授权</option>
+          <option value="third_party">第三方数据 API</option>
+          <option value="local_browser_experimental">本地浏览器助手</option>
+          <option value="disabled">禁用小红书来源</option>
+        </select>
+      </div>
+      <div id="xhsOpenPlatformSettings" style="display:none;">
+        <div class="row">
+          <input id="xhsAppIdInput" class="full" placeholder="小红书开放平台 AppID（可选）">
+        </div>
+        <div class="row">
+          <input id="xhsAppSecretInput" class="full" placeholder="小红书 AppSecret">
+        </div>
+        <div class="row">
+          <input id="xhsOfficialAuthUrlInput" class="full" placeholder="官方授权/扫码登录 URL，例如 https://ark.xiaohongshu.com/ark/authorization">
+        </div>
+        <div class="row">
+          <input id="xhsOfficialRedirectUriInput" class="full" placeholder="授权回调地址 redirectUri（按开放平台配置填写）">
+        </div>
+        <div class="row">
+          <button class="small-btn blue" onclick="openXhsOfficialAuth()">打开授权/扫码登录</button>
+          <span class="hint">完成授权后，将获得的 Access Token 粘贴到下方。</span>
+        </div>
+        <div class="row">
+          <input id="xhsOfficialAccessTokenInput" class="full" placeholder="官方 Access Token">
+        </div>
+        <div class="row">
+          <input id="xhsOfficialAccessTokenExpiresAtInput" class="full" type="datetime-local" onchange="updateXhsOfficialTokenStatus()" placeholder="Access Token 过期时间">
+        </div>
+        <div class="hint" id="xhsOfficialTokenStatus">未设置官方 token 过期时间。</div>
+        <div class="row">
+          <input id="xhsOfficialSearchUrlInput" class="full" placeholder="官方搜索 API URL（需有对应权限）">
+        </div>
+        <div class="row">
+          <input id="xhsOfficialDetailUrlInput" class="full" placeholder="官方详情 API URL（可选，用于后续正文抓取）">
+        </div>
+        <div class="settings-compact-grid">
+          <div>
+            <label for="xhsOfficialTokenModeInput">Token 传递方式</label>
+            <select id="xhsOfficialTokenModeInput" class="full">
+              <option value="authorization_bearer">Authorization: Bearer</option>
+              <option value="header_access_token">自定义 Header</option>
+              <option value="query_access_token">URL 查询参数</option>
+            </select>
+          </div>
+          <div>
+            <label for="xhsOfficialTokenHeaderInput">Token Header</label>
+            <input id="xhsOfficialTokenHeaderInput" class="full" placeholder="Authorization 或 access-token">
+          </div>
+          <div>
+            <label for="xhsOfficialTokenParamInput">Token 参数名</label>
+            <input id="xhsOfficialTokenParamInput" class="full" placeholder="access_token">
+          </div>
+          <div>
+            <label for="xhsOfficialDetailIdParamInput">详情 ID 参数名</label>
+            <input id="xhsOfficialDetailIdParamInput" class="full" placeholder="note_id">
+          </div>
+        </div>
+        <div class="api-param-editor">
+          <div class="api-param-title">
+            <span>搜索查询参数</span>
+            <button class="small-btn" onclick="resetApiParamRows('xhsOfficial')">恢复默认</button>
+          </div>
+          <div id="xhsOfficialParamRows"></div>
+          <button class="small-btn blue" onclick="addApiParamRow('xhsOfficial')">添加参数</button>
+        </div>
+        <div class="hint">
+          官方 token 通常会过期，请填入过期时间；过期后后端会停止调用并提示重新授权。这里不使用网页会话 Cookie，只使用你通过官方授权获得并保存的 token。
+        </div>
+      </div>
+      <div id="xhsThirdPartySettings" style="display:none;">
+        <div class="row">
+          <input id="xhsThirdPartyBaseUrlInput" class="full" placeholder="https://rnote.dev/api/v2/crawler/search/notes">
+        </div>
+        <div class="api-param-editor">
+          <div class="api-param-title">
+            <span>查询参数</span>
+            <button class="small-btn" onclick="resetApiParamRows('xhsThirdParty')">恢复默认</button>
+          </div>
+          <div id="xhsThirdPartyParamRows"></div>
+          <button class="small-btn blue" onclick="addApiParamRow('xhsThirdParty')">添加参数</button>
+        </div>
+        <div class="row">
+          <input id="xhsImageDetailUrlInput" class="full" placeholder="https://rnote.dev/api/v2/crawler/note/image">
+        </div>
+        <div class="row">
+          <input id="xhsVideoDetailUrlInput" class="full" placeholder="https://rnote.dev/api/v2/crawler/note/video">
+        </div>
+        <div class="row settings-inline-input">
+          <input id="xhsThirdPartyApiKeyInput" class="full" placeholder="小红书第三方 API Key">
+          <button class="small-btn blue" onclick="openXhsThirdPartyHelp()" title="小红书第三方 API 获取说明">?</button>
+        </div>
+        <div class="settings-compact-grid">
+          <div>
+            <label for="xhsThirdPartyKeyModeInput">Key 传递方式</label>
+            <select id="xhsThirdPartyKeyModeInput" class="full">
+              <option value="x_api_key">X-API-Key</option>
+              <option value="authorization_bearer">Authorization: Bearer</option>
+              <option value="header">自定义 Header</option>
+              <option value="query_param">URL 查询参数</option>
+              <option value="none">不发送 Key</option>
+            </select>
+          </div>
+          <div>
+            <label for="xhsThirdPartyKeyHeaderInput">Key Header</label>
+            <input id="xhsThirdPartyKeyHeaderInput" class="full" placeholder="X-API-Key">
+          </div>
+          <div>
+            <label for="xhsThirdPartyKeyParamInput">Key 参数名</label>
+            <input id="xhsThirdPartyKeyParamInput" class="full" placeholder="api_key">
+          </div>
+        </div>
+      </div>
+      <div id="xhsLocalBrowserSettings" style="display:none;">
+        <div class="row">
+          <button class="small-btn blue" onclick="startXhsLocalBrowser()">连接助手并启动浏览器</button>
+          <button class="small-btn" onclick="refreshXhsLocalBrowserStatus()">刷新状态</button>
+          <button class="small-btn danger" onclick="closeXhsLocalBrowser()">关闭会话</button>
+        </div>
+        <div class="hint" id="xhsLocalBrowserStatus">
+          浏览器助手未检查。请先在你的电脑运行 python xhs_helper.py；连接后会打开本机 Chromium，请在窗口里完成小红书登录。
+        </div>
+      </div>
+      <div class="settings-callout" id="xhsModeHelp">
+        当前默认通过搜索引擎索引查找小红书公开页面；正文抓取可能受平台限制。
+      </div>
+      <div class="row">
+        <button class="blue" onclick="saveContentSourceSettings()">保存内容源设置</button>
+        <button onclick="loadContentSourceSettings()">重新读取</button>
+        <button class="danger" onclick="clearContentSourceApiKeys()">清空内容源 Key</button>
+      </div>
+      <div class="hint" id="contentSourceStatus">
+        这里配置搜索 API、开放平台、第三方数据服务或本机实验会话；LLM 相关选项统一在 AI 设置里管理。
+      </div>
+    </div>
+
+    <div class="panel app-panel settings-panel settings-wide">
+      <h2>LLM / AI 设置</h2>
+      <div class="settings-subtitle">服务配置</div>
+      <div class="row">
+        <select id="llmProviderInput" class="full">
+          <option value="deepseek">DeepSeek</option>
+          <option value="openai-compatible">OpenAI-compatible / 自定义</option>
+        </select>
+      </div>
+      <div class="row">
+        <input id="llmBaseUrlInput" class="full" placeholder="API Base URL，例如 https://api.deepseek.com">
+      </div>
+      <div class="row">
+        <input id="llmModelInput" class="full" placeholder="模型，例如 deepseek-chat">
+      </div>
+      <div class="row">
+        <input id="llmApiKeyInput" class="full" placeholder="LLM API Key">
+      </div>
+      <div class="settings-subtitle">使用场景</div>
+      <label class="settings-check-row" for="llmCandidateFilterInput">
+        <input id="llmCandidateFilterInput" type="checkbox">
+        <span>使用 LLM 筛选攻略搜索候选</span>
+      </label>
+      <div class="hint">
+        当前 LLM 配置会用于：搜索内容筛选、搜索内容总结、鸟名映射补全。鸟名映射补全会在用户确认结果后写入后端全局映射表。
+      </div>
+      <div class="settings-subtitle">攻略候选筛选 Prompt</div>
+      <div class="row">
+        <textarea id="llmCandidateFilterPromptInput" placeholder="攻略候选筛选 Prompt"></textarea>
+      </div>
+      <div class="settings-subtitle">攻略总结 Prompt</div>
+      <div class="row">
+        <textarea id="llmPromptInput" placeholder="攻略总结 Prompt 模板"></textarea>
+      </div>
+      <div class="row">
+        <button class="blue" onclick="saveLlmSettings()">保存 AI 设置</button>
+        <button onclick="loadLlmSettings()">重新读取</button>
+        <button onclick="testLlmSettings()">测试连接</button>
+        <button class="danger" onclick="clearLlmApiKey()">清空 LLM Key</button>
+      </div>
+      <div class="hint" id="llmSettingsStatus">
+        登录后可保存 API Key 到本机后端；Key 不会写进行程 JSON。
+      </div>
+    </div>
+
     <div class="summary-card app-panel">
       <strong id="tripSummaryTitle">路线概览</strong><br/>
       <span id="tripSummaryText"></span>
+      <div id="tripSocialMeta" class="chip-row"></div>
       <div class="budget-grid">
         <div class="budget-box"><strong id="costMin">-</strong>最低预算估算</div>
         <div class="budget-box"><strong id="costMax">-</strong>最高预算估算</div>
@@ -790,6 +1764,32 @@ window.addEventListener("load", function () {
           <input id="tripCurrencyInput" placeholder="例如：CNY / EUR / TWD / HKD">
         </div>
 
+        <div class="form-field">
+          <label for="tripPrimaryLocationInput">主要地点</label>
+          <input id="tripPrimaryLocationInput" placeholder="例如：台湾 / 大雪山 / 垦丁">
+        </div>
+
+        <div class="form-field">
+          <label for="tripPaceInput">行程属性</label>
+          <select id="tripPaceInput">
+            <option value="休闲">休闲</option>
+            <option value="标准">标准</option>
+            <option value="猛推">猛推</option>
+            <option value="摄影">摄影</option>
+            <option value="亲子">亲子</option>
+            <option value="迁徙季">迁徙季</option>
+          </select>
+        </div>
+
+        <div class="form-field full">
+          <label for="tripVisibilityInput">可见性</label>
+          <select id="tripVisibilityInput">
+            <option value="private">私有，仅自己可见</option>
+            <option value="public">公开，可被其他用户搜索并导入</option>
+          </select>
+          <div class="hint" id="tripVisibilityHint">复制导入的公开行程会先保持私有；修改后才能再次公开。</div>
+        </div>
+
         <div class="form-field full">
           <label for="tripSubtitleInput">副标题</label>
           <input id="tripSubtitleInput" placeholder="例如：城市漫游｜博物馆｜公园｜公共交通">
@@ -823,6 +1823,40 @@ window.addEventListener("load", function () {
 </dialog>
 
 
+<!-- 统一设置 -->
+<dialog id="settingsDialog">
+  <div class="modal-header">
+    <h3>设置</h3>
+  </div>
+  <div class="modal-body" id="settingsDialogBody"></div>
+  <div class="modal-actions">
+    <button type="button" onclick="closeSettingsDialog()">关闭</button>
+  </div>
+</dialog>
+
+<!-- 公开行程检索 -->
+<dialog id="publicTripSearchDialog">
+  <div class="modal-header">
+    <h3>公开行程检索</h3>
+  </div>
+  <div class="modal-body">
+    <div class="row">
+      <input id="publicTripSearchInput" class="full" placeholder="按行程名称、地点、属性、目标鸟种搜索" onkeydown="if(event.key==='Enter') searchPublicTrips('app');">
+    </div>
+    <div class="row">
+      <button type="button" class="blue" onclick="searchPublicTrips('app')">搜索公开行程</button>
+    </div>
+    <div class="hint" id="publicTripSearchStatus">
+      可搜索其他用户公开的行程。游客导入后只保存在本次页面内存；登录用户导入后保存为账号私有副本。
+    </div>
+    <div id="publicTripSearchResults" class="public-trip-results"></div>
+  </div>
+  <div class="modal-actions">
+    <button type="button" onclick="closePublicTripSearchDialog()">关闭</button>
+  </div>
+</dialog>
+
+
 <!-- 鸟种预习 -->
 <dialog id="birdPreviewDialog">
   <div class="modal-header">
@@ -836,6 +1870,29 @@ window.addEventListener("load", function () {
   </div>
   <div class="modal-actions">
     <button type="button" onclick="closeBirdPreview()">关闭</button>
+  </div>
+</dialog>
+
+
+<!-- 鸟名映射确认 -->
+<dialog id="birdMappingDialog">
+  <div class="modal-header">
+    <h3>补全鸟名映射</h3>
+  </div>
+  <div class="modal-body">
+    <div class="hint">
+      这些目标鸟种还没有中文名、英文名和学名映射。可以手动填写，也可以用 LLM 生成候选；确认后会写入后端全局映射表，并用于 Checklist 和鸟种预习。
+    </div>
+    <div class="row" style="margin-top:12px;">
+      <button type="button" class="primary" onclick="resolveBirdMappingsWithLlm()">LLM 补全</button>
+      <button type="button" onclick="confirmBirdMappings()">确认并保存映射</button>
+    </div>
+    <div class="hint" id="birdMappingStatus">请填写或自动补全后确认。</div>
+    <div id="birdMappingRows" class="bird-mapping-table"></div>
+  </div>
+  <div class="modal-actions">
+    <button type="button" onclick="skipBirdMappingsAndContinue()">暂不补全，继续保存</button>
+    <button type="button" class="danger" onclick="cancelBirdMappings()">取消保存活动</button>
   </div>
 </dialog>
 
@@ -910,6 +1967,45 @@ window.addEventListener("load", function () {
   </div>
 </dialog>
 
+<!-- 小红书第三方 API 帮助 -->
+<dialog id="xhsThirdPartyHelpDialog">
+  <div class="modal-header">
+    <h3>小红书第三方数据 API</h3>
+  </div>
+  <div class="modal-body">
+    <p>小红书官方开放平台不一定提供通用的全站笔记搜索能力。若需要更稳定地搜索和解析公开笔记，可以使用用户自备的第三方数据 API。</p>
+    <p>
+      可参考：
+      <a href="https://rnote.dev/" target="_blank" rel="noopener">https://rnote.dev/</a>
+    </p>
+    <div class="summary-card" style="box-shadow:none;margin:0 0 12px 0;">
+      当前已按第三方 V2 流程预填默认端点：先搜索笔记，再按 note_id 抓取图文或视频详情。
+      <br><code>https://rnote.dev/api/v2/crawler/search/notes</code>
+      <br><code>https://rnote.dev/api/v2/crawler/note/image</code>
+      <br><code>https://rnote.dev/api/v2/crawler/note/video</code>
+    </div>
+    <pre style="white-space:pre-wrap;background:#f3f5f1;padding:12px;border-radius:10px;font-size:13px;">GET /api/v2/crawler/search/notes
+Query:
+  keyword = 攻略搜索关键词
+  page = 1
+  sort_type = general
+  note_type = 不限 / 普通笔记 / 视频笔记 / 直播笔记
+  time_filter = 不限 / 一天内 / 一周内 / 半年内
+
+Header:
+  X-API-Key: 你的第三方 API Key
+
+GET /api/v2/crawler/note/image?note_id=...
+GET /api/v2/crawler/note/video?note_id=...</pre>
+    <div class="hint">
+      在该服务获取 API Key 后，把 Key 填入“内容源接入设置”。BirdRoute 会把鸟点关键词作为 keyword 传入；用户点击“抓取正文”时，再根据搜索结果中的 note_id 调详情接口。请自行确认服务条款、数据授权和使用限额。
+    </div>
+  </div>
+  <div class="modal-actions">
+    <button type="button" onclick="closeXhsThirdPartyHelp()">关闭</button>
+  </div>
+</dialog>
+
 
 <!-- 每日 Checklist -->
 <dialog id="checklistDialog">
@@ -928,10 +2024,120 @@ window.addEventListener("load", function () {
   </div>
 </dialog>
 
+<!-- 鸟点攻略研究 -->
+<dialog id="researchDialog">
+  <div class="modal-header">
+    <h3 id="researchTitle">鸟点攻略文章</h3>
+  </div>
+  <div class="modal-body">
+    <div class="research-toolbar">
+      <div>
+        <label for="researchQueryInput">搜索关键词</label>
+        <input id="researchQueryInput" class="full" placeholder="点击下方关键词，或自行输入" oninput="syncResearchKeywordSelectionFromInput()">
+        <div id="researchKeywordChips" class="research-keyword-row"></div>
+      </div>
+
+      <div class="research-source-row">
+        <label><input type="checkbox" class="research-source" value="wechat" checked> 微信公众号</label>
+        <label><input type="checkbox" class="research-source" value="xiaohongshu" checked> 小红书</label>
+        <label><input type="checkbox" class="research-source" value="blog" checked> 个人博客</label>
+        <label><input type="checkbox" class="research-source" value="web" checked> 全网</label>
+      </div>
+
+      <div class="row">
+        <button class="blue research-action" onclick="searchResearchArticles()">搜索候选文章</button>
+        <button class="primary research-action" onclick="summarizeResearchArticles()">AI 生成攻略</button>
+        <button onclick="saveResearchToBackend()">保存攻略结果</button>
+      </div>
+
+      <div>
+        <label for="researchUrlInput">手动粘贴文章链接</label>
+        <div class="row">
+          <input id="researchUrlInput" class="full" placeholder="https://...">
+          <button class="research-action" onclick="ingestResearchUrl()">抓取链接</button>
+        </div>
+      </div>
+
+      <div class="hint" id="researchStatus">
+        搜索会尽量返回微信公众号、小红书和博客候选；无法直接抓正文的网站仍会保留标题和链接。
+      </div>
+      <div id="researchProgress" class="research-progress" aria-live="polite" aria-busy="false">
+        <span class="research-spinner" aria-hidden="true"></span>
+        <span id="researchProgressText" class="research-progress-text">处理中...</span>
+        <span class="research-progress-bar" aria-hidden="true"></span>
+      </div>
+    </div>
+
+    <h4>候选文章</h4>
+    <div id="researchArticles"></div>
+
+    <h4>AI 攻略文案</h4>
+    <div id="researchSummary" class="research-summary">暂无解析结果。</div>
+  </div>
+  <div class="modal-actions">
+    <button type="button" onclick="closeResearchDialog()">关闭</button>
+  </div>
+</dialog>
+
+<!-- API Key 更新弹窗 -->
+<dialog id="secretInputDialog">
+  <div class="modal-header">
+    <h3 id="secretInputTitle">更新 API Key</h3>
+  </div>
+  <div class="modal-body">
+    <label for="secretInputValue" id="secretInputLabel">新的 API Key</label>
+    <input id="secretInputValue" class="full" type="password" autocomplete="off" placeholder="输入新的 key/token">
+  </div>
+  <div class="modal-actions">
+    <button type="button" onclick="closeSecretInputDialog()">取消</button>
+    <button type="button" class="primary" onclick="confirmSecretInputDialog()">确认使用此 Key</button>
+  </div>
+</dialog>
+
 <div class="toast" id="toast"></div>
+
+<script src="./config.js"></script>
 
 <script>
 const STORAGE_KEY = "birdroute_v1_2";
+const SETTINGS_KEY = STORAGE_KEY + "_settings";
+const WECHAT_SOGOU_SEARCH_ENDPOINT = "https://weixin.sogou.com/weixin";
+const RNOTE_XHS_SEARCH_ENDPOINT = "https://rnote.dev/api/v2/crawler/search/notes";
+const RNOTE_XHS_IMAGE_DETAIL_ENDPOINT = "https://rnote.dev/api/v2/crawler/note/image";
+const RNOTE_XHS_VIDEO_DETAIL_ENDPOINT = "https://rnote.dev/api/v2/crawler/note/video";
+const BIRDROUTE_CONFIG = {
+  apiBase: "",
+  localApiBase: "http://127.0.0.1:5000",
+  xhsHelperBase: "http://127.0.0.1:5127",
+  ...(window.BIRDROUTE_CONFIG || {})
+};
+
+function normalizeApiBase(value) {
+  const text = String(value || "").trim().replace(/\/+$/, "");
+  if (!text || text === "." || text === "/" || text === "same-origin") return "";
+  return text;
+}
+
+function autoDetectedApiBase() {
+  if (window.location.protocol === "file:") return normalizeApiBase(BIRDROUTE_CONFIG.localApiBase);
+  if (
+    ["127.0.0.1", "localhost"].includes(window.location.hostname) &&
+    window.location.port &&
+    window.location.port !== "5000"
+  ) {
+    return normalizeApiBase(BIRDROUTE_CONFIG.localApiBase);
+  }
+  return "";
+}
+
+function resolveApiBase() {
+  const fromConfig = normalizeApiBase(BIRDROUTE_CONFIG.apiBase);
+  if (fromConfig) return fromConfig;
+  return autoDetectedApiBase();
+}
+
+const API_BASE = resolveApiBase();
+const XHS_HELPER_BASE = normalizeApiBase(BIRDROUTE_CONFIG.xhsHelperBase || "http://127.0.0.1:5127");
 
 const taiwanTemplateTrips = [
   {
@@ -1049,7 +2255,43 @@ let fxCache = {
   updatedAt: "",
   source: ""
 };
-let map, markerLayer, routeLayer, ebirdLayer;
+let sessionMode = "pending"; // pending | guest | account
+let currentUser = null;
+let backendSyncTimer = null;
+let backendSyncInFlight = false;
+let backendSyncPending = false;
+let mapTileEngine = "leaflet_osm";
+let navigationEngine = "google";
+let map, baseTileLayer, markerLayer, routeLayer, ebirdLayer;
+let currentResearchDayIndex = null;
+let currentResearchStopIndex = null;
+let researchArticles = [];
+let researchSummaryResult = null;
+let researchKeywordTokens = [];
+let researchBusy = false;
+const birdNameMappingCache = {};
+let birdMappingDialogState = null;
+let stopSaveInProgress = false;
+let contentSourceDefaults = {
+  wechat: true,
+  xiaohongshu: true,
+  blog: true,
+  web: true
+};
+const TRIP_VISIBILITY_LABELS = {
+  private: "私有",
+  public: "公开"
+};
+const DEFAULT_TRIP_PACE = "休闲";
+let lastContentSourceSettings = null;
+let lastAccountApiCredentials = null;
+const pendingSecretUpdates = {
+  apiCredentials: {},
+  contentSources: {},
+  llm: {}
+};
+let activeSecretInputId = "";
+let authSessionToken = "";
 
 const typeColors = {
   bird: "#2f6f4e",
@@ -1063,6 +2305,42 @@ const typeLabels = {
   hotel: "住宿",
   transport: "交通节点",
   airport: "机场/航班"
+};
+
+const mapTileEngines = {
+  leaflet_osm: {
+    label: "Leaflet / OpenStreetMap",
+    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    options: {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }
+  },
+  gaode_road: {
+    label: "高德路网",
+    url: "https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}",
+    options: {
+      maxZoom: 18,
+      subdomains: ["1", "2", "3", "4"],
+      attribution: '&copy; 高德地图'
+    }
+  },
+  gaode_satellite: {
+    label: "高德卫星影像",
+    url: "https://webst0{s}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}",
+    options: {
+      maxZoom: 18,
+      subdomains: ["1", "2", "3", "4"],
+      attribution: '&copy; 高德地图'
+    }
+  }
+};
+
+const navigationEngines = {
+  google: "Google 地图",
+  gaode: "高德地图",
+  baidu: "百度地图",
+  osm: "OpenStreetMap"
 };
 
 
@@ -1126,10 +2404,16 @@ const itineraryEl = document.getElementById("itinerary");
 const dialog = document.getElementById("editDialog");
 const dayDialog = document.getElementById("dayDialog");
 const tripDialog = document.getElementById("tripDialog");
+const settingsDialog = document.getElementById("settingsDialog");
+const publicTripSearchDialog = document.getElementById("publicTripSearchDialog");
 const birdPreviewDialog = document.getElementById("birdPreviewDialog");
+const birdMappingDialog = document.getElementById("birdMappingDialog");
 const ebirdHelpDialog = document.getElementById("ebirdHelpDialog");
 const xcHelpDialog = document.getElementById("xcHelpDialog");
+const xhsThirdPartyHelpDialog = document.getElementById("xhsThirdPartyHelpDialog");
+const secretInputDialog = document.getElementById("secretInputDialog");
 const checklistDialog = document.getElementById("checklistDialog");
+const researchDialog = document.getElementById("researchDialog");
 
 function hasTrips() { return trips.length > 0 && trips[currentTripIndex]; }
 
@@ -1139,6 +2423,11 @@ function currentTrip() {
     subtitle: "观鸟行程规划与野外清单",
     currency: "CNY",
     summary: "当前没有载入行程。请先创建新行程，或导入已有 JSON 文件。",
+    visibility: "private",
+    primaryLocation: "未设置地点",
+    tripPace: DEFAULT_TRIP_PACE,
+    birdTags: [],
+    locationTags: [],
     center: { lat: 23.7, lng: 121.0, zoom: 3 },
     days: []
   };
@@ -1148,21 +2437,1882 @@ function currentDays() { return currentTrip().days || []; }
 
 function deepCopy(obj) { return JSON.parse(JSON.stringify(obj)); }
 
-function loadTrips() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return JSON.parse(saved);
-  } catch (e) {}
-  return deepCopy(defaultTrips);
+function normalizeTripVisibility(value) {
+  return value === "public" ? "public" : "private";
 }
 
-function saveTrips() { localStorage.setItem(STORAGE_KEY, JSON.stringify(trips)); }
+function normalizeTripTag(value) {
+  return String(value || "").trim().replace(/\s+/g, " ").replace(/^[\s,，、;；|｜-]+|[\s,，、;；|｜-]+$/g, "");
+}
+
+function uniqueTripTags(values, limit = 40) {
+  const seen = new Set();
+  const tags = [];
+  values.forEach(value => {
+    const tag = normalizeTripTag(value);
+    if (!tag) return;
+    const key = tag.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    tags.push(tag.slice(0, 48));
+  });
+  return tags.slice(0, limit);
+}
+
+function extractTripBirdTags(trip) {
+  const names = [];
+  (trip.days || []).forEach(day => {
+    (day.stops || []).forEach(stop => {
+      if (stop.type === "bird") names.push(...parseBirdNames(stop.birds));
+    });
+  });
+  return uniqueTripTags(names, 50);
+}
+
+function extractTripLocationTags(trip) {
+  const values = [trip.primaryLocation];
+  (trip.days || []).forEach(day => {
+    (day.stops || []).forEach(stop => values.push(stop.name));
+  });
+  return uniqueTripTags(values, 50);
+}
+
+function deriveTripPrimaryLocation(trip) {
+  const explicit = normalizeTripTag(trip.primaryLocation);
+  if (explicit) return explicit;
+  const firstStop = (trip.days || []).flatMap(day => day.stops || []).find(stop => normalizeTripTag(stop.name));
+  if (firstStop) return normalizeTripTag(firstStop.name);
+  const firstTitlePart = String(trip.title || "").split(/[｜|—\-·,，/]+/)[0];
+  return normalizeTripTag(firstTitlePart) || "未设置地点";
+}
+
+function prepareTripForSave(trip) {
+  if (!trip || typeof trip !== "object") return trip;
+  trip.visibility = normalizeTripVisibility(trip.visibility);
+  trip.tripPace = normalizeTripTag(trip.tripPace) || DEFAULT_TRIP_PACE;
+  trip.primaryLocation = deriveTripPrimaryLocation(trip);
+  trip.birdTags = extractTripBirdTags(trip);
+  trip.locationTags = extractTripLocationTags(trip);
+  return trip;
+}
+
+function markTripLocallyModified(trip = currentTrip()) {
+  if (trip && trip.copiedFromPublic) trip.copyModified = true;
+}
+
+function loadTrips() {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch (e) {}
+  return [];
+}
+
+function makeClientId(prefix = "trip") {
+  const random = Math.random().toString(36).slice(2, 10);
+  return `${prefix}_${Date.now().toString(36)}_${random}`;
+}
+
+function ensureTripRecordIds() {
+  trips.forEach(trip => {
+    if (!trip.id) trip.id = makeClientId("trip");
+    if (!trip.createdAt) trip.createdAt = new Date().toISOString();
+    prepareTripForSave(trip);
+    (trip.days || []).forEach(day => {
+      (day.stops || []).forEach(stop => {
+        if (!stop.id) stop.id = makeClientId("stop");
+      });
+    });
+  });
+}
+
+function persistLocalTripsOnly() {
+  if (sessionMode !== "account") return;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(trips));
+}
+
+function saveTrips() {
+  ensureTripRecordIds();
+  persistLocalTripsOnly();
+  scheduleBackendSync();
+}
 
 function showToast(msg) {
   const el = document.getElementById("toast");
   el.textContent = msg;
   el.style.display = "block";
   setTimeout(() => { el.style.display = "none"; }, 1800);
+}
+
+function setAuthStatus(message, isError = false) {
+  const el = document.getElementById("authStatus");
+  if (!el) return;
+  el.textContent = message || "";
+  el.classList.toggle("error", Boolean(isError));
+}
+
+function updateAccountStatus(message = "") {
+  const el = document.getElementById("accountStatus");
+  const logoutButton = document.getElementById("logoutButton");
+  const guestLoginButton = document.getElementById("guestLoginButton");
+  const saveButton = document.getElementById("saveCurrentTripButton");
+  if (!el) return;
+
+  if (sessionMode === "account" && currentUser) {
+    el.textContent = message || `已登录：${currentUser.username}`;
+    if (logoutButton) logoutButton.style.display = "";
+    if (guestLoginButton) guestLoginButton.style.display = "none";
+    if (saveButton) saveButton.style.display = "";
+  } else if (sessionMode === "guest") {
+    el.textContent = message || "游客模式：临时内存，不缓存行程";
+    if (logoutButton) logoutButton.style.display = "none";
+    if (guestLoginButton) guestLoginButton.style.display = "";
+    if (saveButton) saveButton.style.display = "none";
+  } else {
+    el.textContent = message || "等待登录";
+    if (logoutButton) logoutButton.style.display = "none";
+    if (guestLoginButton) guestLoginButton.style.display = "none";
+    if (saveButton) saveButton.style.display = "none";
+  }
+}
+
+function loadAuthSessionToken() {
+  try {
+    authSessionToken = sessionStorage.getItem(STORAGE_KEY + "_auth_token") || "";
+  } catch (e) {
+    authSessionToken = "";
+  }
+}
+
+function saveAuthSessionToken(token = "") {
+  authSessionToken = String(token || "");
+  try {
+    if (authSessionToken) {
+      sessionStorage.setItem(STORAGE_KEY + "_auth_token", authSessionToken);
+    } else {
+      sessionStorage.removeItem(STORAGE_KEY + "_auth_token");
+    }
+  } catch (e) {}
+}
+
+async function apiFetch(path, options = {}) {
+  const headers = {
+    "Accept": "application/json",
+    ...(options.headers || {})
+  };
+  if (authSessionToken && !headers.Authorization) {
+    headers.Authorization = `Bearer ${authSessionToken}`;
+  }
+
+  let body = options.body;
+  if (body && typeof body !== "string" && !(body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+    body = JSON.stringify(body);
+  } else if (typeof body === "string" && !headers["Content-Type"]) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  let res;
+  try {
+    res = await fetch(API_BASE + path, {
+      credentials: API_BASE ? "include" : "same-origin",
+      ...options,
+      headers,
+      body
+    });
+  } catch (e) {
+    throw new Error("无法连接后端。请确认部署配置正确，且后端服务已启动。");
+  }
+
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : {};
+  if (!res.ok || data.ok === false) {
+    throw new Error(data.error || `HTTP ${res.status}`);
+  }
+  return data;
+}
+
+async function xhsHelperFetch(path, options = {}) {
+  if (!XHS_HELPER_BASE) {
+    throw new Error("小红书本地助手地址未配置。请在 config.js 设置 xhsHelperBase。");
+  }
+  const headers = {
+    "Accept": "application/json",
+    ...(options.headers || {})
+  };
+  let body = options.body;
+  if (body && typeof body !== "string" && !(body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+    body = JSON.stringify(body);
+  } else if (typeof body === "string" && !headers["Content-Type"]) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  let res;
+  try {
+    res = await fetch(XHS_HELPER_BASE + path, {
+      mode: "cors",
+      ...options,
+      headers,
+      body
+    });
+  } catch (e) {
+    throw new Error(`无法连接小红书本地助手（${XHS_HELPER_BASE}）。请在你的电脑运行：python xhs_helper.py`);
+  }
+
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : {};
+  if (!res.ok || data.ok === false) {
+    throw new Error(data.error || `HTTP ${res.status}`);
+  }
+  return data;
+}
+
+function enterApp(mode) {
+  sessionMode = mode;
+  document.body.classList.remove("welcome-mode");
+  updateAccountStatus();
+  render(currentFilter || "ALL");
+  if (mode === "account") {
+    loadAllAccountApiSettings(false).catch(() => {});
+  }
+  setTimeout(() => {
+    if (map) map.invalidateSize();
+  }, 100);
+}
+
+function clearTripRuntimeState() {
+  trips = [];
+  currentTripIndex = 0;
+  currentFilter = "ALL";
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch (e) {}
+  clearEbirdHotspots();
+}
+
+function continueAsGuest() {
+  saveAuthSessionToken("");
+  currentUser = null;
+  clearTripRuntimeState();
+  setAuthStatus("");
+  enterApp("guest");
+  render("ALL");
+  showToast("已进入游客模式，本次行程不会缓存");
+}
+
+function returnToWelcomeForLogin() {
+  if (sessionMode === "guest" && hasTrips()) {
+    const ok = confirm("游客模式的行程只在内存中，返回欢迎页会丢弃当前未导出的行程。确定继续吗？");
+    if (!ok) return;
+  }
+  saveAuthSessionToken("");
+  currentUser = null;
+  sessionMode = "pending";
+  clearTripRuntimeState();
+  document.body.classList.add("welcome-mode");
+  setAuthStatus("可以登录/注册账号，或重新以游客身份开始一个空白临时行程。");
+  updateAccountStatus();
+  render("ALL");
+}
+
+async function initAuth() {
+  loadAuthSessionToken();
+  try {
+    const data = await apiFetch("/api/me");
+    if (data.authenticated && data.user) {
+      currentUser = data.user;
+      sessionMode = "account";
+      await loadTripsFromBackend();
+      enterApp("account");
+      setAuthStatus("");
+      showToast("已恢复登录状态");
+    } else {
+      sessionMode = "pending";
+      currentUser = null;
+      setAuthStatus("后端已连接。请选择游客模式，或登录/注册后保存行程。");
+      updateAccountStatus();
+    }
+  } catch (e) {
+    sessionMode = "pending";
+    currentUser = null;
+    setAuthStatus("未连接到后端。可以先以游客身份使用；如需账号功能，请检查部署配置和后端服务。", true);
+    updateAccountStatus("后端未连接");
+  }
+}
+
+function readAuthForm() {
+  return {
+    username: document.getElementById("authUsernameInput").value.trim(),
+    password: document.getElementById("authPasswordInput").value
+  };
+}
+
+async function loginAccount() {
+  const payload = readAuthForm();
+  setAuthStatus("正在登录...");
+  try {
+    clearTripRuntimeState();
+    const data = await apiFetch("/api/auth/login", { method: "POST", body: payload });
+    saveAuthSessionToken(data.authToken || "");
+    currentUser = data.user;
+    sessionMode = "account";
+    await loadTripsFromBackend();
+    enterApp("account");
+    setAuthStatus("");
+    showToast("登录成功");
+  } catch (e) {
+    setAuthStatus("登录失败：" + e.message, true);
+  }
+}
+
+async function registerAccount() {
+  const payload = readAuthForm();
+  setAuthStatus("正在注册...");
+  try {
+    clearTripRuntimeState();
+    const data = await apiFetch("/api/auth/register", { method: "POST", body: payload });
+    saveAuthSessionToken(data.authToken || "");
+    currentUser = data.user;
+    sessionMode = "account";
+    trips = [];
+    currentTripIndex = 0;
+    currentFilter = "ALL";
+    persistLocalTripsOnly();
+    enterApp("account");
+    setAuthStatus("");
+    showToast("注册成功");
+  } catch (e) {
+    setAuthStatus("注册失败：" + e.message, true);
+  }
+}
+
+async function logoutAccount() {
+  try {
+    await apiFetch("/api/auth/logout", { method: "POST" });
+  } catch (e) {}
+  saveAuthSessionToken("");
+  currentUser = null;
+  sessionMode = "pending";
+  clearTripRuntimeState();
+  document.body.classList.add("welcome-mode");
+  setAuthStatus("已退出登录。可以重新登录，或以游客身份继续使用。");
+  updateAccountStatus();
+  render("ALL");
+}
+
+async function loadTripsFromBackend() {
+  const data = await apiFetch("/api/trips");
+  trips = Array.isArray(data.trips) ? data.trips : [];
+  currentTripIndex = 0;
+  currentFilter = "ALL";
+  persistLocalTripsOnly();
+  clearEbirdHotspots();
+  render("ALL");
+}
+
+function scheduleBackendSync() {
+  if (sessionMode !== "account" || !currentUser) return;
+  clearTimeout(backendSyncTimer);
+  backendSyncTimer = setTimeout(syncTripsToBackend, 500);
+}
+
+function cancelScheduledBackendSync() {
+  clearTimeout(backendSyncTimer);
+  backendSyncTimer = null;
+  backendSyncPending = false;
+}
+
+function waitForBackendSyncIdle(timeoutMs = 5000) {
+  if (!backendSyncInFlight) return Promise.resolve(true);
+  const startedAt = Date.now();
+  return new Promise(resolve => {
+    const check = () => {
+      if (!backendSyncInFlight) {
+        resolve(true);
+        return;
+      }
+      if (Date.now() - startedAt >= timeoutMs) {
+        resolve(false);
+        return;
+      }
+      setTimeout(check, 100);
+    };
+    check();
+  });
+}
+
+async function flushScheduledBackendSync(timeoutMs = 5000) {
+  if (backendSyncTimer) {
+    clearTimeout(backendSyncTimer);
+    backendSyncTimer = null;
+    await syncTripsToBackend();
+  }
+  return waitForBackendSyncIdle(timeoutMs);
+}
+
+async function syncTripsToBackend() {
+  if (sessionMode !== "account" || !currentUser) return;
+  backendSyncTimer = null;
+  if (backendSyncInFlight) {
+    backendSyncPending = true;
+    return;
+  }
+
+  backendSyncInFlight = true;
+  backendSyncPending = false;
+  updateAccountStatus(`正在同步：${currentUser.username}`);
+
+  try {
+    const activeTripId = currentTrip()?.id || "";
+    const data = await apiFetch("/api/trips", {
+      method: "PUT",
+      body: { trips }
+    });
+    if (Array.isArray(data.trips)) {
+      trips = data.trips;
+      const nextIndex = trips.findIndex(trip => trip.id === activeTripId);
+      if (nextIndex >= 0) currentTripIndex = nextIndex;
+      persistLocalTripsOnly();
+      render(currentFilter);
+    }
+    updateAccountStatus(`已同步：${currentUser.username}`);
+  } catch (e) {
+    updateAccountStatus(`同步失败：${e.message}`);
+  } finally {
+    backendSyncInFlight = false;
+    if (backendSyncPending) scheduleBackendSync();
+  }
+}
+
+async function saveCurrentTripToBackend() {
+  if (sessionMode !== "account" || !currentUser) {
+    alert("请先登录账号，再保存行程到后端。");
+    return;
+  }
+  if (!hasTrips()) {
+    alert("当前没有可保存的行程。");
+    return;
+  }
+
+  ensureTripRecordIds();
+  persistLocalTripsOnly();
+
+  const trip = currentTrip();
+  updateAccountStatus(`正在保存当前行程：${trip.title || "未命名行程"}`);
+
+  try {
+    const data = await apiFetch(`/api/trips/${encodeURIComponent(trip.id)}`, {
+      method: "PUT",
+      body: { trip }
+    });
+    if (data.trip) {
+      trips[currentTripIndex] = data.trip;
+      persistLocalTripsOnly();
+      render(currentFilter);
+    }
+    updateAccountStatus(`已保存当前行程：${currentUser.username}`);
+    showToast("当前行程已保存到账号");
+  } catch (e) {
+    updateAccountStatus(`保存失败：${e.message}`);
+    alert("保存当前行程失败：" + e.message);
+  }
+}
+
+function relocateSettingsPanels() {
+  const target = document.getElementById("settingsDialogBody");
+  if (!target || target.dataset.ready === "1") return;
+  document.querySelectorAll(".settings-panel").forEach(panel => {
+    target.appendChild(panel);
+  });
+  target.dataset.ready = "1";
+}
+
+function openSettingsDialog() {
+  relocateSettingsPanels();
+  renderMapSettings();
+  updateFxStatus();
+  if (sessionMode === "account") {
+    loadAllAccountApiSettings(false).catch(() => {});
+  }
+  settingsDialog.showModal();
+}
+
+function closeSettingsDialog() {
+  settingsDialog.close();
+}
+
+function openPublicTripSearchDialog() {
+  publicTripSearchDialog.showModal();
+  setPublicTripSearchStatus("可搜索其他用户公开的行程。游客导入后只保存在本次页面内存；登录用户导入后保存为账号私有副本。");
+  setTimeout(() => {
+    document.getElementById("publicTripSearchInput")?.focus();
+  }, 50);
+}
+
+function closePublicTripSearchDialog() {
+  publicTripSearchDialog.close();
+}
+
+function setApiSettingsStatus(message, isError = false) {
+  const el = document.getElementById("apiSettingsStatus");
+  if (!el) return;
+  el.textContent = message;
+  el.style.color = isError ? "var(--red)" : "var(--muted)";
+}
+
+const SECRET_FIELD_DEFS = {
+  ebirdTokenInput: { scope: "apiCredentials", payloadKey: "ebirdToken", label: "eBird API Token" },
+  xcTokenInput: { scope: "apiCredentials", payloadKey: "xcToken", label: "xeno-canto API Key" },
+  llmApiKeyInput: { scope: "llm", payloadKey: "apiKey", label: "LLM API Key" },
+  braveApiKeyInput: { scope: "contentSources", payloadKey: "braveApiKey", label: "Brave Search API Key" },
+  bingApiKeyInput: { scope: "contentSources", payloadKey: "bingApiKey", label: "Bing Web Search API Key" },
+  serpApiKeyInput: { scope: "contentSources", payloadKey: "serpApiKey", label: "SerpAPI Key" },
+  tavilyApiKeyInput: { scope: "contentSources", payloadKey: "tavilyApiKey", label: "Tavily API Key" },
+  wechatAppSecretInput: { scope: "contentSources", payloadKey: "wechatAppSecret", label: "微信公众号 AppSecret" },
+  wechatThirdPartyApiKeyInput: { scope: "contentSources", payloadKey: "wechatThirdPartyApiKey", label: "微信公众号第三方 API Key" },
+  xhsAppSecretInput: { scope: "contentSources", payloadKey: "xhsAppSecret", label: "小红书 AppSecret" },
+  xhsOfficialAccessTokenInput: { scope: "contentSources", payloadKey: "xhsOfficialAccessToken", label: "小红书官方 Access Token" },
+  xhsThirdPartyApiKeyInput: { scope: "contentSources", payloadKey: "xhsThirdPartyApiKey", label: "小红书第三方 API Key" }
+};
+
+function maskSecretClient(value) {
+  const text = String(value || "");
+  if (!text) return "";
+  if (text.length <= 4) return text.slice(0, 1) + "*".repeat(Math.max(1, text.length - 1));
+  if (text.length <= 10) return text.slice(0, 2) + "*".repeat(Math.max(4, text.length - 4)) + text.slice(-2);
+  return text.slice(0, 4) + "*".repeat(Math.max(6, text.length - 8)) + text.slice(-4);
+}
+
+function setupSecretDisplayInputs() {
+  Object.entries(SECRET_FIELD_DEFS).forEach(([id, def]) => {
+    const input = document.getElementById(id);
+    if (!input) return;
+    input.readOnly = true;
+    input.autocomplete = "off";
+    input.classList.add("secret-display");
+    input.title = `点击更新 ${def.label}`;
+    input.onclick = () => openSecretInputDialog(id);
+    setSecretDisplayValue(id, input.value);
+  });
+}
+
+function setSecretDisplayValue(id, value = "") {
+  const input = document.getElementById(id);
+  if (!input) return;
+  input.value = value || "";
+  const def = SECRET_FIELD_DEFS[id];
+  input.placeholder = value ? "已保存，点击更新" : `未设置，点击设置 ${def?.label || "API Key"}`;
+}
+
+function openSecretInputDialog(inputId) {
+  const def = SECRET_FIELD_DEFS[inputId];
+  if (!def || !secretInputDialog) return;
+  activeSecretInputId = inputId;
+  document.getElementById("secretInputTitle").textContent = `更新 ${def.label}`;
+  document.getElementById("secretInputLabel").textContent = `新的 ${def.label}`;
+  const valueInput = document.getElementById("secretInputValue");
+  valueInput.value = "";
+  valueInput.placeholder = "输入新的 key/token";
+  secretInputDialog.showModal();
+  setTimeout(() => valueInput.focus(), 50);
+}
+
+function closeSecretInputDialog() {
+  activeSecretInputId = "";
+  document.getElementById("secretInputValue").value = "";
+  secretInputDialog.close();
+}
+
+function confirmSecretInputDialog() {
+  const def = SECRET_FIELD_DEFS[activeSecretInputId];
+  if (!def) return;
+  const value = document.getElementById("secretInputValue").value.trim();
+  if (!value) {
+    alert("请输入新的 key/token。若要删除，请使用对应的清空按钮。");
+    return;
+  }
+  pendingSecretUpdates[def.scope][def.payloadKey] = value;
+  setSecretDisplayValue(activeSecretInputId, maskSecretClient(value));
+  closeSecretInputDialog();
+  showToast("新的 key 已暂存，请点击保存生效");
+}
+
+function clearPendingSecrets(scope) {
+  if (scope) {
+    pendingSecretUpdates[scope] = {};
+    return;
+  }
+  Object.keys(pendingSecretUpdates).forEach(key => {
+    pendingSecretUpdates[key] = {};
+  });
+}
+
+async function loadAccountApiCredentials(showToastOnDone = true) {
+  if (sessionMode !== "account") {
+    setApiSettingsStatus("请先登录账号，再载入账号 API 配置。", true);
+    return;
+  }
+
+  try {
+    const data = await apiFetch("/api/api-credentials/settings");
+    const s = data.settings || {};
+    lastAccountApiCredentials = s;
+    clearPendingSecrets("apiCredentials");
+    setSecretDisplayValue("ebirdTokenInput", s.ebirdToken || "");
+    setSecretDisplayValue("xcTokenInput", s.xcToken || "");
+    if (showToastOnDone) showToast("eBird / xeno-canto API 配置已载入");
+  } catch (e) {
+    setApiSettingsStatus("载入 eBird / xeno-canto API 配置失败：" + e.message, true);
+  }
+}
+
+async function saveAccountApiCredentials() {
+  if (sessionMode !== "account") {
+    alert("请先登录账号，再保存 API Key。游客模式不会保存 API Key。");
+    return;
+  }
+
+  const payload = { ...pendingSecretUpdates.apiCredentials };
+
+  setApiSettingsStatus("正在保存 eBird / xeno-canto API 配置...");
+  try {
+    const data = await apiFetch("/api/api-credentials/settings", { method: "PUT", body: payload });
+    lastAccountApiCredentials = data.settings || {};
+    clearPendingSecrets("apiCredentials");
+    setSecretDisplayValue("ebirdTokenInput", lastAccountApiCredentials.ebirdToken || "");
+    setSecretDisplayValue("xcTokenInput", lastAccountApiCredentials.xcToken || "");
+    setApiSettingsStatus("eBird / xeno-canto API 配置已保存。");
+    showToast("API 配置已保存");
+  } catch (e) {
+    setApiSettingsStatus("保存 eBird / xeno-canto API 配置失败：" + e.message, true);
+  }
+}
+
+async function loadAllAccountApiSettings(showToastOnDone = true) {
+  if (sessionMode !== "account") return;
+  setApiSettingsStatus("正在载入全部账号 API 配置...");
+  await Promise.allSettled([
+    loadContentSourceSettings(false),
+    loadLlmSettings(false),
+    loadAccountApiCredentials(false)
+  ]);
+  setApiSettingsStatus("全部账号 API 配置已载入。");
+  if (showToastOnDone) showToast("全部 API 配置已载入");
+}
+
+async function saveAllApiSettings() {
+  if (sessionMode !== "account") {
+    alert("请先登录账号，再保存 API 配置。");
+    return;
+  }
+  setApiSettingsStatus("正在保存全部 API 配置...");
+  try {
+    await saveContentSourceSettings();
+    await saveLlmSettings();
+    await saveAccountApiCredentials();
+    setApiSettingsStatus("全部 API 配置已保存到当前账号。");
+  } catch (e) {
+    setApiSettingsStatus("保存全部 API 配置失败：" + e.message, true);
+  }
+}
+
+async function clearAllAccountApiSecrets() {
+  if (sessionMode !== "account") {
+    alert("请先登录账号。");
+    return;
+  }
+  if (!confirm("确定清空当前账号保存的全部 API Key / Token 吗？这不会删除行程。")) return;
+
+  setApiSettingsStatus("正在清空全部 API Key...");
+  try {
+    await apiFetch("/api/api-credentials/settings", { method: "DELETE" });
+    clearPendingSecrets();
+    ["ebirdTokenInput", "xcTokenInput", "llmApiKeyInput", "braveApiKeyInput", "bingApiKeyInput", "serpApiKeyInput", "tavilyApiKeyInput",
+     "wechatAppSecretInput", "wechatThirdPartyApiKeyInput", "xhsAppSecretInput", "xhsOfficialAccessTokenInput", "xhsThirdPartyApiKeyInput"]
+      .forEach(id => {
+        setSecretDisplayValue(id, "");
+      });
+    await loadAllAccountApiSettings(false);
+    setApiSettingsStatus("全部 API Key 已清空。");
+    showToast("全部 API Key 已清空");
+  } catch (e) {
+    setApiSettingsStatus("清空全部 API Key 失败：" + e.message, true);
+  }
+}
+
+async function clearEbirdToken() {
+  delete pendingSecretUpdates.apiCredentials.ebirdToken;
+  setSecretDisplayValue("ebirdTokenInput", "");
+  if (sessionMode !== "account") {
+    showToast("已清空当前页面的 eBird Token");
+    return;
+  }
+  try {
+    await apiFetch("/api/api-credentials/settings", { method: "PUT", body: { clearEbirdToken: true } });
+    await loadAccountApiCredentials(false);
+    showToast("已清空账号保存的 eBird Token");
+  } catch (e) {
+    alert("清空 eBird Token 失败：" + e.message);
+  }
+}
+
+function setContentSourceStatus(message, isError = false) {
+  const el = document.getElementById("contentSourceStatus");
+  if (!el) return;
+  el.textContent = message;
+  el.style.color = isError ? "var(--red)" : "var(--muted)";
+}
+
+function contentSearchKeyField(provider) {
+  if (provider === "brave") return "braveApiKey";
+  if (provider === "bing_api") return "bingApiKey";
+  if (provider === "serpapi") return "serpApiKey";
+  if (provider === "tavily") return "tavilyApiKey";
+  return "";
+}
+
+function updateContentSearchApiKeyPlaceholder() {
+  const provider = document.getElementById("contentSearchProviderInput")?.value || "html";
+  const activeField = contentSearchKeyField(provider);
+  const map = {
+    braveApiKeyInput: "braveApiKey",
+    bingApiKeyInput: "bingApiKey",
+    serpApiKeyInput: "serpApiKey",
+    tavilyApiKeyInput: "tavilyApiKey"
+  };
+  const labels = {
+    braveApiKeyInput: "Brave Search API Key",
+    bingApiKeyInput: "Bing Web Search API Key",
+    serpApiKeyInput: "SerpAPI Key",
+    tavilyApiKeyInput: "Tavily API Key"
+  };
+  Object.entries(map).forEach(([id, field]) => {
+    const input = document.getElementById(id);
+    if (!input) return;
+    const activeText = field === activeField ? "（当前启用）" : "";
+    input.placeholder = `${labels[id] || "API Key"}${activeText}`;
+  });
+}
+
+const API_PARAM_DEFAULTS = {
+  wechatSogou: [
+    { name: "type", value: "2", note: "搜狗微信文章搜索类型", enabled: true },
+    { name: "query", value: "{query}", note: "搜索关键词", enabled: true },
+    { name: "ie", value: "utf8", note: "字符集", enabled: true },
+    { name: "page", value: "{page}", note: "页码", enabled: true }
+  ],
+  wechatThirdParty: [
+    { name: "keyword", value: "{query}", note: "搜索关键词", enabled: true },
+    { name: "page", value: "1", note: "页码", enabled: true }
+  ],
+  xhsThirdParty: [
+    { name: "keyword", value: "{query}", note: "搜索关键词", enabled: true },
+    { name: "page", value: "1", note: "页码", enabled: true },
+    { name: "sort_type", value: "general", note: "排序字段", enabled: true },
+    { name: "note_type", value: "不限", note: "笔记类型；接口不需要可关闭", enabled: false },
+    { name: "time_filter", value: "不限", note: "发布时间；接口不需要可关闭", enabled: false }
+  ],
+  xhsOfficial: [
+    { name: "keyword", value: "{query}", note: "搜索关键词", enabled: true },
+    { name: "page", value: "1", note: "页码", enabled: true }
+  ]
+};
+
+function cloneApiParamRows(rows) {
+  return (rows || []).map(row => ({
+    name: row.name || "",
+    value: row.value || "",
+    note: row.note || "",
+    enabled: row.enabled !== false
+  }));
+}
+
+function normalizeApiParamRows(rows, kind) {
+  const fallback = cloneApiParamRows(API_PARAM_DEFAULTS[kind] || []);
+  const hasExplicitRows = Array.isArray(rows);
+  const source = hasExplicitRows ? rows : fallback;
+  const normalized = source
+    .filter(row => row && typeof row === "object")
+    .map(row => ({
+      name: String(row.name || ""),
+      value: String(row.value || ""),
+      note: String(row.note || ""),
+      enabled: row.enabled !== false
+    }))
+    .filter(row => row.name || row.value || row.note);
+  return hasExplicitRows ? normalized : (normalized.length ? normalized : fallback);
+}
+
+function apiParamInputId(kind, index, field) {
+  return `${kind}Param${field}${index}`;
+}
+
+function renderApiParamEditor(kind, rows) {
+  const target = document.getElementById(`${kind}ParamRows`);
+  if (!target) return;
+  const normalized = normalizeApiParamRows(rows, kind);
+  target.innerHTML = normalized.map((row, index) => `
+    <div class="api-param-row" data-param-index="${index}">
+      <input id="${apiParamInputId(kind, index, "Enabled")}" type="checkbox" ${row.enabled ? "checked" : ""} title="启用">
+      <input id="${apiParamInputId(kind, index, "Name")}" class="full param-name" placeholder="字段名" value="${escapeHtml(row.name)}">
+      <input id="${apiParamInputId(kind, index, "Value")}" class="full param-value" placeholder="默认值，可用 {query}" value="${escapeHtml(row.value)}">
+      <input id="${apiParamInputId(kind, index, "Note")}" class="full param-note" placeholder="备注" value="${escapeHtml(row.note)}">
+      <button class="small-btn danger" onclick="removeApiParamRow('${kind}', ${index})">删除</button>
+    </div>
+  `).join("");
+}
+
+function collectApiParamRows(kind) {
+  const target = document.getElementById(`${kind}ParamRows`);
+  if (!target) return cloneApiParamRows(API_PARAM_DEFAULTS[kind] || []);
+  return Array.from(target.querySelectorAll(".api-param-row")).map(row => {
+    const index = Number(row.dataset.paramIndex);
+    return {
+      name: document.getElementById(apiParamInputId(kind, index, "Name"))?.value.trim() || "",
+      value: document.getElementById(apiParamInputId(kind, index, "Value"))?.value.trim() || "",
+      note: document.getElementById(apiParamInputId(kind, index, "Note"))?.value.trim() || "",
+      enabled: Boolean(document.getElementById(apiParamInputId(kind, index, "Enabled"))?.checked)
+    };
+  }).filter(row => row.name || row.value || row.note);
+}
+
+function addApiParamRow(kind) {
+  const rows = collectApiParamRows(kind);
+  rows.push({ name: "", value: "", note: "", enabled: true });
+  renderApiParamEditor(kind, rows);
+}
+
+function removeApiParamRow(kind, index) {
+  const rows = collectApiParamRows(kind);
+  rows.splice(index, 1);
+  renderApiParamEditor(kind, rows);
+}
+
+function resetApiParamRows(kind) {
+  renderApiParamEditor(kind, cloneApiParamRows(API_PARAM_DEFAULTS[kind] || []));
+}
+
+function datetimeLocalFromSaved(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  const date = new Date(text);
+  if (Number.isNaN(date.getTime())) return text.slice(0, 16);
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
+}
+
+function savedDatetimeFromLocalInput(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  const date = new Date(text);
+  return Number.isNaN(date.getTime()) ? text : date.toISOString();
+}
+
+function updateXhsOfficialTokenStatus() {
+  const el = document.getElementById("xhsOfficialTokenStatus");
+  const input = document.getElementById("xhsOfficialAccessTokenExpiresAtInput");
+  if (!el || !input) return;
+  const value = input.value.trim();
+  if (!value) {
+    el.textContent = "未设置官方 token 过期时间；如果接口 token 有时效，建议填写。";
+    el.style.color = "var(--muted)";
+    return;
+  }
+  const expiresAt = new Date(value);
+  if (Number.isNaN(expiresAt.getTime())) {
+    el.textContent = "过期时间格式无法识别。";
+    el.style.color = "var(--red)";
+    return;
+  }
+  if (expiresAt.getTime() <= Date.now()) {
+    el.textContent = "官方 token 已过期，请重新授权/扫码登录后更新。";
+    el.style.color = "var(--red)";
+  } else {
+    el.textContent = `官方 token 将于 ${value.replace("T", " ")} 过期。`;
+    el.style.color = "var(--muted)";
+  }
+}
+
+function updateWechatModeHelp() {
+  const mode = document.getElementById("wechatModeInput")?.value || "search_index";
+  const el = document.getElementById("wechatModeHelp");
+  const officialSettings = document.getElementById("wechatOfficialSettings");
+  const sogouSettings = document.getElementById("wechatSogouSettings");
+  const thirdPartySettings = document.getElementById("wechatThirdPartySettings");
+  if (officialSettings) officialSettings.style.display = mode === "official_api" ? "" : "none";
+  if (sogouSettings) sogouSettings.style.display = mode === "sogou_weixin" ? "" : "none";
+  if (thirdPartySettings) thirdPartySettings.style.display = mode === "third_party" ? "" : "none";
+  if (!el) return;
+  if (mode === "sogou_weixin") {
+    const input = document.getElementById("wechatSogouSearchUrlInput");
+    if (input && !input.value.trim()) input.value = WECHAT_SOGOU_SEARCH_ENDPOINT;
+    el.textContent = "搜狗微信搜索模式：先请求搜狗微信文章搜索，候选结果保留搜狗跳转链接；点击抓取正文时，后端会尝试解析真实 mp.weixin.qq.com 链接并抽取公众号正文。搜狗可能出现验证码/反爬限制。";
+  } else if (mode === "official_api") {
+    el.textContent = "官方接口 / 授权公众号模式：适用于你拥有公众号或授权权限；通用全网公众号文章搜索通常不可用。";
+  } else if (mode === "third_party") {
+    el.textContent = "第三方数据 API 模式：保留自定义 Base URL 和 Key 配置位，适合后续接入专门的公众号数据服务。";
+  } else if (mode === "disabled") {
+    el.textContent = "已选择禁用微信公众号来源；攻略搜索时请取消微信公众号来源勾选，或保存默认来源配置。";
+  } else {
+    el.textContent = "当前默认通过搜索引擎索引查找 mp.weixin.qq.com 公开文章；正文抓取可能受平台限制。";
+  }
+}
+
+function updateXhsModeHelp() {
+  const mode = document.getElementById("xhsModeInput")?.value || "search_index";
+  const el = document.getElementById("xhsModeHelp");
+  const openPlatformSettings = document.getElementById("xhsOpenPlatformSettings");
+  const thirdPartySettings = document.getElementById("xhsThirdPartySettings");
+  const localBrowserSettings = document.getElementById("xhsLocalBrowserSettings");
+  if (openPlatformSettings) openPlatformSettings.style.display = mode === "open_platform" ? "" : "none";
+  if (thirdPartySettings) thirdPartySettings.style.display = mode === "third_party" ? "" : "none";
+  if (localBrowserSettings) localBrowserSettings.style.display = mode === "local_browser_experimental" ? "" : "none";
+  if (!el) return;
+  if (mode === "local_browser_experimental") {
+    el.textContent = `本地浏览器助手模式：请在自己的电脑运行 python xhs_helper.py，前端会连接 ${XHS_HELPER_BASE} 并启动本机 Chromium；云后端不会启动浏览器。`;
+    if (sessionMode === "account") refreshXhsLocalBrowserStatus(false);
+  } else if (mode === "third_party") {
+    const baseInput = document.getElementById("xhsThirdPartyBaseUrlInput");
+    if (baseInput && !baseInput.value.trim()) baseInput.value = RNOTE_XHS_SEARCH_ENDPOINT;
+    const imageInput = document.getElementById("xhsImageDetailUrlInput");
+    const videoInput = document.getElementById("xhsVideoDetailUrlInput");
+    if (imageInput && !imageInput.value.trim()) imageInput.value = RNOTE_XHS_IMAGE_DETAIL_ENDPOINT;
+    if (videoInput && !videoInput.value.trim()) videoInput.value = RNOTE_XHS_VIDEO_DETAIL_ENDPOINT;
+    el.textContent = "第三方数据 API 模式：先用搜索端点拿候选笔记和 note_id，点击抓取正文时再按图文/视频详情端点读取完整内容。";
+  } else if (mode === "open_platform") {
+    el.textContent = "开放平台授权模式：打开官方授权/扫码登录后保存 Access Token，再由后端调用你填写的官方搜索 API URL。是否可搜索公开笔记取决于账号和应用权限。";
+  } else if (mode === "disabled") {
+    el.textContent = "已选择禁用小红书来源；攻略搜索时请取消小红书来源勾选，或保存默认来源配置。";
+  } else {
+    el.textContent = "当前默认通过搜索引擎索引查找小红书公开页面；正文抓取可能受平台限制。";
+  }
+}
+
+function setXhsLocalBrowserStatus(message, isError = false) {
+  const el = document.getElementById("xhsLocalBrowserStatus");
+  if (!el) return;
+  el.textContent = message;
+  el.style.color = isError ? "var(--red)" : "var(--muted)";
+}
+
+function renderXhsLocalBrowserStatus(status = {}) {
+  const running = Boolean(status.running);
+  const env = status.environment || {};
+  const loginText = running
+    ? (status.loggedIn ? "可能已登录" : "等待扫码/登录确认")
+    : "未启动";
+  const parts = [`状态：${running ? "浏览器会话运行中" : "浏览器会话未启动"}`, loginText];
+  if (!running && env.message) parts.push(`环境：${env.message}`);
+  if (!running && env.ready === false && env.installHint) parts.push(env.installHint);
+  if (status.title) parts.push(`页面：${status.title}`);
+  if (status.currentUrl) parts.push(`URL：${status.currentUrl}`);
+  if (status.message) parts.push(status.message);
+  setXhsLocalBrowserStatus(parts.join("；"), env.ready === false);
+}
+
+function xhsHelperUsername() {
+  return currentUser?.username || "guest";
+}
+
+function isXhsLocalBrowserMode() {
+  return document.getElementById("xhsModeInput")?.value === "local_browser_experimental";
+}
+
+async function startXhsLocalBrowser() {
+  if (sessionMode !== "account") {
+    alert("请先登录账号，再启动小红书本机浏览器会话。");
+    return;
+  }
+  setXhsLocalBrowserStatus("正在连接本地助手并启动小红书浏览器，请稍候...");
+  try {
+    const data = await xhsHelperFetch("/api/xiaohongshu/browser-session", {
+      method: "POST",
+      body: { username: xhsHelperUsername() }
+    });
+    renderXhsLocalBrowserStatus(data.status || {});
+    showToast("小红书浏览器会话已启动");
+  } catch (e) {
+    setXhsLocalBrowserStatus("启动失败：" + e.message, true);
+  }
+}
+
+async function refreshXhsLocalBrowserStatus(showToastOnDone = true) {
+  if (sessionMode !== "account") {
+    setXhsLocalBrowserStatus("请先登录账号，再查看小红书本机浏览器会话。", true);
+    return;
+  }
+  try {
+    const data = await xhsHelperFetch(`/api/xiaohongshu/browser-session?username=${encodeURIComponent(xhsHelperUsername())}`);
+    renderXhsLocalBrowserStatus(data.status || {});
+    if (showToastOnDone) showToast("小红书浏览器状态已刷新");
+  } catch (e) {
+    setXhsLocalBrowserStatus("读取状态失败：" + e.message, true);
+  }
+}
+
+async function closeXhsLocalBrowser() {
+  if (sessionMode !== "account") {
+    setXhsLocalBrowserStatus("请先登录账号。", true);
+    return;
+  }
+  setXhsLocalBrowserStatus("正在关闭小红书本机浏览器会话...");
+  try {
+    const data = await xhsHelperFetch("/api/xiaohongshu/browser-session", {
+      method: "DELETE",
+      body: { username: xhsHelperUsername() }
+    });
+    renderXhsLocalBrowserStatus(data.status || {});
+    showToast("小红书浏览器会话已关闭");
+  } catch (e) {
+    setXhsLocalBrowserStatus("关闭失败：" + e.message, true);
+  }
+}
+
+function openXhsOfficialAuth() {
+  const authUrl = document.getElementById("xhsOfficialAuthUrlInput")?.value.trim();
+  const appId = document.getElementById("xhsAppIdInput")?.value.trim();
+  const redirectUri = document.getElementById("xhsOfficialRedirectUriInput")?.value.trim();
+  if (!authUrl) {
+    alert("请先填写官方授权/扫码登录 URL。");
+    return;
+  }
+  if (!appId) {
+    alert("请先填写小红书开放平台 AppID。");
+    return;
+  }
+  const url = new URL(authUrl);
+  url.searchParams.set("appId", appId);
+  if (redirectUri) url.searchParams.set("redirectUri", redirectUri);
+  url.searchParams.set("state", `birdroute_${Date.now()}`);
+  window.open(url.toString(), "_blank", "noopener,noreferrer");
+}
+
+function openXhsThirdPartyHelp() {
+  xhsThirdPartyHelpDialog.showModal();
+}
+
+function closeXhsThirdPartyHelp() {
+  xhsThirdPartyHelpDialog.close();
+}
+
+function applyContentSourceDefaultsToResearch() {
+  const map = {
+    wechat: "wechat",
+    xiaohongshu: "xiaohongshu",
+    blog: "blog",
+    web: "web"
+  };
+  document.querySelectorAll(".research-source").forEach(input => {
+    const key = map[input.value];
+    if (key) input.checked = Boolean(contentSourceDefaults[key]);
+  });
+}
+
+async function loadContentSourceSettings(showToastOnDone = true) {
+  if (sessionMode !== "account") {
+    setContentSourceStatus("请先登录账号，再保存内容源设置。", true);
+    return;
+  }
+
+  try {
+    const data = await apiFetch("/api/content-sources/settings");
+    const s = data.settings || {};
+    lastContentSourceSettings = s;
+    const defaults = s.defaultSources || {};
+    contentSourceDefaults = {
+      wechat: defaults.wechat !== false,
+      xiaohongshu: defaults.xiaohongshu !== false,
+      blog: defaults.blog !== false,
+      web: defaults.web !== false
+    };
+
+    document.getElementById("contentSearchProviderInput").value = s.searchProvider || "html";
+    document.getElementById("contentBingEndpointInput").value = s.bingEndpoint || "https://api.bing.microsoft.com/v7.0/search";
+    clearPendingSecrets("contentSources");
+    setSecretDisplayValue("braveApiKeyInput", s.braveApiKey || "");
+    setSecretDisplayValue("bingApiKeyInput", s.bingApiKey || "");
+    setSecretDisplayValue("serpApiKeyInput", s.serpApiKey || "");
+    setSecretDisplayValue("tavilyApiKeyInput", s.tavilyApiKey || "");
+    document.getElementById("contentDefaultWechatInput").checked = contentSourceDefaults.wechat;
+    document.getElementById("contentDefaultXhsInput").checked = contentSourceDefaults.xiaohongshu;
+    document.getElementById("contentDefaultBlogInput").checked = contentSourceDefaults.blog;
+    document.getElementById("contentDefaultWebInput").checked = contentSourceDefaults.web;
+    const wechat = s.wechat || {};
+    document.getElementById("wechatModeInput").value = wechat.mode || "search_index";
+    document.getElementById("wechatAppIdInput").value = wechat.appId || "";
+    setSecretDisplayValue("wechatAppSecretInput", s.wechatAppSecret || "");
+    document.getElementById("wechatThirdPartyBaseUrlInput").value = wechat.thirdPartyBaseUrl || "";
+    document.getElementById("wechatSogouSearchUrlInput").value = wechat.sogouSearchUrl || WECHAT_SOGOU_SEARCH_ENDPOINT;
+    document.getElementById("wechatSogouPagesInput").value = wechat.sogouPages || "3";
+    document.getElementById("wechatSogouResultLimitInput").value = wechat.sogouResultLimit || "18";
+    renderApiParamEditor("wechatSogou", wechat.sogouQueryParams);
+    document.getElementById("wechatThirdPartyKeyModeInput").value = wechat.thirdPartyKeyMode || "authorization_bearer";
+    document.getElementById("wechatThirdPartyKeyHeaderInput").value = wechat.thirdPartyKeyHeader || "Authorization";
+    document.getElementById("wechatThirdPartyKeyParamInput").value = wechat.thirdPartyKeyParam || "api_key";
+    renderApiParamEditor("wechatThirdParty", wechat.thirdPartyQueryParams);
+    setSecretDisplayValue("wechatThirdPartyApiKeyInput", s.wechatThirdPartyApiKey || "");
+
+    const xhs = s.xiaohongshu || {};
+    document.getElementById("xhsModeInput").value = xhs.mode || "search_index";
+    document.getElementById("xhsAppIdInput").value = xhs.appId || "";
+    setSecretDisplayValue("xhsAppSecretInput", s.xhsAppSecret || "");
+    document.getElementById("xhsOfficialAuthUrlInput").value = xhs.officialAuthUrl || "https://ark.xiaohongshu.com/ark/authorization";
+    document.getElementById("xhsOfficialRedirectUriInput").value = xhs.officialRedirectUri || "";
+    setSecretDisplayValue("xhsOfficialAccessTokenInput", s.xhsOfficialAccessToken || "");
+    document.getElementById("xhsOfficialAccessTokenExpiresAtInput").value = datetimeLocalFromSaved(xhs.officialAccessTokenExpiresAt || "");
+    document.getElementById("xhsOfficialSearchUrlInput").value = xhs.officialSearchUrl || "";
+    document.getElementById("xhsOfficialDetailUrlInput").value = xhs.officialDetailUrl || "";
+    document.getElementById("xhsOfficialTokenModeInput").value = xhs.officialTokenMode || "authorization_bearer";
+    document.getElementById("xhsOfficialTokenHeaderInput").value = xhs.officialTokenHeader || "Authorization";
+    document.getElementById("xhsOfficialTokenParamInput").value = xhs.officialTokenParam || "access_token";
+    document.getElementById("xhsOfficialDetailIdParamInput").value = xhs.officialDetailIdParam || "note_id";
+    renderApiParamEditor("xhsOfficial", xhs.officialSearchQueryParams);
+    document.getElementById("xhsThirdPartyBaseUrlInput").value = xhs.thirdPartyBaseUrl || RNOTE_XHS_SEARCH_ENDPOINT;
+    document.getElementById("xhsImageDetailUrlInput").value = xhs.imageDetailUrl || RNOTE_XHS_IMAGE_DETAIL_ENDPOINT;
+    document.getElementById("xhsVideoDetailUrlInput").value = xhs.videoDetailUrl || RNOTE_XHS_VIDEO_DETAIL_ENDPOINT;
+    renderApiParamEditor("xhsThirdParty", xhs.thirdPartyQueryParams);
+    document.getElementById("xhsThirdPartyKeyModeInput").value = xhs.thirdPartyKeyMode || "x_api_key";
+    document.getElementById("xhsThirdPartyKeyHeaderInput").value = xhs.thirdPartyKeyHeader || "X-API-Key";
+    document.getElementById("xhsThirdPartyKeyParamInput").value = xhs.thirdPartyKeyParam || "api_key";
+    setSecretDisplayValue("xhsThirdPartyApiKeyInput", s.xhsThirdPartyApiKey || "");
+
+    updateContentSearchApiKeyPlaceholder();
+    updateXhsOfficialTokenStatus();
+    updateWechatModeHelp();
+    updateXhsModeHelp();
+    setContentSourceStatus(`内容源设置已读取。当前搜索 Provider：${s.searchProvider || "html"}。`);
+    if (showToastOnDone) showToast("内容源设置已读取");
+  } catch (e) {
+    setContentSourceStatus("读取内容源设置失败：" + e.message, true);
+  }
+}
+
+async function saveContentSourceSettings() {
+  if (sessionMode !== "account") {
+    alert("请先登录账号，再保存内容源设置。");
+    return;
+  }
+
+  const provider = document.getElementById("contentSearchProviderInput").value;
+  const payload = {
+    searchProvider: provider,
+    bingEndpoint: document.getElementById("contentBingEndpointInput").value.trim(),
+    defaultSources: {
+      wechat: document.getElementById("contentDefaultWechatInput").checked,
+      xiaohongshu: document.getElementById("contentDefaultXhsInput").checked,
+      blog: document.getElementById("contentDefaultBlogInput").checked,
+      web: document.getElementById("contentDefaultWebInput").checked
+    },
+    wechat: {
+      mode: document.getElementById("wechatModeInput").value,
+      appId: document.getElementById("wechatAppIdInput").value.trim(),
+      thirdPartyBaseUrl: document.getElementById("wechatThirdPartyBaseUrlInput").value.trim(),
+      thirdPartyKeyMode: document.getElementById("wechatThirdPartyKeyModeInput").value || "authorization_bearer",
+      thirdPartyKeyHeader: document.getElementById("wechatThirdPartyKeyHeaderInput").value.trim() || "Authorization",
+      thirdPartyKeyParam: document.getElementById("wechatThirdPartyKeyParamInput").value.trim() || "api_key",
+      thirdPartyQueryParams: collectApiParamRows("wechatThirdParty"),
+      sogouSearchUrl: document.getElementById("wechatSogouSearchUrlInput").value.trim() || WECHAT_SOGOU_SEARCH_ENDPOINT,
+      sogouPages: document.getElementById("wechatSogouPagesInput").value || "3",
+      sogouResultLimit: document.getElementById("wechatSogouResultLimitInput").value || "18",
+      sogouQueryParams: collectApiParamRows("wechatSogou")
+    },
+    xiaohongshu: {
+      mode: document.getElementById("xhsModeInput").value,
+      appId: document.getElementById("xhsAppIdInput").value.trim(),
+      officialAuthUrl: document.getElementById("xhsOfficialAuthUrlInput").value.trim() || "https://ark.xiaohongshu.com/ark/authorization",
+      officialRedirectUri: document.getElementById("xhsOfficialRedirectUriInput").value.trim(),
+      officialSearchUrl: document.getElementById("xhsOfficialSearchUrlInput").value.trim(),
+      officialDetailUrl: document.getElementById("xhsOfficialDetailUrlInput").value.trim(),
+      officialAccessTokenExpiresAt: savedDatetimeFromLocalInput(document.getElementById("xhsOfficialAccessTokenExpiresAtInput").value),
+      officialTokenMode: document.getElementById("xhsOfficialTokenModeInput").value || "authorization_bearer",
+      officialTokenHeader: document.getElementById("xhsOfficialTokenHeaderInput").value.trim() || "Authorization",
+      officialTokenParam: document.getElementById("xhsOfficialTokenParamInput").value.trim() || "access_token",
+      officialDetailIdParam: document.getElementById("xhsOfficialDetailIdParamInput").value.trim() || "note_id",
+      officialSearchQueryParams: collectApiParamRows("xhsOfficial"),
+      thirdPartyBaseUrl: document.getElementById("xhsThirdPartyBaseUrlInput").value.trim() || RNOTE_XHS_SEARCH_ENDPOINT,
+      thirdPartyKeyMode: document.getElementById("xhsThirdPartyKeyModeInput").value || "x_api_key",
+      thirdPartyKeyHeader: document.getElementById("xhsThirdPartyKeyHeaderInput").value.trim() || "X-API-Key",
+      thirdPartyKeyParam: document.getElementById("xhsThirdPartyKeyParamInput").value.trim() || "api_key",
+      thirdPartyQueryParams: collectApiParamRows("xhsThirdParty"),
+      imageDetailUrl: document.getElementById("xhsImageDetailUrlInput").value.trim() || RNOTE_XHS_IMAGE_DETAIL_ENDPOINT,
+      videoDetailUrl: document.getElementById("xhsVideoDetailUrlInput").value.trim() || RNOTE_XHS_VIDEO_DETAIL_ENDPOINT
+    }
+  };
+
+  Object.assign(payload, pendingSecretUpdates.contentSources);
+
+  setContentSourceStatus("正在保存内容源设置...");
+  try {
+    const data = await apiFetch("/api/content-sources/settings", { method: "PUT", body: payload });
+    lastContentSourceSettings = data.settings || {};
+    clearPendingSecrets("contentSources");
+    await loadContentSourceSettings(false);
+    updateWechatModeHelp();
+    updateXhsModeHelp();
+    setContentSourceStatus("内容源设置已保存。搜索和正文抓取由这里的内容源配置完成；LLM 相关选项请在 AI 设置中管理。");
+    showToast("内容源设置已保存");
+  } catch (e) {
+    setContentSourceStatus("保存内容源设置失败：" + e.message, true);
+  }
+}
+
+async function clearContentSourceApiKeys() {
+  if (sessionMode !== "account") {
+    clearPendingSecrets("contentSources");
+    ["braveApiKeyInput", "bingApiKeyInput", "serpApiKeyInput", "tavilyApiKeyInput",
+     "wechatAppSecretInput", "wechatThirdPartyApiKeyInput", "xhsAppSecretInput", "xhsOfficialAccessTokenInput", "xhsThirdPartyApiKeyInput"]
+      .forEach(id => {
+        setSecretDisplayValue(id, "");
+      });
+    showToast("已清空当前页面的内容源 Key");
+    return;
+  }
+  if (!confirm("确定清空当前账号保存的全部内容源 API Key / Secret 吗？")) return;
+  setContentSourceStatus("正在清空内容源 API Key...");
+  try {
+    await apiFetch("/api/content-sources/settings", {
+      method: "PUT",
+      body: {
+        clearBraveApiKey: true,
+        clearBingApiKey: true,
+        clearSerpApiKey: true,
+        clearTavilyApiKey: true,
+        clearWechatAppSecret: true,
+        clearWechatThirdPartyApiKey: true,
+        clearXhsAppSecret: true,
+        clearXhsOfficialAccessToken: true,
+        clearXhsThirdPartyApiKey: true
+      }
+    });
+    clearPendingSecrets("contentSources");
+    ["braveApiKeyInput", "bingApiKeyInput", "serpApiKeyInput", "tavilyApiKeyInput",
+     "wechatAppSecretInput", "wechatThirdPartyApiKeyInput", "xhsAppSecretInput", "xhsOfficialAccessTokenInput", "xhsThirdPartyApiKeyInput"]
+      .forEach(id => {
+        setSecretDisplayValue(id, "");
+      });
+    await loadContentSourceSettings(false);
+    setContentSourceStatus("内容源 API Key 已清空。");
+    showToast("内容源 API Key 已清空");
+  } catch (e) {
+    setContentSourceStatus("清空内容源 API Key 失败：" + e.message, true);
+  }
+}
+
+function setLlmSettingsStatus(message, isError = false) {
+  const el = document.getElementById("llmSettingsStatus");
+  if (!el) return;
+  el.textContent = message;
+  el.style.color = isError ? "var(--red)" : "var(--muted)";
+}
+
+async function loadLlmSettings(showToastOnDone = true) {
+  if (sessionMode !== "account") {
+    setLlmSettingsStatus("请先登录账号，再保存 AI 设置。", true);
+    return;
+  }
+
+  try {
+    const data = await apiFetch("/api/llm/settings");
+    const s = data.settings || {};
+    document.getElementById("llmProviderInput").value = s.provider || "deepseek";
+    document.getElementById("llmBaseUrlInput").value = s.baseUrl || "https://api.deepseek.com";
+    document.getElementById("llmModelInput").value = s.model || "deepseek-chat";
+    clearPendingSecrets("llm");
+    setSecretDisplayValue("llmApiKeyInput", s.apiKey || "");
+    document.getElementById("llmCandidateFilterInput").checked = Boolean(s.candidateFilterEnabled);
+    document.getElementById("llmCandidateFilterPromptInput").value = s.candidateFilterPrompt || "";
+    document.getElementById("llmPromptInput").value = s.promptTemplate || "";
+    setLlmSettingsStatus(s.hasApiKey ? "AI 设置已读取。" : "AI 设置已读取，但还没有保存 API Key。");
+    if (showToastOnDone) showToast("AI 设置已读取");
+  } catch (e) {
+    setLlmSettingsStatus("读取 AI 设置失败：" + e.message, true);
+  }
+}
+
+async function saveLlmSettings() {
+  if (sessionMode !== "account") {
+    alert("请先登录账号，再保存 AI 设置。");
+    return;
+  }
+
+  const payload = {
+    provider: document.getElementById("llmProviderInput").value,
+    baseUrl: document.getElementById("llmBaseUrlInput").value.trim(),
+    model: document.getElementById("llmModelInput").value.trim(),
+    candidateFilterEnabled: document.getElementById("llmCandidateFilterInput").checked,
+    candidateFilterPrompt: document.getElementById("llmCandidateFilterPromptInput").value,
+    promptTemplate: document.getElementById("llmPromptInput").value
+  };
+  Object.assign(payload, pendingSecretUpdates.llm);
+
+  setLlmSettingsStatus("正在保存 AI 设置...");
+  try {
+    const data = await apiFetch("/api/llm/settings", { method: "PUT", body: payload });
+    const s = data.settings || {};
+    clearPendingSecrets("llm");
+    setSecretDisplayValue("llmApiKeyInput", s.apiKey || "");
+    setLlmSettingsStatus(s.hasApiKey ? "AI 设置已保存。" : "AI 设置已保存，API Key 已清空。");
+    showToast("AI 设置已保存");
+  } catch (e) {
+    setLlmSettingsStatus("保存 AI 设置失败：" + e.message, true);
+  }
+}
+
+async function testLlmSettings() {
+  if (sessionMode !== "account") {
+    alert("请先登录账号，再测试 AI 设置。");
+    return;
+  }
+  setLlmSettingsStatus("正在测试 LLM 连接...");
+  try {
+    await apiFetch("/api/llm/test", { method: "POST", body: {} });
+    setLlmSettingsStatus("LLM 连接测试成功。");
+    showToast("LLM 连接成功");
+  } catch (e) {
+    setLlmSettingsStatus("LLM 连接测试失败：" + e.message, true);
+  }
+}
+
+async function clearLlmApiKey() {
+  if (sessionMode !== "account") {
+    delete pendingSecretUpdates.llm.apiKey;
+    setSecretDisplayValue("llmApiKeyInput", "");
+    showToast("已清空当前页面的 LLM Key");
+    return;
+  }
+  if (!confirm("确定清空当前账号保存的 LLM API Key 吗？")) return;
+  setLlmSettingsStatus("正在清空 LLM API Key...");
+  try {
+    const data = await apiFetch("/api/llm/settings/api-key", { method: "DELETE" });
+    const s = data.settings || {};
+    clearPendingSecrets("llm");
+    setSecretDisplayValue("llmApiKeyInput", "");
+    setLlmSettingsStatus("LLM API Key 已清空。");
+    showToast("LLM API Key 已清空");
+  } catch (e) {
+    setLlmSettingsStatus("清空 LLM API Key 失败：" + e.message, true);
+  }
+}
+
+function currentResearchStop() {
+  if (currentResearchDayIndex === null || currentResearchStopIndex === null) return null;
+  return currentDays()[currentResearchDayIndex]?.stops?.[currentResearchStopIndex] || null;
+}
+
+function researchStopId(stop) {
+  if (!stop.id) stop.id = makeClientId("stop");
+  return stop.id;
+}
+
+function defaultResearchQuery(stop) {
+  return buildResearchQueryFromKeywords(buildResearchKeywordTokens(stop).filter(item => item.selected).map(item => item.text));
+}
+
+function uniqueResearchKeywords(values) {
+  const seen = new Set();
+  return values
+    .map(v => String(v || "").trim())
+    .filter(Boolean)
+    .filter(v => {
+      const key = v.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
+function buildResearchKeywordTokens(stop, selectedKeywords = null) {
+  const defaults = uniqueResearchKeywords([
+    stop.name,
+    ...parseBirdNames(stop.birds).slice(0, 8),
+    "观鸟",
+    "攻略"
+  ]);
+  const selectedSet = selectedKeywords
+    ? new Set(selectedKeywords.map(v => String(v || "").trim()).filter(Boolean))
+    : new Set(defaults);
+  return defaults.map(text => ({ text, selected: selectedSet.has(text) }));
+}
+
+function buildResearchQueryFromKeywords(keywords, manualText = "") {
+  return uniqueResearchKeywords([...(keywords || []), ...String(manualText || "").split(/\s+/)]).join(" ");
+}
+
+function selectedResearchKeywords() {
+  return researchKeywordTokens.filter(item => item.selected).map(item => item.text);
+}
+
+function inputResearchKeywords() {
+  return uniqueResearchKeywords(document.getElementById("researchQueryInput").value.split(/\s+/));
+}
+
+function activeResearchKeywords() {
+  return uniqueResearchKeywords([...selectedResearchKeywords(), ...inputResearchKeywords()]);
+}
+
+function renderResearchKeywordChips() {
+  const el = document.getElementById("researchKeywordChips");
+  if (!el) return;
+  el.innerHTML = researchKeywordTokens.map((item, index) => `
+    <button type="button" class="research-keyword-chip ${item.selected ? "active" : ""}" onclick="toggleResearchKeyword(${index})">
+      ${escapeHtml(item.text)}
+    </button>
+  `).join("");
+}
+
+function syncResearchInputFromKeywords() {
+  document.getElementById("researchQueryInput").value = buildResearchQueryFromKeywords(selectedResearchKeywords());
+}
+
+function syncResearchKeywordSelectionFromInput() {
+  const query = document.getElementById("researchQueryInput").value;
+  const terms = new Set(inputResearchKeywords());
+  researchKeywordTokens = researchKeywordTokens.map(item => ({ ...item, selected: terms.has(item.text) || query.includes(item.text) }));
+  renderResearchKeywordChips();
+}
+
+function escapeRegExp(s) {
+  return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function toggleResearchKeyword(index) {
+  const token = researchKeywordTokens[index];
+  if (!token) return;
+  const input = document.getElementById("researchQueryInput");
+  const query = input.value;
+  const terms = inputResearchKeywords();
+  const hasTerm = terms.includes(token.text) || query.includes(token.text);
+  let nextTerms;
+  if (hasTerm || token.selected) {
+    const nextQuery = query.replace(new RegExp(escapeRegExp(token.text), "g"), " ").replace(/\s+/g, " ").trim();
+    nextTerms = uniqueResearchKeywords(nextQuery.split(/\s+/));
+    input.value = nextQuery;
+    researchKeywordTokens[index] = { ...token, selected: false };
+  } else {
+    nextTerms = [...terms, token.text];
+    researchKeywordTokens[index] = { ...token, selected: true };
+    input.value = buildResearchQueryFromKeywords(nextTerms);
+  }
+  syncResearchKeywordSelectionFromInput();
+}
+
+function setResearchStatus(message, isError = false) {
+  const el = document.getElementById("researchStatus");
+  if (!el) return;
+  el.textContent = message;
+  el.style.color = isError ? "var(--red)" : "var(--muted)";
+}
+
+function setResearchProgress(active, message = "") {
+  const el = document.getElementById("researchProgress");
+  const text = document.getElementById("researchProgressText");
+  if (!el) return;
+  el.classList.toggle("active", Boolean(active));
+  el.setAttribute("aria-busy", active ? "true" : "false");
+  if (text) text.textContent = message || "处理中...";
+}
+
+function setResearchBusy(active, message = "") {
+  researchBusy = Boolean(active);
+  setResearchProgress(researchBusy, message);
+  document.querySelectorAll(".research-action").forEach(button => {
+    button.disabled = researchBusy;
+  });
+}
+
+function selectedResearchSources() {
+  return Array.from(document.querySelectorAll(".research-source:checked")).map(el => el.value);
+}
+
+function selectedResearchArticles() {
+  return researchArticles.filter((_, index) => {
+    const box = document.getElementById(`researchArticleSelect${index}`);
+    return box && box.checked;
+  });
+}
+
+function renderResearchArticles() {
+  const el = document.getElementById("researchArticles");
+  if (!el) return;
+
+  if (!researchArticles.length) {
+    el.innerHTML = `<div class="hint">暂无候选文章。可以先搜索，或手动粘贴链接。</div>`;
+    return;
+  }
+
+  el.innerHTML = researchArticles.map((article, index) => {
+    const providerText = [article.source || "manual", article.provider, article.note_id ? `note_id:${article.note_id}` : "", article.note_type ? `type:${article.note_type}` : ""].filter(Boolean).join("｜");
+    const fetchLabel = article.loading ? "抓取中..." : (article.provider === "rnote" && !article.text ? "抓取详情" : (article.text ? "重新抓取正文" : "抓取正文"));
+    const fetchDisabled = researchBusy || article.loading ? "disabled" : "";
+    const textStatus = article.loading ? "正在抓取正文..." : (article.text ? `正文 ${article.text.length} 字` : "尚未抓取正文");
+    return `
+      <div class="research-article">
+        <div class="research-article-title">
+          <label>
+            <input id="researchArticleSelect${index}" type="checkbox" ${article.selected === false ? "" : "checked"}>
+            <span>${escapeHtml(article.title || article.url || "未命名文章")}</span>
+          </label>
+        </div>
+        <div class="research-article-meta">${escapeHtml(providerText)}${article.url ? `｜${escapeHtml(article.url)}` : ""}</div>
+        ${article.snippet ? `<div>${escapeHtml(article.snippet)}</div>` : ""}
+        ${article.llmFilterReason ? `<div class="hint">LLM 筛选：${escapeHtml(article.llmFilterReason)}</div>` : ""}
+        <div class="row" style="margin-top:8px;">
+          <button class="small-btn research-action" onclick="fetchResearchArticleText(${index})" ${fetchDisabled}>${fetchLabel}</button>
+          ${article.url ? `<a class="small-btn blue" href="${escapeHtml(article.url)}" target="_blank" rel="noopener noreferrer">打开原文</a>` : ""}
+          <span class="hint">${textStatus}</span>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function inlineMarkdown(text) {
+  let html = escapeHtml(text);
+  html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+  return html;
+}
+
+function markdownToHtml(markdown) {
+  const lines = String(markdown || "").replace(/\r\n/g, "\n").split("\n");
+  const html = [];
+  let listType = "";
+
+  const closeList = () => {
+    if (listType) {
+      html.push(`</${listType}>`);
+      listType = "";
+    }
+  };
+
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) {
+      closeList();
+      continue;
+    }
+    const heading = line.match(/^(#{1,3})\s+(.+)$/);
+    if (heading) {
+      closeList();
+      const level = heading[1].length;
+      html.push(`<h${level}>${inlineMarkdown(heading[2])}</h${level}>`);
+      continue;
+    }
+    const unordered = line.match(/^[-*]\s+(.+)$/);
+    if (unordered) {
+      if (listType !== "ul") {
+        closeList();
+        listType = "ul";
+        html.push("<ul>");
+      }
+      html.push(`<li>${inlineMarkdown(unordered[1])}</li>`);
+      continue;
+    }
+    const ordered = line.match(/^\d+\.\s+(.+)$/);
+    if (ordered) {
+      if (listType !== "ol") {
+        closeList();
+        listType = "ol";
+        html.push("<ol>");
+      }
+      html.push(`<li>${inlineMarkdown(ordered[1])}</li>`);
+      continue;
+    }
+    closeList();
+    html.push(`<p>${inlineMarkdown(line)}</p>`);
+  }
+  closeList();
+  return html.join("");
+}
+
+function researchSummaryMarkdown() {
+  if (!researchSummaryResult) return "";
+  if (typeof researchSummaryResult === "string") return researchSummaryResult;
+  return researchSummaryResult.summaryMarkdown ||
+    researchSummaryResult.markdown ||
+    (typeof researchSummaryResult.summary === "string" ? researchSummaryResult.summary : "") ||
+    researchSummaryResult.raw ||
+    "";
+}
+
+function renderResearchSummary() {
+  const el = document.getElementById("researchSummary");
+  if (!el) return;
+  if (!researchSummaryResult) {
+    el.textContent = "暂无解析结果。";
+    return;
+  }
+  const markdown = researchSummaryMarkdown();
+  if (markdown) {
+    el.innerHTML = markdownToHtml(markdown);
+    return;
+  }
+  el.textContent = JSON.stringify(researchSummaryResult.summary || researchSummaryResult, null, 2);
+}
+
+async function openResearchDialog(dayIndex, stopIndex) {
+  if (sessionMode !== "account" || !currentUser) {
+    alert("攻略文章模块需要登录账号，因为 API Key 和攻略结果保存在本机后端用户目录。");
+    return;
+  }
+
+  ensureTripRecordIds();
+  persistLocalTripsOnly();
+  currentResearchDayIndex = dayIndex;
+  currentResearchStopIndex = stopIndex;
+  const stop = currentResearchStop();
+  if (!stop) return;
+
+  document.getElementById("researchTitle").textContent = `鸟点攻略文章｜${stop.name}`;
+  researchKeywordTokens = buildResearchKeywordTokens(stop);
+  renderResearchKeywordChips();
+  syncResearchInputFromKeywords();
+  document.getElementById("researchUrlInput").value = "";
+  applyContentSourceDefaultsToResearch();
+  researchArticles = [];
+  researchSummaryResult = null;
+  renderResearchArticles();
+  renderResearchSummary();
+  setResearchStatus("正在读取已保存攻略...");
+
+  researchDialog.showModal();
+
+  try {
+    const data = await apiFetch(`/api/trips/${encodeURIComponent(currentTrip().id)}/research/${encodeURIComponent(researchStopId(stop))}`);
+    const research = data.research || {};
+    if (Array.isArray(research.articles)) researchArticles = research.articles;
+    if (research.summaryMarkdown) {
+      researchSummaryResult = { summaryMarkdown: research.summaryMarkdown };
+    } else if (typeof research.summary === "string" && research.summary.trim()) {
+      researchSummaryResult = { summaryMarkdown: research.summary };
+    } else if (research.summary && Object.keys(research.summary).length) {
+      researchSummaryResult = { summary: research.summary };
+    }
+    if (Array.isArray(research.keywords) && research.keywords.length) {
+      researchKeywordTokens = buildResearchKeywordTokens(stop, research.keywords);
+      renderResearchKeywordChips();
+      if (!research.query) syncResearchInputFromKeywords();
+    }
+    if (research.query) {
+      document.getElementById("researchQueryInput").value = research.query;
+      syncResearchKeywordSelectionFromInput();
+    }
+    renderResearchArticles();
+    renderResearchSummary();
+    setResearchStatus(Object.keys(research).length ? "已读取保存过的攻略结果。" : "暂无保存过的攻略结果。");
+  } catch (e) {
+    setResearchStatus("读取攻略失败：" + e.message, true);
+  }
+}
+
+function closeResearchDialog() {
+  researchDialog.close();
+}
+
+async function searchResearchArticles() {
+  const query = document.getElementById("researchQueryInput").value.trim();
+  const keywords = activeResearchKeywords();
+  if (!query) {
+    alert("请先填写搜索关键词。");
+    return;
+  }
+
+  setResearchStatus("正在搜索候选文章...");
+  try {
+    const sources = selectedResearchSources();
+    const useLocalXhs = sources.includes("xiaohongshu") && isXhsLocalBrowserMode();
+    const backendSources = useLocalXhs ? sources.filter(source => source !== "xiaohongshu") : sources;
+    const errors = [];
+    let filterMode = "rules";
+    let incoming = [];
+
+    if (backendSources.length) {
+      try {
+        const data = await apiFetch("/api/research/search", {
+          method: "POST",
+          body: {
+            query,
+            keywords,
+            sources: backendSources
+          }
+        });
+        incoming.push(...(Array.isArray(data.results) ? data.results : []));
+        if (Array.isArray(data.errors) && data.errors.length) errors.push(...data.errors);
+        filterMode = data.filter || filterMode;
+      } catch (e) {
+        errors.push("backend: " + e.message);
+      }
+    }
+
+    if (useLocalXhs) {
+      setResearchStatus("正在通过本地助手搜索小红书...");
+      try {
+        const data = await xhsHelperFetch("/api/xiaohongshu/search", {
+          method: "POST",
+          body: {
+            username: xhsHelperUsername(),
+            query,
+            limit: 12
+          }
+        });
+        incoming.push(...(Array.isArray(data.results) ? data.results : []));
+      } catch (e) {
+        errors.push("xiaohongshu_local: " + e.message);
+      }
+    }
+
+    const seenUrls = new Set();
+    incoming = incoming.filter(item => {
+      const url = item?.url || "";
+      if (!url || seenUrls.has(url)) return false;
+      seenUrls.add(url);
+      return true;
+    });
+    if (!incoming.length && errors.length) {
+      setResearchStatus("搜索失败：" + errors.join(" / "), true);
+      return;
+    }
+
+    researchArticles = incoming.map(item => ({ ...item, selected: true }));
+    researchSummaryResult = null;
+    renderResearchArticles();
+    renderResearchSummary();
+    const errorText = errors.length ? `；部分来源失败：${errors.join(" / ")}` : "";
+    const filterText = filterMode === "llm"
+      ? "（LLM 已筛选）"
+      : (filterMode === "rules_fallback" ? "（LLM 筛选失败，已用规则兜底）" : "（规则筛选）");
+    const localText = useLocalXhs ? "；小红书来自本地助手" : "";
+    if (incoming.length) {
+      setResearchStatus(`已刷新，找到 ${incoming.length} 条相关候选文章${filterText}${localText}${errorText}`);
+    } else {
+      setResearchStatus(`已刷新，但没有找到相关候选文章${filterText}${localText}；明显无关的搜索结果已被过滤${errorText}`);
+    }
+  } catch (e) {
+    setResearchStatus("搜索失败：" + e.message, true);
+  }
+}
+
+async function fetchResearchArticleText(index) {
+  const article = researchArticles[index];
+  if (!article?.url && !article?.note_id) return;
+
+  researchArticles[index] = { ...article, loading: true };
+  renderResearchArticles();
+  setResearchStatus(`正在抓取正文：${article.title || article.url}`);
+  setResearchBusy(true, `正在抓取正文：${article.title || article.url || "候选文章"}`);
+  try {
+    const data = article.provider === "xhs_local_browser"
+      ? await xhsHelperFetch("/api/xiaohongshu/read-note", {
+          method: "POST",
+          body: { username: xhsHelperUsername(), url: article.url }
+        })
+      : await apiFetch("/api/research/ingest-url", {
+          method: "POST",
+          body: { url: article.url, article }
+        });
+    researchArticles[index] = {
+      ...article,
+      ...data.article,
+      source: article.source || data.article.source || "manual",
+      loading: false,
+      selected: true
+    };
+    renderResearchArticles();
+    setResearchStatus("正文抓取完成。");
+  } catch (e) {
+    if (researchArticles[index]) {
+      researchArticles[index].snippet = researchArticles[index].snippet || `正文抓取失败：${e.message}`;
+      researchArticles[index].loading = false;
+    }
+    renderResearchArticles();
+    setResearchStatus("正文抓取失败：" + e.message, true);
+  } finally {
+    if (researchArticles[index]) {
+      researchArticles[index].loading = false;
+    }
+    renderResearchArticles();
+    setResearchBusy(false);
+  }
+}
+
+async function ingestResearchUrl() {
+  const url = document.getElementById("researchUrlInput").value.trim();
+  if (!url) {
+    alert("请先粘贴文章链接。");
+    return;
+  }
+  const existingIndex = researchArticles.findIndex(a => a.url === url);
+  if (existingIndex >= 0) {
+    await fetchResearchArticleText(existingIndex);
+    return;
+  }
+  researchArticles.unshift({ title: url, url, source: "manual", selected: true });
+  renderResearchArticles();
+  await fetchResearchArticleText(0);
+}
+
+async function summarizeResearchArticles() {
+  const stop = currentResearchStop();
+  if (!stop) return;
+  const articles = selectedResearchArticles();
+  if (!articles.length) {
+    alert("请至少勾选一篇候选文章。");
+    return;
+  }
+
+  setResearchStatus("正在调用 AI 生成攻略...");
+  setResearchBusy(true, "AI 正在生成攻略...");
+  try {
+    const query = document.getElementById("researchQueryInput").value.trim();
+    const keywords = activeResearchKeywords();
+    const data = await apiFetch("/api/research/summarize", {
+      method: "POST",
+      body: {
+        trip: currentTrip(),
+        stop,
+        searchQuery: query,
+        keywords,
+        articles
+      }
+    });
+    researchSummaryResult = data.result;
+    renderResearchSummary();
+    setResearchStatus("AI 攻略文案已生成。");
+    showToast("攻略解析完成");
+  } catch (e) {
+    setResearchStatus("AI 生成失败：" + e.message, true);
+  } finally {
+    setResearchBusy(false);
+  }
+}
+
+async function saveResearchToBackend() {
+  const stop = currentResearchStop();
+  if (!stop) return;
+  if (!researchArticles.length && !researchSummaryResult) {
+    alert("当前没有可保存的攻略内容。");
+    return;
+  }
+
+  setResearchStatus("正在保存攻略结果...");
+  try {
+    await apiFetch(`/api/trips/${encodeURIComponent(currentTrip().id)}/research/${encodeURIComponent(researchStopId(stop))}`, {
+      method: "PUT",
+      body: {
+        stopName: stop.name,
+        query: document.getElementById("researchQueryInput").value.trim(),
+        keywords: activeResearchKeywords(),
+        articles: researchArticles,
+        summary: researchSummaryResult?.summary || {},
+        summaryMarkdown: researchSummaryMarkdown()
+      }
+    });
+    setResearchStatus("攻略结果已保存到本机后端。");
+    showToast("攻略结果已保存");
+  } catch (e) {
+    setResearchStatus("保存攻略失败：" + e.message, true);
+  }
 }
 
 function escapeHtml(s) {
@@ -1220,6 +4370,107 @@ function formatBudgetRange(min, max) {
   const cmax = convertAmount(max);
   const suffix = base !== target && canConvert() ? `（原 ${formatAmount(money(min), base)}–${formatAmount(money(max), base)}）` : "";
   return `${formatAmount(cmin, target)}–${formatAmount(cmax, target)}${suffix}`;
+}
+
+function loadUiSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
+    mapTileEngine = mapTileEngines[saved.mapTileEngine] ? saved.mapTileEngine : "leaflet_osm";
+    navigationEngine = navigationEngines[saved.navigationEngine] ? saved.navigationEngine : "google";
+  } catch (e) {
+    mapTileEngine = "leaflet_osm";
+    navigationEngine = "google";
+  }
+}
+
+function saveUiSettings() {
+  try {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify({ mapTileEngine, navigationEngine }));
+  } catch (e) {}
+}
+
+function renderMapSettings() {
+  const tileSelect = document.getElementById("mapTileEngineSelect");
+  const navSelect = document.getElementById("navigationEngineSelect");
+  const status = document.getElementById("mapEngineStatus");
+  if (tileSelect) tileSelect.value = mapTileEngine;
+  if (navSelect) navSelect.value = navigationEngine;
+  if (status) {
+    const tileLabel = mapTileEngines[mapTileEngine]?.label || "Leaflet / OpenStreetMap";
+    const navLabel = navigationEngines[navigationEngine] || "Google 地图";
+    status.textContent = `当前底图：${tileLabel}；外部导航：${navLabel}。`;
+  }
+}
+
+function createBaseTileLayer(engine = mapTileEngine) {
+  const config = mapTileEngines[engine] || mapTileEngines.leaflet_osm;
+  return L.tileLayer(config.url, config.options);
+}
+
+function applyMapTileEngine() {
+  if (!map || typeof L === "undefined") return;
+  if (baseTileLayer) map.removeLayer(baseTileLayer);
+  baseTileLayer = createBaseTileLayer(mapTileEngine);
+  baseTileLayer.addTo(map);
+}
+
+function setMapTileEngine(engine) {
+  mapTileEngine = mapTileEngines[engine] ? engine : "leaflet_osm";
+  saveUiSettings();
+  applyMapTileEngine();
+  renderMapSettings();
+  showToast(`已切换底图：${mapTileEngines[mapTileEngine].label}`);
+}
+
+function setNavigationEngine(engine) {
+  navigationEngine = navigationEngines[engine] ? engine : "google";
+  saveUiSettings();
+  renderMapSettings();
+  render(currentFilter);
+  showToast(`已切换导航：${navigationEngines[navigationEngine]}`);
+}
+
+function navigationEngineLabel() {
+  return navigationEngines[navigationEngine] || "Google 地图";
+}
+
+function navigationUrl(stop) {
+  const lat = Number(stop?.lat);
+  const lng = Number(stop?.lng);
+  const hasCoord = Number.isFinite(lat) && Number.isFinite(lng);
+  const name = String(stop?.name || "").trim();
+  const encodedName = encodeURIComponent(name || "BirdRoute 目的地");
+
+  if (navigationEngine === "gaode") {
+    if (hasCoord) {
+      return `https://uri.amap.com/navigation?to=${encodeURIComponent(lng + "," + lat + "," + (name || "目的地"))}&mode=car&policy=1&src=BirdRoute&coordinate=wgs84&callnative=1`;
+    }
+    return name ? `https://uri.amap.com/search?keyword=${encodedName}&src=BirdRoute&callnative=1` : "https://ditu.amap.com/";
+  }
+
+  if (navigationEngine === "baidu") {
+    if (hasCoord) {
+      return `https://api.map.baidu.com/direction?destination=${encodeURIComponent(lat + "," + lng)}&mode=driving&region=全球&output=html&src=BirdRoute`;
+    }
+    return name ? `https://map.baidu.com/search/${encodedName}` : "https://map.baidu.com/";
+  }
+
+  if (navigationEngine === "osm") {
+    if (hasCoord) {
+      return `https://www.openstreetmap.org/directions?to=${encodeURIComponent(lat + "," + lng)}#map=13/${lat}/${lng}`;
+    }
+    return name ? `https://www.openstreetmap.org/search?query=${encodedName}` : "https://www.openstreetmap.org/";
+  }
+
+  if (hasCoord) {
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(lat + "," + lng)}&travelmode=driving`;
+  }
+
+  if (name) {
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodedName}&travelmode=driving`;
+  }
+
+  return "https://www.google.com/maps";
 }
 
 function budgetTotals() {
@@ -1375,7 +4626,26 @@ function updateTypeHelp() {
 }
 
 
-function popupHtml(stop, day) {
+
+function googleMapsDirectionsUrl(stop) {
+  return navigationUrl(stop);
+}
+
+function openGoogleMaps(stop) {
+  const url = googleMapsDirectionsUrl(stop);
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
+function googleMapsButtonHtml(stop, extraClass = "") {
+  const url = googleMapsDirectionsUrl(stop);
+  return `<a class="small-btn blue ${extraClass}" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">在 ${escapeHtml(navigationEngineLabel())} 打开</a>`;
+}
+
+
+function popupHtml(stop, day, dayIndex = -1, stopIndex = -1) {
+  const researchButton = stop.type === "bird" && dayIndex >= 0 && stopIndex >= 0
+    ? `<button class="small-btn blue" onclick="openResearchDialog(${dayIndex}, ${stopIndex})">攻略文章</button>`
+    : "";
   return `
     <div class="popup-title">${day}｜${escapeHtml(stop.name)}</div>
     <div class="popup-line"><b>类型：</b>${typeLabels[stop.type] || stop.type}</div>
@@ -1384,6 +4654,7 @@ function popupHtml(stop, day) {
     <div class="popup-birds"><b>${stopMainLabel(stop)}：</b>${escapeHtml(stop.birds)}</div>
     <div class="popup-birds">${escapeHtml(stop.note || "")}</div>
     <div class="popup-line"><b>${stopBudgetLabel(stop)}：</b>${escapeHtml(formatBudgetRange(stop.costMin, stop.costMax))}</div>
+    <div class="popup-actions">${googleMapsButtonHtml(stop)}${researchButton}</div>
   `;
 }
 
@@ -1449,6 +4720,8 @@ function renderCards(days) {
           <div class="cost-text"><b>${stopBudgetLabel(stop)}：</b>${escapeHtml(formatBudgetRange(stop.costMin, stop.costMax))}</div>
           <div class="stop-actions">
             ${stop.type === "bird" ? `<button class="small-btn blue" onclick="openBirdPreview(${actualDayIndex}, ${stopIndex})">鸟种预习</button>` : ""}
+            ${stop.type === "bird" ? `<button class="small-btn blue" onclick="openResearchDialog(${actualDayIndex}, ${stopIndex})">攻略文章</button>` : ""}
+            ${googleMapsButtonHtml(stop)}
             <button class="small-btn" onclick="openEditDialog(${actualDayIndex}, ${stopIndex})">修改</button>
             <button class="small-btn" onclick="moveStop(${actualDayIndex}, ${stopIndex}, -1)">上移</button>
             <button class="small-btn" onclick="moveStop(${actualDayIndex}, ${stopIndex}, 1)">下移</button>
@@ -1476,17 +4749,19 @@ function renderMap(days) {
   routeLayer.clearLayers();
 
   const bounds = [];
+  const allDays = currentDays();
   days.forEach(day => {
+    const actualDayIndex = allDays.findIndex(d => d === day);
     const points = [];
 
-    day.stops.forEach(stop => {
+    day.stops.forEach((stop, stopIndex) => {
       const lat = Number(stop.lat);
       const lng = Number(stop.lng);
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
 
       const marker = L.marker([lat, lng], {
         icon: makeIcon(stop.type, day.day.replace("D",""))
-      }).bindPopup(popupHtml(stop, day.day));
+      }).bindPopup(popupHtml(stop, day.day, actualDayIndex, stopIndex));
 
       marker.addTo(markerLayer);
       bounds.push([lat, lng]);
@@ -1515,11 +4790,13 @@ function renderMap(days) {
 
 function renderSummary() {
   const trip = currentTrip();
+  if (hasTrips()) prepareTripForSave(trip);
   document.title = hasTrips() ? `BirdRoute · ${trip.title || "未命名行程"}` : "BirdRoute · Birding Trip Planner";
   document.getElementById("pageTitle").textContent = hasTrips() ? `BirdRoute · ${trip.title || "未命名行程"}` : "BirdRoute";
   document.getElementById("pageSubtitle").textContent = trip.subtitle || "观鸟行程规划与野外清单";
   document.getElementById("tripSummaryTitle").textContent = trip.title || "路线概览";
   document.getElementById("tripSummaryText").textContent = trip.summary || "暂无概览。";
+  renderTripSocialMeta(trip);
 
   const totals = budgetTotals();
   const currency = activeDisplayCurrency();
@@ -1528,6 +4805,124 @@ function renderSummary() {
   const select = document.getElementById("displayCurrencySelect");
   if (select) select.value = displayCurrency || "";
   updateFxStatus();
+  renderMapSettings();
+}
+
+function renderTripSocialMeta(trip) {
+  const el = document.getElementById("tripSocialMeta");
+  if (!el) return;
+  if (!hasTrips()) {
+    el.innerHTML = "";
+    return;
+  }
+  const visibility = normalizeTripVisibility(trip.visibility);
+  const chips = [
+    `<span class="chip ${visibility}">${TRIP_VISIBILITY_LABELS[visibility]}</span>`,
+    `<span class="chip">地点：${escapeHtml(trip.primaryLocation || "未设置地点")}</span>`,
+    `<span class="chip">属性：${escapeHtml(trip.tripPace || DEFAULT_TRIP_PACE)}</span>`,
+    trip.copiedFromPublic ? `<span class="chip copy">${trip.copyModified ? "公开副本已修改" : "公开副本未修改"}</span>` : ""
+  ];
+  (trip.birdTags || []).slice(0, 6).forEach(tag => chips.push(`<span class="chip">${escapeHtml(tag)}</span>`));
+  el.innerHTML = chips.filter(Boolean).join("");
+}
+
+function publicTripSearchDomIds(context = "app") {
+  return context === "welcome"
+    ? {
+        input: "welcomePublicTripSearchInput",
+        status: "welcomePublicTripSearchStatus",
+        results: "welcomePublicTripSearchResults"
+      }
+    : {
+        input: "publicTripSearchInput",
+        status: "publicTripSearchStatus",
+        results: "publicTripSearchResults"
+      };
+}
+
+function setPublicTripSearchStatus(message, isError = false, context = "app") {
+  const el = document.getElementById(publicTripSearchDomIds(context).status);
+  if (!el) return;
+  el.textContent = message;
+  el.style.color = isError ? "var(--red)" : "var(--muted)";
+}
+
+function renderPublicTripSearchResults(results = [], context = "app") {
+  const el = document.getElementById(publicTripSearchDomIds(context).results);
+  if (!el) return;
+  if (!results.length) {
+    el.innerHTML = `<div class="hint">没有找到匹配的公开行程。</div>`;
+    return;
+  }
+  el.innerHTML = results.map(card => {
+    const tags = [
+      card.primaryLocation ? `地点：${card.primaryLocation}` : "",
+      card.tripPace ? `属性：${card.tripPace}` : "",
+      `${card.dayCount || 0} 天`,
+      `${card.stopCount || 0} 个活动`,
+      ...(card.birdTags || []).slice(0, 5),
+      ...(card.locationTags || []).slice(0, 3)
+    ].filter(Boolean);
+    return `
+      <div class="public-trip-card">
+        <h3>${escapeHtml(card.title || "未命名公开行程")}</h3>
+        <div class="hint">开放用户：${escapeHtml(card.owner || "")}${card.isOwn ? "｜你的公开行程" : ""}</div>
+        <p>${escapeHtml(card.summary || card.subtitle || "暂无简介。")}</p>
+        <div class="chip-row">
+          ${tags.map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join("")}
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <button class="small-btn blue" onclick="importPublicTrip(${escapeHtml(JSON.stringify(card.owner || ""))}, ${escapeHtml(JSON.stringify(card.tripId || ""))}, ${escapeHtml(JSON.stringify(context))})">导入为私有副本</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+async function searchPublicTrips(context = "app") {
+  const query = document.getElementById(publicTripSearchDomIds(context).input)?.value.trim() || "";
+  setPublicTripSearchStatus("正在搜索公开行程...", false, context);
+  try {
+    const data = await apiFetch(`/api/public-trips/search?q=${encodeURIComponent(query)}&limit=30`);
+    renderPublicTripSearchResults(data.results || [], context);
+    setPublicTripSearchStatus(`已找到 ${(data.results || []).length} 条公开行程。`, false, context);
+  } catch (e) {
+    setPublicTripSearchStatus("搜索公开行程失败：" + e.message, true, context);
+  }
+}
+
+async function importPublicTrip(owner, tripId, context = "app") {
+  setPublicTripSearchStatus("正在导入公开行程...", false, context);
+  try {
+    const data = await apiFetch("/api/public-trips/import", {
+      method: "POST",
+      body: { owner, tripId }
+    });
+    const trip = data.trip;
+    if (trip) {
+      if (sessionMode === "pending") {
+        currentUser = null;
+        clearTripRuntimeState();
+        sessionMode = "guest";
+        document.body.classList.remove("welcome-mode");
+        setAuthStatus("");
+        updateAccountStatus();
+      }
+      trips.push(trip);
+      currentTripIndex = trips.length - 1;
+      currentFilter = "ALL";
+      persistLocalTripsOnly();
+      clearEbirdHotspots();
+      render("ALL");
+    }
+    setPublicTripSearchStatus(data.persisted
+      ? "已导入为账号私有副本。修改并保存后，才可以再次设为公开。"
+      : "已导入为游客临时私有副本。本次页面可导出 JSON，但不会写入浏览器缓存。", false, context);
+    showToast("公开行程已导入");
+    if (context === "app") closePublicTripSearchDialog();
+  } catch (e) {
+    setPublicTripSearchStatus("导入公开行程失败：" + e.message, true, context);
+  }
 }
 
 function render(filter = currentFilter) {
@@ -1607,13 +5002,15 @@ function openEditDialog(dayIndex, stopIndex) {
 
 function closeDialog() { dialog.close(); }
 
-function saveStopFromDialog() {
+async function saveStopFromDialog() {
+  if (stopSaveInProgress) return;
   const oldDayIndex = Number(document.getElementById("editDayIndex").value);
   const stopIndexRaw = document.getElementById("editStopIndex").value;
   const stopIndex = stopIndexRaw === "" ? null : Number(stopIndexRaw);
   const newDayIndex = Number(document.getElementById("daySelect").value);
 
   const stop = {
+    id: stopIndex === null ? makeClientId("stop") : (currentDays()[oldDayIndex]?.stops?.[stopIndex]?.id || makeClientId("stop")),
     name: document.getElementById("nameInput").value.trim() || "未命名活动",
     type: document.getElementById("typeInput").value,
     time: document.getElementById("timeInput").value.trim() || "待定",
@@ -1631,6 +5028,22 @@ function saveStopFromDialog() {
     return;
   }
 
+  if (stop.type === "bird") {
+    const names = parseBirdNames(stop.birds);
+    if (names.length) {
+      stopSaveInProgress = true;
+      try {
+        const ok = await ensureBirdMappingsForNames(names, { promptMissing: true });
+        if (!ok) {
+          showToast("已取消保存活动");
+          return;
+        }
+      } finally {
+        stopSaveInProgress = false;
+      }
+    }
+  }
+
   const days = currentDays();
   if (stopIndex === null) {
     days[newDayIndex].stops.push(stop);
@@ -1643,6 +5056,7 @@ function saveStopFromDialog() {
     }
   }
 
+  markTripLocallyModified();
   saveTrips();
   dialog.close();
   render(currentFilter);
@@ -1653,6 +5067,7 @@ function deleteStop(dayIndex, stopIndex) {
   const stop = currentDays()[dayIndex].stops[stopIndex];
   if (!confirm(`确定删除「${stop.name}」吗？`)) return;
   currentDays()[dayIndex].stops.splice(stopIndex, 1);
+  markTripLocallyModified();
   saveTrips();
   render(currentFilter);
   showToast("已删除活动");
@@ -1663,6 +5078,7 @@ function moveStop(dayIndex, stopIndex, direction) {
   const newIndex = stopIndex + direction;
   if (newIndex < 0 || newIndex >= stops.length) return;
   [stops[stopIndex], stops[newIndex]] = [stops[newIndex], stops[stopIndex]];
+  markTripLocallyModified();
   saveTrips();
   render(currentFilter);
   showToast("活动顺序已调整");
@@ -1715,6 +5131,7 @@ function saveDayFromDialog() {
     if (currentFilter === oldDayCode) currentFilter = day.day;
   }
 
+  markTripLocallyModified();
   saveTrips();
   dayDialog.close();
   render(currentFilter);
@@ -1725,6 +5142,7 @@ function deleteDay(dayIndex) {
   const day = currentDays()[dayIndex];
   if (!confirm(`确定删除「${day.day}｜${day.title}」以及其中 ${day.stops.length} 个活动吗？`)) return;
   currentDays().splice(dayIndex, 1);
+  markTripLocallyModified();
   saveTrips();
   if (currentFilter === day.day) currentFilter = "ALL";
   render(currentFilter);
@@ -1736,6 +5154,7 @@ function moveDay(dayIndex, direction) {
   const newIndex = dayIndex + direction;
   if (newIndex < 0 || newIndex >= days.length) return;
   [days[dayIndex], days[newIndex]] = [days[newIndex], days[dayIndex]];
+  markTripLocallyModified();
   saveTrips();
   render(currentFilter);
   showToast("天顺序已调整");
@@ -1750,6 +5169,10 @@ function openTripDialog(tripIndex = null) {
     document.getElementById("tripTitleInput").value = "";
     document.getElementById("tripSubtitleInput").value = "";
     document.getElementById("tripCurrencyInput").value = "CNY";
+    document.getElementById("tripPrimaryLocationInput").value = "";
+    document.getElementById("tripPaceInput").value = DEFAULT_TRIP_PACE;
+    document.getElementById("tripVisibilityInput").value = "private";
+    document.getElementById("tripVisibilityHint").textContent = "新建行程默认为私有；公开后可被其他用户搜索并导入。";
     document.getElementById("tripSummaryInput").value = "";
     document.getElementById("tripCenterLatInput").value = "";
     document.getElementById("tripCenterLngInput").value = "";
@@ -1759,6 +5182,12 @@ function openTripDialog(tripIndex = null) {
     document.getElementById("tripTitleInput").value = trip.title || "";
     document.getElementById("tripSubtitleInput").value = trip.subtitle || "";
     document.getElementById("tripCurrencyInput").value = normalizeCurrency(trip.currency || "CNY");
+    document.getElementById("tripPrimaryLocationInput").value = trip.primaryLocation || deriveTripPrimaryLocation(trip);
+    document.getElementById("tripPaceInput").value = trip.tripPace || DEFAULT_TRIP_PACE;
+    document.getElementById("tripVisibilityInput").value = normalizeTripVisibility(trip.visibility);
+    document.getElementById("tripVisibilityHint").textContent = trip.copiedFromPublic && !trip.copyModified
+      ? "这是从公开行程导入的副本。请先修改并保存一次，再设置为公开检索。"
+      : "公开后可被其他用户按名称、地点、属性和目标鸟种搜索到。";
     document.getElementById("tripSummaryInput").value = trip.summary || "";
     document.getElementById("tripCenterLatInput").value = trip.center?.lat ?? "";
     document.getElementById("tripCenterLngInput").value = trip.center?.lng ?? "";
@@ -1776,19 +5205,37 @@ function saveTripFromDialog() {
   const title = document.getElementById("tripTitleInput").value.trim() || "未命名整体行程";
   const centerLat = Number(document.getElementById("tripCenterLatInput").value);
   const centerLng = Number(document.getElementById("tripCenterLngInput").value);
+  let visibility = normalizeTripVisibility(document.getElementById("tripVisibilityInput").value);
+  const existingTrip = idx === null ? null : trips[idx];
+  if (visibility === "public" && existingTrip?.copiedFromPublic && !existingTrip.copyModified) {
+    alert("这是从公开行程导入的副本。请先对行程内容进行修改并保存后，再设置为公开检索。");
+    visibility = "private";
+  }
 
   const trip = {
+    id: idx === null ? makeClientId("trip") : (trips[idx].id || makeClientId("trip")),
     title,
     subtitle: document.getElementById("tripSubtitleInput").value.trim() || "自定义旅行行程",
     currency: normalizeCurrency(document.getElementById("tripCurrencyInput").value.trim() || "CNY"),
     summary: document.getElementById("tripSummaryInput").value.trim() || "暂无概览。",
+    primaryLocation: document.getElementById("tripPrimaryLocationInput").value.trim(),
+    tripPace: document.getElementById("tripPaceInput").value || DEFAULT_TRIP_PACE,
+    visibility,
     center: {
       lat: Number.isFinite(centerLat) ? centerLat : 23.7,
       lng: Number.isFinite(centerLng) ? centerLng : 121.0,
       zoom: 7
     },
-    days: idx === null ? [{ day: "D1", title: "第一天", stay: "住宿：待定", stops: [] }] : trips[idx].days
+    createdAt: idx === null ? new Date().toISOString() : (trips[idx].createdAt || new Date().toISOString()),
+    days: idx === null ? [{ day: "D1", title: "第一天", stay: "住宿：待定", stops: [] }] : trips[idx].days,
+    copiedFromPublic: existingTrip?.copiedFromPublic || false,
+    sourcePublicTripOwner: existingTrip?.sourcePublicTripOwner || "",
+    sourcePublicTripId: existingTrip?.sourcePublicTripId || "",
+    sourcePublicTripTitle: existingTrip?.sourcePublicTripTitle || "",
+    sourceFingerprint: existingTrip?.sourceFingerprint || "",
+    copyModified: existingTrip?.copyModified || false
   };
+  prepareTripForSave(trip);
 
   if (idx === null) {
     trips.push(trip);
@@ -1804,22 +5251,73 @@ function saveTripFromDialog() {
   showToast("整体行程已保存");
 }
 
-function deleteTrip() {
+async function deleteTrip() {
   if (!hasTrips()) {
     alert("当前没有行程。");
     return;
   }
 
-  const trip = currentTrip();
-  if (!confirm(`确定删除整体行程「${trip.title}」吗？`)) return;
+  const selectedIndex = Number(document.getElementById("tripSelect")?.value);
+  const targetIndex = Number.isInteger(selectedIndex) && selectedIndex >= 0 && selectedIndex < trips.length
+    ? selectedIndex
+    : currentTripIndex;
+  const trip = trips[targetIndex];
+  if (!trip) {
+    alert("当前没有选中的行程。");
+    return;
+  }
+  currentTripIndex = targetIndex;
+  if (!confirm(`确定删除当前行程「${trip.title || "未命名行程"}」吗？`)) return;
 
-  trips.splice(currentTripIndex, 1);
+  const tripId = trip.id || "";
+  if (sessionMode === "account" && currentUser) {
+    if (!tripId) {
+      alert("当前行程缺少 ID，无法安全删除。请先刷新账号行程后再试。");
+      return;
+    }
+
+    updateAccountStatus("正在保存当前修改后删除行程...");
+    const syncIdle = await flushScheduledBackendSync();
+    if (!syncIdle) {
+      updateAccountStatus("删除已暂停：当前同步尚未完成");
+      alert("当前账号同步还没有完成。请稍后再删除这个行程。");
+      return;
+    }
+
+    try {
+      updateAccountStatus(`正在删除当前行程：${trip.title || "未命名行程"}`);
+      await apiFetch(`/api/trips/${encodeURIComponent(tripId)}`, { method: "DELETE" });
+      const nextIndex = Math.max(0, Math.min(targetIndex, trips.length - 2));
+      await loadTripsFromBackend();
+      currentTripIndex = Math.max(0, Math.min(nextIndex, trips.length - 1));
+      currentFilter = "ALL";
+      persistLocalTripsOnly();
+      clearEbirdHotspots();
+      render("ALL");
+      updateAccountStatus(`已删除当前行程：${currentUser.username}`);
+      showToast("已删除当前行程");
+      return;
+    } catch (e) {
+      if (!/行程不存在/.test(e.message || "")) {
+        updateAccountStatus(`删除失败：${e.message}`);
+        alert("删除当前行程失败：" + e.message);
+        return;
+      }
+      await loadTripsFromBackend();
+      showToast("当前行程已不存在，已刷新行程列表");
+      return;
+    }
+  }
+
+  const removeIndex = tripId ? trips.findIndex(item => item.id === tripId) : currentTripIndex;
+  trips.splice(removeIndex >= 0 ? removeIndex : currentTripIndex, 1);
   currentTripIndex = Math.max(0, Math.min(currentTripIndex, trips.length - 1));
   currentFilter = "ALL";
-  saveTrips();
+  persistLocalTripsOnly();
   clearEbirdHotspots();
   render("ALL");
-  showToast("已删除整体行程");
+  updateAccountStatus();
+  showToast("已删除当前行程");
 }
 
 
@@ -1978,23 +5476,17 @@ function closeEbirdHelp() {
 
 async function loadEbirdHotspots() {
   if (!map || !ebirdLayer) return;
-
-  const token = document.getElementById("ebirdTokenInput").value.trim();
-  if (!token) {
-    alert("eBird 官方 API 需要 token。请先填写 eBird API Token。");
+  if (sessionMode !== "account") {
+    alert("请先登录账号并保存 eBird API Token。游客模式不会把 token 暴露给前端。");
     return;
   }
 
   const center = map.getCenter();
-  const url = `https://api.ebird.org/v2/ref/hotspot/geo?lat=${center.lat.toFixed(6)}&lng=${center.lng.toFixed(6)}&fmt=json&dist=50`;
+  const url = `/api/ebird/hotspots?lat=${encodeURIComponent(center.lat.toFixed(6))}&lng=${encodeURIComponent(center.lng.toFixed(6))}&dist=50`;
 
   try {
-    const res = await fetch(url, {
-      headers: { "X-eBirdApiToken": token }
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-    const data = await res.json();
+    const payload = await apiFetch(url);
+    const data = Array.isArray(payload.hotspots) ? payload.hotspots : [];
     ebirdLayer.clearLayers();
 
     data.forEach(h => {
@@ -2076,41 +5568,103 @@ function validateImported(data) {
   throw new Error("JSON 格式不支持。请导入当前行程/全部行程导出的 JSON。");
 }
 
+function normalizeImportedTripsForAppend(imported) {
+  const usedIds = new Set(trips.map(trip => trip.id).filter(Boolean));
+  return imported.map(rawTrip => {
+    const trip = deepCopy(rawTrip);
+    trip.title = trip.title || "导入行程";
+    trip.subtitle = trip.subtitle || "自定义旅行行程";
+    trip.currency = normalizeCurrency(trip.currency || "CNY");
+    trip.summary = trip.summary || "暂无概览。";
+    trip.center = trip.center || { lat: 23.7, lng: 121.0, zoom: 7 };
+    trip.days = trip.days || [];
+    trip.visibility = "private";
+    trip.copiedFromPublic = false;
+    trip.copyModified = false;
+    trip.sourceFingerprint = "";
+    trip.id = makeClientId("trip");
+    while (usedIds.has(trip.id)) trip.id = makeClientId("trip");
+    usedIds.add(trip.id);
+    trip.createdAt = new Date().toISOString();
+    prepareTripForSave(trip);
+    return trip;
+  });
+}
+
+async function commitImportedTrips(imported) {
+  if (!imported.length) return;
+
+  if (sessionMode === "account" && currentUser) {
+    updateAccountStatus("正在保存当前修改后导入行程...");
+    const syncIdle = await flushScheduledBackendSync();
+    if (!syncIdle) {
+      throw new Error("当前账号同步还没有完成，请稍后再导入。");
+    }
+
+    updateAccountStatus(`正在导入 ${imported.length} 个行程...`);
+    const saved = [];
+    for (const trip of imported) {
+      const data = await apiFetch(`/api/trips/${encodeURIComponent(trip.id)}`, {
+        method: "PUT",
+        body: { trip }
+      });
+      saved.push(data.trip || trip);
+    }
+
+    const firstImportedId = saved[0]?.id || imported[0]?.id || "";
+    await loadTripsFromBackend();
+    const importedIndex = trips.findIndex(trip => trip.id === firstImportedId);
+    if (importedIndex >= 0) currentTripIndex = importedIndex;
+    currentFilter = "ALL";
+    persistLocalTripsOnly();
+    clearEbirdHotspots();
+    render("ALL");
+    updateAccountStatus(`已导入行程：${currentUser.username}`);
+    return;
+  }
+
+  const firstImportedIndex = trips.length;
+  trips.push(...imported);
+  currentTripIndex = firstImportedIndex;
+  currentFilter = "ALL";
+  saveTrips();
+  clearEbirdHotspots();
+  render("ALL");
+}
+
 function importTrips(event) {
-  const file = event.target.files[0];
+  const fileInput = event.target;
+  const file = fileInput.files[0];
   if (!file) return;
 
   const reader = new FileReader();
-  reader.onload = () => {
+  reader.onload = async () => {
     try {
-      const imported = validateImported(JSON.parse(reader.result));
-      imported.forEach(t => {
-        t.title = t.title || "导入行程";
-        t.subtitle = t.subtitle || "自定义旅行行程";
-        t.currency = normalizeCurrency(t.currency || "CNY");
-        t.summary = t.summary || "暂无概览。";
-        t.center = t.center || { lat: 23.7, lng: 121.0, zoom: 7 };
-        t.days = t.days || [];
-      });
+      const imported = normalizeImportedTripsForAppend(validateImported(JSON.parse(reader.result)));
 
-      trips = imported;
-      currentTripIndex = 0;
-      currentFilter = "ALL";
-      saveTrips();
-      clearEbirdHotspots();
-      render("ALL");
-      showToast("导入成功");
+      const birdNames = collectBirdNamesFromTrips(imported);
+      const mappingOk = await ensureBirdMappingsForNames(birdNames, { promptMissing: true });
+      if (!mappingOk) {
+        showToast("已取消导入");
+        return;
+      }
+
+      await commitImportedTrips(imported);
+      showToast(`导入成功：新增 ${imported.length} 个行程`);
     } catch (e) {
       alert("导入失败：" + e.message);
     } finally {
-      event.target.value = "";
+      fileInput.value = "";
     }
   };
   reader.readAsText(file, "utf-8");
 }
 
 function resetAll() {
-  if (!confirm("确定恢复默认数据吗？当前浏览器中保存的所有行程会被覆盖。")) return;
+  const message = sessionMode === "account"
+    ? "确定清空当前账号的全部行程吗？此操作会同步到后端本地 JSON。"
+    : "确定清空当前游客临时行程吗？游客模式不会保存浏览器缓存。";
+  if (!confirm(message)) return;
   trips = deepCopy(defaultTrips);
   currentTripIndex = 0;
   currentFilter = "ALL";
@@ -2124,32 +5678,31 @@ function resetAll() {
 
 
 function loadXcToken() {
-  try {
-    const token = localStorage.getItem(STORAGE_KEY + "_xc_token") || "";
-    const input = document.getElementById("xcTokenInput");
-    if (input) input.value = token;
-    return token;
-  } catch (e) {
-    return "";
-  }
+  return getXcToken();
 }
 
 function getXcToken() {
-  const input = document.getElementById("xcTokenInput");
-  return (input?.value || "").trim();
+  return pendingSecretUpdates.apiCredentials.xcToken || "";
 }
 
 function saveXcToken() {
-  try {
-    localStorage.setItem(STORAGE_KEY + "_xc_token", getXcToken());
-  } catch (e) {}
+  return saveAccountApiCredentials();
 }
 
-function clearXcToken() {
-  const input = document.getElementById("xcTokenInput");
-  if (input) input.value = "";
-  saveXcToken();
-  showToast("已清除 xeno-canto key");
+async function clearXcToken() {
+  delete pendingSecretUpdates.apiCredentials.xcToken;
+  setSecretDisplayValue("xcTokenInput", "");
+  if (sessionMode !== "account") {
+    showToast("已清除当前页面的 xeno-canto key");
+    return;
+  }
+  try {
+    await apiFetch("/api/api-credentials/settings", { method: "PUT", body: { clearXcToken: true } });
+    await loadAccountApiCredentials(false);
+    showToast("已清除账号保存的 xeno-canto key");
+  } catch (e) {
+    alert("清除 xeno-canto key 失败：" + e.message);
+  }
 }
 
 function openXcHelp() {
@@ -2160,51 +5713,6 @@ function closeXcHelp() {
   xcHelpDialog.close();
 }
 
-const birdNameDictionary = {
-  "黑冠麻鹭": { english: "Malayan Night Heron", scientific: "Gorsachius melanolophus" },
-  "五色鸟": { english: "Taiwan Barbet", scientific: "Psilopogon nuchalis" },
-  "台湾拟啄木鸟": { english: "Taiwan Barbet", scientific: "Psilopogon nuchalis" },
-  "白头翁": { english: "Light-vented Bulbul", scientific: "Pycnonotus sinensis" },
-  "红耳鹎": { english: "Red-whiskered Bulbul", scientific: "Pycnonotus jocosus" },
-  "红嘴黑鹎": { english: "Black Bulbul", scientific: "Hypsipetes leucocephalus" },
-  "绿绣眼": { english: "Swinhoe's White-eye", scientific: "Zosterops simplex" },
-  "灰树鹊": { english: "Gray Treepie", scientific: "Dendrocitta formosae" },
-  "凤头苍鹰": { english: "Crested Goshawk", scientific: "Accipiter trivirgatus" },
-  "台湾蓝鹊": { english: "Taiwan Blue Magpie", scientific: "Urocissa caerulea" },
-  "台湾噪鹛": { english: "White-whiskered Laughingthrush", scientific: "Trochalopteron morrisonianum" },
-  "白耳画眉": { english: "White-eared Sibia", scientific: "Heterophasia auricularis" },
-  "绣眼画眉": { english: "Taiwan Yuhina", scientific: "Yuhina brunneiceps" },
-  "台湾鹛": { english: "Steere's Liocichla", scientific: "Liocichla steerii" },
-  "黄山雀": { english: "Flamecrest", scientific: "Regulus goodfellowi" },
-  "栗背林鸲": { english: "Collared Bush Robin", scientific: "Tarsiger johnstoniae" },
-  "台湾山鹪莺": { english: "Taiwan Bush Warbler", scientific: "Locustella alishanensis" },
-  "黄胸薮眉": { english: "Taiwan Fulvetta", scientific: "Fulvetta formosana" },
-  "帝雉": { english: "Mikado Pheasant", scientific: "Syrmaticus mikado" },
-  "蓝腹鹇": { english: "Swinhoe's Pheasant", scientific: "Lophura swinhoii" },
-  "台湾鹪鹛": { english: "Taiwan Wren-babbler", scientific: "Pnoepyga formosana" },
-  "灰面鵟鹰": { english: "Gray-faced Buzzard", scientific: "Butastur indicus" },
-  "灰面鵟鷹": { english: "Gray-faced Buzzard", scientific: "Butastur indicus" },
-  "赤腹鹰": { english: "Chinese Sparrowhawk", scientific: "Accipiter soloensis" },
-  "赤腹鷹": { english: "Chinese Sparrowhawk", scientific: "Accipiter soloensis" },
-  "凤头蜂鹰": { english: "Crested Honey Buzzard", scientific: "Pernis ptilorhynchus" },
-  "東方蜂鷹": { english: "Crested Honey Buzzard", scientific: "Pernis ptilorhynchus" },
-  "苍鹭": { english: "Gray Heron", scientific: "Ardea cinerea" },
-  "蒼鷺": { english: "Gray Heron", scientific: "Ardea cinerea" },
-  "白鹭": { english: "Little Egret", scientific: "Egretta garzetta" },
-  "小白鹭": { english: "Little Egret", scientific: "Egretta garzetta" },
-  "夜鹭": { english: "Black-crowned Night Heron", scientific: "Nycticorax nycticorax" },
-  "黑翅长脚鹬": { english: "Black-winged Stilt", scientific: "Himantopus himantopus" },
-  "黑翅長腳鷸": { english: "Black-winged Stilt", scientific: "Himantopus himantopus" },
-  "鱼鹰": { english: "Osprey", scientific: "Pandion haliaetus" },
-  "黑面琵鹭": { english: "Black-faced Spoonbill", scientific: "Platalea minor" },
-  "黑面琵鷺": { english: "Black-faced Spoonbill", scientific: "Platalea minor" },
-  "大卷尾": { english: "Black Drongo", scientific: "Dicrurus macrocercus" },
-  "珠颈斑鸠": { english: "Spotted Dove", scientific: "Spilopelia chinensis" },
-  "珠頸斑鳩": { english: "Spotted Dove", scientific: "Spilopelia chinensis" },
-  "翠鸟": { english: "Common Kingfisher", scientific: "Alcedo atthis" },
-  "普通翠鸟": { english: "Common Kingfisher", scientific: "Alcedo atthis" }
-};
-
 function normalizeBirdName(raw) {
   return String(raw || "")
     .replace(/\（.*?\）|\(.*?\)/g, "")
@@ -2212,25 +5720,100 @@ function normalizeBirdName(raw) {
     .trim();
 }
 
+function birdMappingKey(name) {
+  return normalizeBirdName(name).toLowerCase();
+}
+
+function looksScientificBirdName(name) {
+  const clean = normalizeBirdName(name);
+  if (!/^[A-Z][a-z]{2,}(?:\s+[a-z][a-z-]{2,}){1,2}$/.test(clean)) return false;
+  const parts = clean.split(/\s+/);
+  return !["species", "sp", "spp"].includes((parts[1] || "").toLowerCase());
+}
+
+function detectBirdNameLanguage(name) {
+  const clean = normalizeBirdName(name);
+  if (!clean) return "unknown";
+  if (/[\u4e00-\u9fff]/.test(clean)) return "chinese";
+  if (looksScientificBirdName(clean)) return "scientific";
+  if (/[A-Za-z]/.test(clean)) return "english";
+  return "unknown";
+}
+
+function birdNameLanguageLabel(language) {
+  return {
+    chinese: "中文名",
+    english: "英文名",
+    scientific: "学名",
+    unknown: "未识别"
+  }[language] || "未识别";
+}
+
+function seedBirdMappingFromName(name) {
+  const clean = normalizeBirdName(name);
+  const language = detectBirdNameLanguage(clean);
+  const item = { originalName: clean, nameLanguage: language, chinese: "", english: "", scientific: "" };
+  if (language === "chinese") item.chinese = clean;
+  else if (language === "english") item.english = clean;
+  else if (language === "scientific") item.scientific = clean;
+  else item.chinese = clean;
+  return item;
+}
+
+function birdMappingAliasKeys(item = {}) {
+  return [item.chinese, item.english, item.scientific, item.name, item.originalName, item.matchedName]
+    .map(birdMappingKey)
+    .filter(Boolean);
+}
+
+function cacheBirdMappings(mappings = []) {
+  mappings.forEach(item => {
+    if (!item || typeof item !== "object") return;
+    const chinese = normalizeBirdName(item.chinese || item.name || "");
+    if (!chinese) return;
+    const entry = {
+      chinese,
+      english: String(item.english || item.englishName || "").trim(),
+      scientific: String(item.scientific || item.scientificName || "").trim(),
+      source: item.source || "",
+      confidence: item.confidence || "",
+      notes: item.notes || "",
+      sourceUrls: Array.isArray(item.sourceUrls) ? item.sourceUrls : []
+    };
+    birdMappingAliasKeys({ ...item, ...entry }).forEach(key => {
+      birdNameMappingCache[key] = entry;
+    });
+  });
+}
+
+function cachedBirdMapping(name) {
+  return birdNameMappingCache[birdMappingKey(name)] || null;
+}
+
 function resolveBirdName(raw) {
   const clean = normalizeBirdName(raw);
-  const mapped = birdNameDictionary[clean];
+  const mapped = cachedBirdMapping(clean);
 
   if (mapped) {
     return {
-      original: clean,
+      input: clean,
+      original: mapped.chinese || clean,
+      chinese: mapped.chinese || "",
       english: mapped.english,
       scientific: mapped.scientific,
-      queries: [mapped.scientific, mapped.english, clean].filter(Boolean)
+      queries: [mapped.scientific, mapped.english, mapped.chinese || clean].filter(Boolean)
     };
   }
 
   // 如果用户已经填了英文名或学名，就直接作为高优先级 query
-  const looksScientific = /^[A-Z][a-z]+ [a-z-]+/.test(clean);
-  const looksEnglish = /[A-Za-z]/.test(clean);
+  const language = detectBirdNameLanguage(clean);
+  const looksScientific = language === "scientific";
+  const looksEnglish = language === "english";
 
   return {
+    input: clean,
     original: clean,
+    chinese: language === "chinese" || language === "unknown" ? clean : "",
     english: looksEnglish && !looksScientific ? clean : "",
     scientific: looksScientific ? clean : "",
     queries: looksScientific ? [clean] : looksEnglish ? [clean] : [clean]
@@ -2238,12 +5821,251 @@ function resolveBirdName(raw) {
 }
 
 function parseBirdNames(text) {
+  const ignored = new Set([
+    "目标", "机会", "水鸟", "林鸟", "猛禽", "过境雀形目", "画眉类", "山地林鸟", "交通节点", "休息", "抵达台湾",
+    "shorebirds", "waders", "duck species", "gull species", "seabirds", "waterbirds", "sea birds"
+  ]);
   return String(text || "")
     .split(/[、,，;；\n\/]+/)
     .map(normalizeBirdName)
     .filter(Boolean)
-    .filter(s => !["目标", "机会", "水鸟", "林鸟", "猛禽", "过境雀形目", "画眉类", "山地林鸟", "交通节点", "休息", "抵达台湾"].includes(s))
+    .filter(s => !ignored.has(s) && !ignored.has(s.toLowerCase()))
     .slice(0, 12);
+}
+
+function uniqueBirdNames(names) {
+  const seen = new Set();
+  return names
+    .map(normalizeBirdName)
+    .filter(Boolean)
+    .filter(name => {
+      const key = birdMappingKey(name);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
+async function lookupBirdMappings(names) {
+  const data = await apiFetch("/api/bird-mappings/lookup", {
+    method: "POST",
+    body: { names }
+  });
+  cacheBirdMappings(data.mappings || []);
+  return {
+    mappings: data.mappings || [],
+    missing: data.missing || []
+  };
+}
+
+async function ensureBirdMappingsForNames(names, options = {}) {
+  const uniqueNames = uniqueBirdNames(names);
+  if (!uniqueNames.length) return true;
+
+  const unknown = uniqueNames.filter(name => !cachedBirdMapping(name));
+  let missing = [];
+  if (unknown.length) {
+    try {
+      const data = await lookupBirdMappings(unknown);
+      missing = uniqueBirdNames(data.missing || []);
+    } catch (e) {
+      if (options.promptMissing) {
+        return confirm(`无法连接后端鸟名映射表：${e.message}\n\n仍然保存活动吗？Checklist 将暂时只使用原始鸟名。`);
+      }
+      return true;
+    }
+  }
+
+  missing = missing.filter(name => !cachedBirdMapping(name));
+  if (missing.length && options.promptMissing) {
+    return openBirdMappingDialog(missing);
+  }
+  return true;
+}
+
+async function ensureCurrentTripBirdMappings() {
+  const names = [];
+  currentDays().forEach(day => {
+    (day.stops || [])
+      .filter(stop => stop.type === "bird")
+      .forEach(stop => {
+        names.push(...parseBirdNames(stop.birds));
+      });
+  });
+  await ensureBirdMappingsForNames(names, { promptMissing: false });
+}
+
+function collectBirdNamesFromTrips(tripList = []) {
+  const names = [];
+  tripList.forEach(trip => {
+    (trip.days || []).forEach(day => {
+      (day.stops || [])
+        .filter(stop => stop.type === "bird")
+        .forEach(stop => {
+          names.push(...parseBirdNames(stop.birds));
+        });
+    });
+  });
+  return uniqueBirdNames(names);
+}
+
+function setBirdMappingStatus(message, isError = false) {
+  const el = document.getElementById("birdMappingStatus");
+  if (!el) return;
+  el.textContent = message;
+  el.style.color = isError ? "var(--red)" : "var(--muted)";
+}
+
+function renderBirdMappingRows(names, mappings = []) {
+  const rowsEl = document.getElementById("birdMappingRows");
+  if (!rowsEl) return;
+  const byKey = {};
+  mappings.forEach(item => {
+    birdMappingAliasKeys(item).forEach(key => {
+      byKey[key] = item;
+    });
+  });
+  rowsEl.innerHTML = names.map((name, index) => {
+    const seed = seedBirdMappingFromName(name);
+    const item = { ...seed, ...(byKey[birdMappingKey(name)] || {}) };
+    const language = item.nameLanguage || seed.nameLanguage;
+    const chineseValue = item.chinese || "";
+    const englishValue = item.english || (language === "english" ? seed.english : "");
+    const scientificValue = item.scientific || (language === "scientific" ? seed.scientific : "");
+    const sourceText = [
+      `识别：${birdNameLanguageLabel(language)}`,
+      item.source ? `来源：${item.source}` : "",
+      item.confidence ? `置信度：${item.confidence}` : "",
+      item.notes || ""
+    ].filter(Boolean).join("｜");
+    return `
+      <div class="bird-mapping-row" data-bird-index="${index}" data-original-name="${escapeHtml(seed.originalName)}" data-name-language="${escapeHtml(language)}">
+        <label>原始鸟名
+          <input class="bird-mapping-original" value="${escapeHtml(seed.originalName)}" readonly>
+        </label>
+        <label>中文名
+          <input class="bird-mapping-chinese" value="${escapeHtml(chineseValue)}" placeholder="例如 大天鹅">
+        </label>
+        <label>英文名
+          <input class="bird-mapping-english" value="${escapeHtml(englishValue)}" placeholder="例如 Whooper Swan">
+        </label>
+        <label>学名
+          <input class="bird-mapping-scientific" value="${escapeHtml(scientificValue)}" placeholder="例如 Cygnus cygnus">
+        </label>
+        <div class="bird-mapping-meta">${escapeHtml(sourceText || "等待填写或自动补全。")}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+function collectBirdMappingRows() {
+  return Array.from(document.querySelectorAll("#birdMappingRows .bird-mapping-row")).map(row => ({
+    originalName: row.dataset.originalName || row.querySelector(".bird-mapping-original")?.value.trim() || "",
+    nameLanguage: row.dataset.nameLanguage || "unknown",
+    chinese: row.querySelector(".bird-mapping-chinese")?.value.trim() || "",
+    english: row.querySelector(".bird-mapping-english")?.value.trim() || "",
+    scientific: row.querySelector(".bird-mapping-scientific")?.value.trim() || "",
+    source: "user_confirmed",
+    confidence: "confirmed"
+  }));
+}
+
+function openBirdMappingDialog(missingNames) {
+  return new Promise(resolve => {
+    const names = uniqueBirdNames(missingNames);
+    birdMappingDialogState = { names, resolve };
+    renderBirdMappingRows(names);
+    setBirdMappingStatus("请手动填写，或先用 LLM 补全后确认。");
+    birdMappingDialog.showModal();
+  });
+}
+
+async function resolveBirdMappingsWithLlm() {
+  if (!birdMappingDialogState) return;
+  const names = birdMappingDialogState.names || [];
+  if (!names.length) return;
+  const batchSize = 8;
+  const batches = [];
+  for (let i = 0; i < names.length; i += batchSize) {
+    batches.push(names.slice(i, i + batchSize));
+  }
+
+  const mappings = [];
+  try {
+    for (let index = 0; index < batches.length; index += 1) {
+      const batch = batches[index];
+      const start = index * batchSize + 1;
+      const end = Math.min(start + batch.length - 1, names.length);
+      setBirdMappingStatus(`正在使用 LLM 补全第 ${index + 1}/${batches.length} 批（${start}-${end}/${names.length}），请稍候...`);
+      const data = await apiFetch("/api/bird-mappings/resolve", {
+        method: "POST",
+        body: { names: batch, method: "llm" }
+      });
+      mappings.push(...(data.mappings || []));
+      renderBirdMappingRows(names, mappings);
+    }
+
+    const resolvedKeys = new Set(
+      mappings
+        .map(item => birdMappingKey(item.originalName || item.chinese || item.english || item.scientific || ""))
+        .filter(Boolean)
+    );
+    setBirdMappingStatus(`LLM 已分 ${batches.length} 批生成 ${resolvedKeys.size}/${names.length} 个候选，请核对后点击“确认并保存映射”。`);
+  } catch (e) {
+    if (mappings.length) {
+      renderBirdMappingRows(names, mappings);
+      setBirdMappingStatus(`LLM 部分补全失败：${e.message}。已保留前面批次生成的候选。`, true);
+    } else {
+      setBirdMappingStatus(`LLM 补全失败：${e.message}`, true);
+    }
+  }
+}
+
+async function confirmBirdMappings() {
+  if (!birdMappingDialogState) return;
+  const rows = collectBirdMappingRows();
+  const incomplete = rows.filter(item => (item.english || item.scientific) && !item.chinese);
+  const mappings = rows.filter(item => item.chinese && (item.english || item.scientific));
+  if (!mappings.length) {
+    setBirdMappingStatus(incomplete.length
+      ? "请先为英文名或学名补上中文名，再保存映射。"
+      : "请至少为一个鸟名填写完整的中文名，并保留英文名或学名。", true);
+    return;
+  }
+  if (incomplete.length && !confirm(`还有 ${incomplete.length} 个鸟名缺少中文名。只保存已填写完整的映射并继续吗？`)) {
+    return;
+  }
+  setBirdMappingStatus("正在保存到后端全局映射表...");
+  try {
+    const data = await apiFetch("/api/bird-mappings", {
+      method: "PUT",
+      body: { mappings, source: "user_confirmed" }
+    });
+    cacheBirdMappings(data.mappings?.length ? data.mappings : mappings);
+    const resolve = birdMappingDialogState.resolve;
+    birdMappingDialogState = null;
+    birdMappingDialog.close();
+    resolve(true);
+    showToast("鸟名映射已保存");
+  } catch (e) {
+    setBirdMappingStatus("保存映射失败：" + e.message, true);
+  }
+}
+
+function skipBirdMappingsAndContinue() {
+  if (!birdMappingDialogState) return;
+  const resolve = birdMappingDialogState.resolve;
+  birdMappingDialogState = null;
+  birdMappingDialog.close();
+  resolve(true);
+}
+
+function cancelBirdMappings() {
+  if (!birdMappingDialogState) return;
+  const resolve = birdMappingDialogState.resolve;
+  birdMappingDialogState = null;
+  birdMappingDialog.close();
+  resolve(false);
 }
 
 async function openBirdPreview(dayIndex, stopIndex) {
@@ -2258,6 +6080,8 @@ async function openBirdPreview(dayIndex, stopIndex) {
     birdPreviewDialog.showModal();
     return;
   }
+
+  await ensureBirdMappingsForNames(names, { promptMissing: false });
 
   content.innerHTML = names.map(name => `
     <div class="bird-preview-card" id="bird-card-${safeDomId(name)}">
@@ -2284,11 +6108,19 @@ function safeDomId(s) {
   return btoa(unescape(encodeURIComponent(s))).replaceAll("=", "").replaceAll("+", "-").replaceAll("/", "_");
 }
 
+function birdPreviewDisplayName(resolved, fallback = "") {
+  return resolved.chinese || resolved.english || resolved.scientific || resolved.input || fallback;
+}
+
 async function loadBirdPreviewCard(name) {
   const card = document.getElementById(`bird-card-${safeDomId(name)}`);
   if (!card) return;
 
   const resolved = resolveBirdName(name);
+  const displayName = birdPreviewDisplayName(resolved, name);
+  const header = card.querySelector(".bird-preview-card-header");
+  if (header) header.textContent = displayName;
+
   const imagePromise = fetchBirdImageResolved(resolved);
   const soundPromise = fetchBirdSoundResolved(resolved);
 
@@ -2298,12 +6130,14 @@ async function loadBirdPreviewCard(name) {
   const soundData = sound.status === "fulfilled" ? sound.value : null;
 
   const displayNames = [
+    resolved.input && resolved.input !== displayName ? `<div><b>原始输入：</b>${escapeHtml(resolved.input)}</div>` : "",
+    resolved.chinese ? `<div><b>中文名：</b>${escapeHtml(resolved.chinese)}</div>` : "",
     resolved.english ? `<div><b>英文名：</b>${escapeHtml(resolved.english)}</div>` : "",
     resolved.scientific ? `<div><b>学名：</b><i>${escapeHtml(resolved.scientific)}</i></div>` : ""
   ].join("");
 
   const imgHtml = imageData?.url
-    ? `<a href="${escapeHtml(imageData.url)}" target="_blank" rel="noopener" title="打开原图"><img src="${escapeHtml(imageData.url)}" alt="${escapeHtml(name)}"></a>`
+    ? `<a href="${escapeHtml(imageData.url)}" target="_blank" rel="noopener" title="打开原图"><img src="${escapeHtml(imageData.url)}" alt="${escapeHtml(displayName)}"></a>`
     : `<div class="hint">未找到可用图片</div>`;
 
   const imgLink = imageData?.page
@@ -2312,14 +6146,14 @@ async function loadBirdPreviewCard(name) {
 
   const soundHtml = soundData?.file
     ? `
-      <div><b>鸟声：</b>${escapeHtml(soundData.en || resolved.english || name)} ${soundData.type ? "｜" + escapeHtml(soundData.type) : ""}</div>
+      <div><b>鸟声：</b>${escapeHtml(soundData.en || resolved.english || displayName)} ${soundData.type ? "｜" + escapeHtml(soundData.type) : ""}</div>
       <div class="hint">检索词：${escapeHtml(soundData.queryUsed || "")}｜${escapeHtml(soundData.apiUsed || "")}</div>
       <audio controls preload="none" src="${escapeHtml(soundData.file)}"></audio>
       <a class="bird-preview-link" href="${escapeHtml(soundData.url)}" target="_blank" rel="noopener">打开 xeno-canto 记录</a>
     `
     : `
       <div>未能通过 API 直接加载鸟声。可能需要 xeno-canto API key，或浏览器阻止了本地 HTML 的跨域请求。</div>
-      <a class="bird-preview-link" href="https://xeno-canto.org/explore?query=${encodeURIComponent(resolved.scientific || resolved.english || name)}" target="_blank" rel="noopener">在 xeno-canto 搜索</a>
+      <a class="bird-preview-link" href="https://xeno-canto.org/explore?query=${encodeURIComponent(resolved.scientific || resolved.english || displayName)}" target="_blank" rel="noopener">在 xeno-canto 搜索</a>
     `;
 
   card.querySelector(".bird-preview-body").innerHTML = `
@@ -2330,7 +6164,7 @@ async function loadBirdPreviewCard(name) {
     <div class="bird-preview-meta">
       ${displayNames}
       ${soundHtml}
-      <a class="bird-preview-link" href="https://www.google.com/search?q=${encodeURIComponent((resolved.scientific || resolved.english || name) + " bird")}" target="_blank" rel="noopener">Google 搜索该鸟种</a>
+      <a class="bird-preview-link" href="https://www.google.com/search?q=${encodeURIComponent((resolved.scientific || resolved.english || displayName) + " bird")}" target="_blank" rel="noopener">Google 搜索该鸟种</a>
     </div>
   `;
 }
@@ -2380,24 +6214,23 @@ async function fetchBirdImageResolved(resolved) {
 
 async function fetchBirdSoundResolved(resolved) {
   // xeno-canto 对学名/英文名支持最好：学名 → 英文名 → 原名
-  const token = getXcToken();
   const queries = buildXcQueries(resolved);
 
-  // 1) 优先 API v3 + key
-  if (token) {
+  // 1) 登录模式优先走后端代理，由后端解密并使用完整 key
+  if (sessionMode === "account") {
     for (const query of queries) {
       try {
-        const url = `https://xeno-canto.org/api/3/recordings?query=${encodeURIComponent(query)}&key=${encodeURIComponent(token)}`;
-        const data = await fetchJsonWithTimeout(url, 12000);
+        const payload = await apiFetch(`/api/xeno-canto/recordings?query=${encodeURIComponent(query)}`);
+        const data = payload.data || {};
         const rec = selectBestXcRecording(data.recordings || data.recs || []);
-        if (rec) return normalizeXcRecording(rec, query, "API v3 + key");
+        if (rec) return normalizeXcRecording(rec, query, payload.apiUsed || "backend proxy");
       } catch (e) {
         // 继续尝试下一个 query / fallback
       }
     }
   }
 
-  // 2) 无 key 或 v3 失败时，尝试旧 v2 接口
+  // 2) 未登录或后端代理失败时，尝试无需 key 的旧 v2 接口
   for (const query of queries) {
     try {
       const url = `https://xeno-canto.org/api/2/recordings?query=${encodeURIComponent(query)}`;
@@ -2554,7 +6387,7 @@ function buildDailyChecklist() {
         parseBirdNames(stop.birds).forEach(name => {
           const resolved = resolveBirdName(name);
           birds.push({
-            chinese: resolved.original || name,
+            chinese: resolved.chinese || "",
             english: resolved.english || "",
             scientific: resolved.scientific || "",
             site: stop.name,
@@ -2580,7 +6413,8 @@ function buildDailyChecklist() {
   });
 }
 
-function openChecklist() {
+async function openChecklist() {
+  await ensureCurrentTripBirdMappings();
   const checklist = buildDailyChecklist();
   const seen = loadChecklistSeen();
   const content = document.getElementById("checklistContent");
@@ -2614,6 +6448,7 @@ function openChecklist() {
                   ${day.birds.map(b => {
                     const key = birdChecklistKey(b);
                     const checked = seen[key] ? "checked" : "";
+                    const displayName = b.chinese || b.english || b.scientific || "-";
                     return `
                       <tr>
                         <td style="border-bottom:1px solid var(--line);padding:6px;">
@@ -2624,7 +6459,7 @@ function openChecklist() {
                         <td style="border-bottom:1px solid var(--line);padding:6px;">
                           <a href="#"
                              onclick="event.preventDefault(); previewChecklistBird('${escapeHtml(b.chinese)}','${escapeHtml(b.english)}','${escapeHtml(b.scientific)}')">
-                             ${escapeHtml(b.chinese)}
+                             ${escapeHtml(displayName)}
                           </a>
                         </td>
                         <td style="border-bottom:1px solid var(--line);padding:6px;">${escapeHtml(b.english || "-")}</td>
@@ -2649,7 +6484,8 @@ function closeChecklist() {
   checklistDialog.close();
 }
 
-function exportChecklist() {
+async function exportChecklist() {
+  await ensureCurrentTripBirdMappings();
   const seen = loadChecklistSeen();
   const checklist = buildDailyChecklist().map(day => ({
     ...day,
@@ -2668,14 +6504,18 @@ function exportChecklist() {
 }
 
 function init() {
+  loadUiSettings();
   loadFxCache();
   loadXcToken();
+  relocateSettingsPanels();
+  setupSecretDisplayInputs();
   if (typeof L === "undefined") {
     document.getElementById("mapError").style.display = "block";
     renderTripSelect();
     renderButtons();
     renderSummary();
     renderCards(currentDays());
+    initAuth();
     return;
   }
 
@@ -2685,10 +6525,7 @@ function init() {
     preferCanvas: true
   }).setView([c.lat, c.lng], c.zoom || 7);
 
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19,
-    attribution: '&copy; OpenStreetMap contributors'
-  }).addTo(map);
+  applyMapTileEngine();
 
   markerLayer = L.layerGroup().addTo(map);
   routeLayer = L.layerGroup().addTo(map);
@@ -2713,12 +6550,67 @@ function init() {
   render("ALL");
   setTimeout(() => map.invalidateSize(), 300);
   window.addEventListener("resize", () => map.invalidateSize());
+  initAuth();
 }
 
 
 // Expose functions used by inline HTML event handlers.
 // This avoids ReferenceError on GitHub Pages if the script is later bundled or partially refactored.
 Object.assign(window, {
+  continueAsGuest,
+  returnToWelcomeForLogin,
+  loginAccount,
+  registerAccount,
+  logoutAccount,
+  openSettingsDialog,
+  closeSettingsDialog,
+  openPublicTripSearchDialog,
+  closePublicTripSearchDialog,
+  openSecretInputDialog,
+  closeSecretInputDialog,
+  confirmSecretInputDialog,
+  saveCurrentTripToBackend,
+  loadAllAccountApiSettings,
+  saveAllApiSettings,
+  clearAllAccountApiSecrets,
+  loadAccountApiCredentials,
+  saveAccountApiCredentials,
+  clearEbirdToken,
+  loadContentSourceSettings,
+  saveContentSourceSettings,
+  clearContentSourceApiKeys,
+  updateContentSearchApiKeyPlaceholder,
+  updateWechatModeHelp,
+  updateXhsModeHelp,
+  addApiParamRow,
+  removeApiParamRow,
+  resetApiParamRows,
+  updateXhsOfficialTokenStatus,
+  openXhsOfficialAuth,
+  startXhsLocalBrowser,
+  refreshXhsLocalBrowserStatus,
+  closeXhsLocalBrowser,
+  openXhsThirdPartyHelp,
+  closeXhsThirdPartyHelp,
+  loadLlmSettings,
+  saveLlmSettings,
+  testLlmSettings,
+  clearLlmApiKey,
+  openResearchDialog,
+  closeResearchDialog,
+  toggleResearchKeyword,
+  syncResearchKeywordSelectionFromInput,
+  searchResearchArticles,
+  fetchResearchArticleText,
+  ingestResearchUrl,
+  summarizeResearchArticles,
+  saveResearchToBackend,
+  searchPublicTrips,
+  importPublicTrip,
+  resolveBirdMappingsWithLlm,
+  confirmBirdMappings,
+  skipBirdMappingsAndContinue,
+  cancelBirdMappings,
   importTrips,
   openTripDialog,
   closeTripDialog,
@@ -2751,7 +6643,12 @@ Object.assign(window, {
   exportChecklist,
   closeChecklist,
   stopMainLabel,
-  stopBudgetLabel
+  stopBudgetLabel,
+  setMapTileEngine,
+  setNavigationEngine,
+  googleMapsDirectionsUrl,
+  openGoogleMaps,
+  googleMapsButtonHtml
 });
 
 window.addEventListener("load", init);
