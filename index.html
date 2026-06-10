@@ -931,7 +931,7 @@ window.addEventListener("load", function () {
 <div class="toast" id="toast"></div>
 
 <script>
-const STORAGE_KEY = "birdroute_v1_1_hardfix";
+const STORAGE_KEY = "birdroute_v1_2";
 
 const taiwanTemplateTrips = [
   {
@@ -1286,7 +1286,7 @@ function makeEbirdIcon() {
 }
 
 
-function BR.stopMainLabel(stop) {
+function stopMainLabel(stop) {
   if (!stop || !stop.type) return "内容";
   if (stop.type === "bird") return "目标鸟种";
   if (stop.type === "hotel") return "住宿说明";
@@ -1295,7 +1295,52 @@ function BR.stopMainLabel(stop) {
   return "内容";
 }
 
-function BR.stopBudgetLabel(stop) {
+function stopBudgetLabel(stop) {
+  if (!stop || !stop.type) return "预算";
+  if (stop.type === "hotel") return "住宿预算";
+  if (stop.type === "transport") return "交通预算";
+  if (stop.type === "airport") return "航班/机场预算";
+  if (stop.type === "bird") return "鸟点相关费用";
+  return "预算";
+}
+
+function updateTypeHelp() {
+  const type = document.getElementById("typeInput")?.value || "bird";
+  const birdsLabel = document.getElementById("birdsLabel");
+  const typeHelp = document.getElementById("typeHelp");
+
+  if (!birdsLabel || !typeHelp) return;
+
+  if (type === "bird") {
+    birdsLabel.textContent = "目标鸟种";
+    typeHelp.textContent = "鸟点：请重点填写目标鸟种；预算可用于门票、打车、向导费等。";
+  } else if (type === "hotel") {
+    birdsLabel.textContent = "住宿说明";
+    typeHelp.textContent = "住宿节点：请填写住宿预算最低/最高费用，这会计入总预算统计。";
+  } else if (type === "transport") {
+    birdsLabel.textContent = "交通说明";
+    typeHelp.textContent = "交通节点：请填写交通预算最低/最高费用，例如高铁、巴士、包车、出租车。";
+  } else if (type === "airport") {
+    birdsLabel.textContent = "航班/机场说明";
+    typeHelp.textContent = "机场/航班节点：请填写机票或机场交通预算，这会计入总预算统计。";
+  } else {
+    birdsLabel.textContent = "活动内容";
+    typeHelp.textContent = "请填写活动内容和预算。";
+  }
+}
+
+
+
+function stopMainLabel(stop) {
+  if (!stop || !stop.type) return "内容";
+  if (stop.type === "bird") return "目标鸟种";
+  if (stop.type === "hotel") return "住宿说明";
+  if (stop.type === "transport") return "交通说明";
+  if (stop.type === "airport") return "航班/机场说明";
+  return "内容";
+}
+
+function stopBudgetLabel(stop) {
   if (!stop || !stop.type) return "预算";
   if (stop.type === "hotel") return "住宿预算";
   if (stop.type === "transport") return "交通预算";
@@ -1336,9 +1381,9 @@ function popupHtml(stop, day) {
     <div class="popup-line"><b>类型：</b>${typeLabels[stop.type] || stop.type}</div>
     <div class="popup-line"><b>时间：</b>${escapeHtml(stop.time)}</div>
     <div class="popup-line"><b>交通：</b>${escapeHtml(stop.transport)}</div>
-    <div class="popup-birds"><b>${BR.stopMainLabel(stop)}：</b>${escapeHtml(stop.birds)}</div>
+    <div class="popup-birds"><b>${stopMainLabel(stop)}：</b>${escapeHtml(stop.birds)}</div>
     <div class="popup-birds">${escapeHtml(stop.note || "")}</div>
-    <div class="popup-line"><b>${BR.stopBudgetLabel(stop)}：</b>${escapeHtml(formatBudgetRange(stop.costMin, stop.costMax))}</div>
+    <div class="popup-line"><b>${stopBudgetLabel(stop)}：</b>${escapeHtml(formatBudgetRange(stop.costMin, stop.costMax))}</div>
   `;
 }
 
@@ -1399,9 +1444,9 @@ function renderCards(days) {
             <span class="time">${escapeHtml(stop.time)}</span>
           </div>
           <div class="meta">${escapeHtml(stop.note || "")}</div>
-          <div class="birds"><b>${BR.stopMainLabel(stop)}：</b>${escapeHtml(stop.birds)}</div>
+          <div class="birds"><b>${stopMainLabel(stop)}：</b>${escapeHtml(stop.birds)}</div>
           <div class="transport-text"><b>交通：</b>${escapeHtml(stop.transport)}</div>
-          <div class="cost-text"><b>${BR.stopBudgetLabel(stop)}：</b>${escapeHtml(formatBudgetRange(stop.costMin, stop.costMax))}</div>
+          <div class="cost-text"><b>${stopBudgetLabel(stop)}：</b>${escapeHtml(formatBudgetRange(stop.costMin, stop.costMax))}</div>
           <div class="stop-actions">
             ${stop.type === "bird" ? `<button class="small-btn blue" onclick="openBirdPreview(${actualDayIndex}, ${stopIndex})">鸟种预习</button>` : ""}
             <button class="small-btn" onclick="openEditDialog(${actualDayIndex}, ${stopIndex})">修改</button>
@@ -2669,6 +2714,45 @@ function init() {
   setTimeout(() => map.invalidateSize(), 300);
   window.addEventListener("resize", () => map.invalidateSize());
 }
+
+
+// Expose functions used by inline HTML event handlers.
+// This avoids ReferenceError on GitHub Pages if the script is later bundled or partially refactored.
+Object.assign(window, {
+  importTrips,
+  openTripDialog,
+  closeTripDialog,
+  saveTripFromDialog,
+  deleteTrip,
+  switchTrip,
+  setDisplayCurrency,
+  refreshExchangeRates,
+  openAddDialog,
+  openDayDialog,
+  exportCurrentTrip,
+  exportAllTrips,
+  resetAll,
+  openChecklist,
+  loadEbirdHotspots,
+  clearEbirdHotspots,
+  openEbirdHelp,
+  closeEbirdHelp,
+  openXcHelp,
+  closeXcHelp,
+  clearXcToken,
+  saveXcToken,
+  updateTypeHelp,
+  geocodeIntoForm,
+  closeDialog,
+  saveStopFromDialog,
+  closeDayDialog,
+  saveDayFromDialog,
+  closeBirdPreview,
+  exportChecklist,
+  closeChecklist,
+  stopMainLabel,
+  stopBudgetLabel
+});
 
 window.addEventListener("load", init);
 </script>
