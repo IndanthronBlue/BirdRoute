@@ -1,0 +1,2554 @@
+<!DOCTYPE html>
+
+<!-- saved from url=(0064)file:///home/jzhang/Downloads/birdroute_cn_empty_hero%20(1).html -->
+<html lang="zh-CN"><head><meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BirdRoute · 台湾观鸟 8 天行程</title>
+<link href="./BirdRoute · 台湾观鸟 8 天行程_files/leaflet.css" rel="stylesheet"/>
+<script src="./BirdRoute · 台湾观鸟 8 天行程_files/leaflet.js"></script>
+<style>
+    :root {
+      --bg: #f6f7f2;
+      --card: #ffffff;
+      --text: #1f2a24;
+      --muted: #67736d;
+      --green: #2f6f4e;
+      --green2: #4d8f66;
+      --line: #d9dfd6;
+      --orange: #c06a2b;
+      --blue: #315f88;
+      --purple: #7d5bbd;
+      --red: #b6473b;
+      --ebird: #1d78b5;
+      --shadow: 0 10px 30px rgba(0,0,0,.10);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC",
+                   "Microsoft YaHei", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      min-height: 82px;
+      padding: 15px 22px;
+      background: linear-gradient(135deg, #1f4f38, #4c8b5e);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    header h1 { margin: 0; font-size: 22px; }
+    header .subtitle { margin-top: 4px; font-size: 13px; opacity: .9; }
+    header .right { text-align: right; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 500px minmax(0, 1fr);
+      height: calc(100vh - 82px);
+    }
+
+    aside {
+      overflow-y: auto;
+      padding: 16px;
+      border-right: 1px solid var(--line);
+      background: #fbfcf8;
+    }
+
+    .map-wrap { position: relative; min-width: 0; height: 100%; }
+    #map {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: #dbe7d5;
+      z-index: 1;
+    }
+
+    #mapError {
+      position: absolute;
+      z-index: 2;
+      left: 16px;
+      top: 16px;
+      max-width: 440px;
+      display: none;
+      background: #fff3f0;
+      color: #742f1d;
+      border: 1px solid #ffc9bd;
+      border-radius: 12px;
+      padding: 12px 14px;
+      box-shadow: var(--shadow);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .panel, .summary-card, .day-card {
+      background: var(--card);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+
+    .panel { padding: 14px; }
+    .panel h2 { font-size: 16px; margin: 0 0 10px; }
+
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .row + .row { margin-top: 9px; }
+
+    button, .file-label {
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--text);
+      padding: 8px 11px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: .15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    button:hover, .file-label:hover { transform: translateY(-1px); }
+    button.active { background: var(--green); color: white; border-color: var(--green); }
+    button.primary { background: var(--green); color: white; border-color: var(--green); }
+    button.warn { background: #fff5ef; color: #8b421c; border-color: #f0c8ad; }
+    button.danger { background: #fff2f1; color: var(--red); border-color: #efc0bb; }
+    button.blue { background: #f1f6ff; color: var(--blue); border-color: #c8d8ef; }
+    button.ebird { background: #eef8ff; color: var(--ebird); border-color: #bee0f5; }
+
+    .small-btn { padding: 5px 8px; font-size: 12px; }
+    input[type="file"] { display: none; }
+
+    select, input, textarea {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 9px 10px;
+      font-size: 14px;
+      font-family: inherit;
+      background: white;
+      color: var(--text);
+    }
+
+    select.full, input.full { width: 100%; }
+    textarea { width: 100%; min-height: 76px; resize: vertical; }
+
+    .day-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .legend {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-top: 14px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .legend span::before {
+      content: "";
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: -1px;
+    }
+
+    .bird::before { background: var(--green); }
+    .hotel::before { background: var(--blue); }
+    .transport::before { background: var(--orange); }
+    .airport::before { background: var(--purple); }
+    .ebirdDot::before { background: var(--ebird); }
+
+    .summary-card {
+      padding: 14px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .summary-card strong { color: var(--green); }
+
+    .budget-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .budget-box {
+      background: #f1f6ff;
+      border-left: 4px solid var(--blue);
+      padding: 9px 10px;
+      border-radius: 10px;
+      font-size: 13px;
+    }
+
+    .budget-box strong { display: block; color: var(--blue); font-size: 15px; }
+
+    .day-card-header {
+      padding: 14px 16px;
+      background: #eef4ec;
+      border-bottom: 1px solid var(--line);
+    }
+    .day-card-header h3 { margin: 0; font-size: 16px; }
+    .day-card-header p { margin: 5px 0 0; font-size: 13px; color: var(--muted); }
+    .day-header-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .stop {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+    .stop:last-child { border-bottom: none; }
+
+    .stop-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 7px;
+    }
+
+    .stop h4 { margin: 0; font-size: 15px; }
+    .time {
+      white-space: nowrap;
+      font-size: 12px;
+      color: white;
+      background: var(--green2);
+      padding: 4px 8px;
+      border-radius: 999px;
+      align-self: flex-start;
+    }
+
+    .meta { font-size: 13px; color: var(--muted); line-height: 1.55; }
+    .birds { margin-top: 8px; font-size: 13px; line-height: 1.45; }
+
+    .transport-text {
+      margin-top: 8px;
+      padding: 8px 10px;
+      background: #fff7ef;
+      border-left: 3px solid var(--orange);
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .cost-text {
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--blue);
+    }
+
+    .stop-actions { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .leaflet-popup-content {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC",
+                   "Microsoft YaHei", Arial, sans-serif;
+      min-width: 230px;
+    }
+
+    .popup-title {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--green);
+      margin-bottom: 5px;
+    }
+    .popup-line { font-size: 13px; margin: 3px 0; }
+    .popup-birds { font-size: 12px; color: #35443b; line-height: 1.45; margin-top: 6px; }
+
+    dialog {
+      border: none;
+      border-radius: 18px;
+      padding: 0;
+      width: min(820px, calc(100vw - 28px));
+      box-shadow: 0 24px 80px rgba(0,0,0,.3);
+    }
+    dialog::backdrop { background: rgba(0,0,0,.45); }
+
+    .modal-header {
+      padding: 16px 18px;
+      background: #eef4ec;
+      border-bottom: 1px solid var(--line);
+    }
+    .modal-header h3 { margin: 0; font-size: 18px; }
+
+    .modal-body {
+      padding: 18px;
+      max-height: 72vh;
+      overflow-y: auto;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .form-field.full { grid-column: 1 / -1; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    .modal-actions {
+      padding: 14px 18px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: #fbfcf8;
+    }
+
+    .hint {
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 9999;
+      background: #1f4f38;
+      color: white;
+      padding: 11px 14px;
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      display: none;
+      font-size: 13px;
+    }
+
+    .search-results {
+      margin-top: 8px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .search-result {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: #fbfcf8;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .search-result:hover { background: #eef4ec; }
+
+
+    .bird-preview-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .bird-preview-card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+      background: #fbfcf8;
+    }
+
+    .bird-preview-card-header {
+      padding: 11px 12px;
+      background: #eef4ec;
+      border-bottom: 1px solid var(--line);
+      font-weight: 700;
+      color: var(--green);
+    }
+
+    .bird-preview-body {
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .bird-preview-body img {
+      width: 150px;
+      height: 110px;
+      object-fit: contain;
+      border-radius: 10px;
+      background: #eef2ec;
+      border: 1px solid var(--line);
+      padding: 4px;
+    }
+
+    .bird-preview-body audio {
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .bird-preview-meta {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .bird-preview-link {
+      display: inline-block;
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--blue);
+    }
+
+    @media (max-width: 680px) {
+      .bird-preview-body {
+        grid-template-columns: 1fr;
+      }
+      .bird-preview-body img {
+        width: 100%;
+        height: 220px;
+        object-fit: contain;
+      }
+    }
+
+
+
+    .empty-hero {
+      background: linear-gradient(180deg, #ffffff, #f4f8f2);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 34px 22px;
+      margin-bottom: 16px;
+      text-align: center;
+      border: 1px solid var(--line);
+    }
+
+    .empty-hero h2 {
+      margin: 0 0 10px;
+      font-size: 24px;
+      color: var(--green);
+    }
+
+    .empty-hero p {
+      margin: 0 auto 22px;
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 380px;
+      font-size: 14px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    body.no-trip .app-panel {
+      display: none;
+    }
+
+    body.has-trip #emptyHero {
+      display: none;
+    }
+
+    .empty-state {
+      background: var(--card);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 28px 20px;
+      text-align: center;
+      color: var(--text);
+    }
+    .empty-state h2 {
+      margin: 0 0 8px;
+      font-size: 22px;
+      color: var(--green);
+    }
+    .empty-state p {
+      margin: 8px auto 18px;
+      max-width: 360px;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    @media (max-width: 1050px) {
+      header { height: auto; display: block; }
+      header .right { text-align: left; margin-top: 6px; }
+      .layout { display: block; height: auto; }
+      aside {
+        height: auto;
+        max-height: none;
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+      }
+      .map-wrap { height: 70vh; min-height: 520px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .budget-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body class="has-trip">
+<header>
+<div>
+<h1 id="pageTitle">BirdRoute · 台湾观鸟 8 天行程</h1>
+<div class="subtitle" id="pageSubtitle">香港出发｜公共交通为主｜大雪山包车｜垦丁猛禽迁徙｜10月初</div>
+</div>
+<div class="right">
+<div class="subtitle">规划路线、目标鸟种、预算与每日观察清单</div>
+<div class="subtitle">面向开源｜创建或导入行程后开始使用</div>
+</div>
+</header>
+<div class="layout">
+<aside>
+<div class="empty-hero" id="emptyHero">
+<h2>欢迎使用 BirdRoute</h2>
+<p>创建一个观鸟行程，或导入已有 JSON 文件后开始规划。</p>
+<div class="hero-actions">
+<button class="primary" onclick="openTripDialog()">＋ 创建行程</button>
+<label class="file-label blue">
+          📂 导入 JSON
+          <input accept="application/json,.json" onchange="importTrips(event)" type="file"/>
+</label>
+</div>
+</div>
+<div class="panel app-panel">
+<h2>整体行程</h2>
+<div class="row">
+<select class="full" id="tripSelect" onchange="switchTrip(Number(this.value))"><option value="0">台湾观鸟 8 天行程</option></select>
+</div>
+<div class="row">
+<button class="primary" onclick="openTripDialog()">＋ 新增整体行程</button>
+<button onclick="openTripDialog(currentTripIndex)">修改标题</button>
+<button class="danger" onclick="deleteTrip()">删除整体行程</button>
+</div>
+</div>
+<div class="panel app-panel">
+<h2>预算币种与实时汇率</h2>
+<div class="row">
+<select class="full" id="displayCurrencySelect" onchange="setDisplayCurrency(this.value)">
+<option value="">使用行程原币种</option>
+<option value="CNY">CNY 人民币</option>
+<option value="HKD">HKD 港币</option>
+<option value="TWD">TWD 新台币</option>
+<option value="EUR">EUR 欧元</option>
+<option value="USD">USD 美元</option>
+<option value="JPY">JPY 日元</option>
+<option value="PLN">PLN 波兰兹罗提</option>
+<option value="GBP">GBP 英镑</option>
+</select>
+</div>
+<div class="row">
+<button class="blue" onclick="refreshExchangeRates()">刷新实时汇率</button>
+<span class="hint" id="fxStatus">汇率状态：使用原币种 CNY</span>
+</div>
+<div class="hint">
+        活动预算按行程原币种保存；切换显示币种只改变页面显示和预算统计，不修改原始预算数据。
+      </div>
+</div>
+<div class="panel app-panel">
+<h2>按天查看</h2>
+<div class="day-buttons" id="dayButtons"><button class="active">全部</button><button class="">D1</button><button class="">D2</button><button class="">D3</button><button class="">D4</button><button class="">D5</button><button class="">D6</button><button class="">D7</button><button class="">D8</button></div>
+<div class="legend">
+<span class="bird">鸟点</span>
+<span class="hotel">住宿</span>
+<span class="transport">交通</span>
+<span class="airport">机场</span>
+<span class="ebirdDot">eBird</span>
+</div>
+</div>
+<div class="panel app-panel">
+<h2>行程管理</h2>
+<div class="row">
+<button class="primary" onclick="openAddDialog()">＋ 新增活动</button>
+<button onclick="openDayDialog()">＋ 新增一天</button>
+<button onclick="exportCurrentTrip()">导出当前行程</button>
+<button onclick="exportAllTrips()">导出全部</button>
+<label class="file-label">导入 JSON
+          <input accept="application/json,.json" id="importFile" onchange="importTrips(event)" type="file"/>
+</label>
+<button class="warn" onclick="resetAll()">恢复默认</button>
+</div>
+<div class="row">
+<button class="blue" onclick="openChecklist()">生成每日鸟种 Checklist</button>
+</div>
+<div class="hint">
+        新增活动可先输入地点名并点击“联网查询坐标”，也可以直接点击地图新增并自动填入坐标。
+      </div>
+</div>
+<div class="panel app-panel">
+<h2>eBird 热点图层 <button class="small-btn ebird" onclick="openEbirdHelp()" title="如何获取 eBird API Token">?</button></h2>
+<input class="full" id="ebirdTokenInput" placeholder="填写 eBird API Token（可选）"/>
+<div class="row">
+<button class="ebird" onclick="loadEbirdHotspots()">加载当前地图范围热点</button>
+<button onclick="clearEbirdHotspots()">清除热点</button>
+</div>
+<div class="hint">
+        eBird 官方 API 需要 token。获取后填入即可加载当前地图视野附近热点；不填 token 时无法从 eBird 官方 API 拉取。
+      </div>
+</div>
+<div class="panel app-panel">
+<h2>xeno-canto 鸟声 API</h2>
+<input class="full" id="xcTokenInput" oninput="saveXcToken()" placeholder="填写 xeno-canto API key（推荐，用于鸟种预习）"/>
+<div class="row">
+<button class="blue" onclick="openXcHelp()">如何获取？</button>
+<button onclick="clearXcToken()">清除 key</button>
+</div>
+<div class="hint">
+        鸟种预习会优先使用 API v3 + key 查询鸟声；没有 key 时尝试旧接口并提供 xeno-canto 搜索链接。
+      </div>
+</div>
+<div class="summary-card app-panel">
+<strong id="tripSummaryTitle">台湾观鸟 8 天行程</strong><br/>
+<span id="tripSummaryText">香港 → 台北植物园 / 大安森林公园 → 大雪山 23K / 35K / 43K / 47K / 49.5K → 台中 → 垦丁龙銮潭 / 龙磐 / 风吹砂 / 社顶 / 垦丁国家森林游乐区 → 高雄 → 香港。</span>
+<div class="budget-grid">
+<div class="budget-box"><strong id="costMin">7,280 CNY</strong>最低预算估算</div>
+<div class="budget-box"><strong id="costMax">13,760 CNY</strong>最高预算估算</div>
+</div>
+<div class="hint">预算来自每个活动的“最低费用/最高费用”，币种按行程设置显示，不做自动汇率换算。</div>
+</div>
+<div id="itinerary"></div>
+</aside>
+<main class="map-wrap">
+<div id="mapError">
+      地图资源加载失败。请确认打开 HTML 时有网络连接；如果使用浏览器安全策略较严格，建议用 Chrome/Edge 打开。
+    </div>
+<div id="map"></div>
+</main>
+</div>
+<!-- 活动编辑 -->
+<dialog id="editDialog">
+<form method="dialog" onsubmit="event.preventDefault(); saveStopFromDialog();">
+<div class="modal-header">
+<h3 id="dialogTitle">新增活动</h3>
+</div>
+<div class="modal-body">
+<input id="editDayIndex" type="hidden" value="0"/>
+<input id="editStopIndex" type="hidden" value=""/>
+<div class="form-grid">
+<div class="form-field">
+<label for="daySelect">所属日期</label>
+<select id="daySelect"><option value="0">D1｜香港 → 台北｜台北植物园热身</option><option value="1">D2｜台北城市观鸟｜轻松不赶路</option><option value="2">D3｜台北 → 大雪山｜包车上山</option><option value="3">D4｜大雪山核心观鸟日｜特有种重点</option><option value="4">D5｜大雪山补种 → 台中</option><option value="5">D6｜台中 → 垦丁｜龙銮潭水鸟</option><option value="6">D7｜垦丁国家公园｜猛禽迁徙与珊瑚礁森林</option><option value="7">D8｜垦丁 → 高雄 → 香港</option></select>
+</div>
+<div class="form-field">
+<label for="timeInput">时间段</label>
+<input id="timeInput" placeholder="例如：06:00–09:00"/>
+</div>
+<div class="form-field">
+<label for="nameInput">地点/活动名称</label>
+<input id="nameInput" placeholder="例如：台北植物园"/>
+</div>
+<div class="form-field">
+<label for="typeInput">类型</label>
+<select id="typeInput" onchange="updateTypeHelp()">
+<option value="bird">鸟点</option>
+<option value="hotel">住宿</option>
+<option value="transport">交通节点</option>
+<option value="airport">机场/航班</option>
+</select>
+</div>
+<div class="form-field">
+<label for="latInput">纬度 lat</label>
+<input id="latInput" placeholder="25.0318" step="0.000001" type="number"/>
+</div>
+<div class="form-field">
+<label for="lngInput">经度 lng</label>
+<input id="lngInput" placeholder="121.5108" step="0.000001" type="number"/>
+</div>
+<div class="form-field full">
+<button class="blue" onclick="geocodeIntoForm()" type="button">联网查询坐标</button>
+<span class="hint">使用地点名查询 OpenStreetMap 坐标。</span>
+<div class="search-results" id="geocodeResults"></div>
+</div>
+<div class="form-field full">
+<label for="birdsInput" id="birdsLabel">目标鸟种 / 活动内容</label>
+<textarea id="birdsInput" placeholder="鸟点：黑冠麻鹭、五色鸟；交通/住宿：说明内容"></textarea>
+</div>
+<div class="form-field full">
+<label for="transportInput">交通方式</label>
+<textarea id="transportInput" placeholder="例如：台北车站 → MRT小南门站 → 步行约10分钟"></textarea>
+</div>
+<div class="form-field full">
+<label for="noteInput">备注</label>
+<textarea id="noteInput" placeholder="例如：清晨鸟活跃，适合拍摄"></textarea>
+</div>
+<div class="form-field">
+<label for="costMinInput">预算最低费用</label>
+<input id="costMinInput" min="0" placeholder="例如：300" step="1" type="number"/>
+</div>
+<div class="form-field">
+<label for="costMaxInput">预算最高费用</label>
+<input id="costMaxInput" min="0" placeholder="例如：500" step="1" type="number"/>
+</div>
+<div class="form-field full">
+<div class="hint" id="typeHelp">
+            鸟点：重点填写目标鸟种；住宿/交通/机场：重点填写预算。预算会计入总预算统计。
+          </div>
+</div>
+</div>
+</div>
+<div class="modal-actions">
+<button onclick="closeDialog()" type="button">取消</button>
+<button class="primary" type="submit">保存</button>
+</div>
+</form>
+</dialog>
+<!-- 天编辑 -->
+<dialog id="dayDialog">
+<form method="dialog" onsubmit="event.preventDefault(); saveDayFromDialog();">
+<div class="modal-header">
+<h3 id="dayDialogTitle">编辑一天</h3>
+</div>
+<div class="modal-body">
+<input id="editDayOnlyIndex" type="hidden"/>
+<div class="form-grid">
+<div class="form-field">
+<label for="dayCodeInput">日期编号</label>
+<input id="dayCodeInput" placeholder="例如：D9"/>
+</div>
+<div class="form-field">
+<label for="dayTitleInput">当天标题</label>
+<input id="dayTitleInput" placeholder="例如：台北自由观鸟日"/>
+</div>
+<div class="form-field full">
+<label for="dayStayInput">住宿/当天说明</label>
+<input id="dayStayInput" placeholder="例如：住宿：台北车站周边"/>
+</div>
+</div>
+</div>
+<div class="modal-actions">
+<button onclick="closeDayDialog()" type="button">取消</button>
+<button class="primary" type="submit">保存</button>
+</div>
+</form>
+</dialog>
+<!-- 整体行程编辑 -->
+<dialog id="tripDialog">
+<form method="dialog" onsubmit="event.preventDefault(); saveTripFromDialog();">
+<div class="modal-header">
+<h3 id="tripDialogTitle">编辑整体行程</h3>
+</div>
+<div class="modal-body">
+<input id="editTripIndex" type="hidden"/>
+<div class="form-grid">
+<div class="form-field">
+<label for="tripTitleInput">行程标题</label>
+<input id="tripTitleInput" placeholder="例如：华沙八天行程"/>
+</div>
+<div class="form-field">
+<label for="tripCurrencyInput">预算原币种代码</label>
+<input id="tripCurrencyInput" placeholder="例如：CNY / EUR / TWD / HKD"/>
+</div>
+<div class="form-field full">
+<label for="tripSubtitleInput">副标题</label>
+<input id="tripSubtitleInput" placeholder="例如：城市漫游｜博物馆｜公园｜公共交通"/>
+</div>
+<div class="form-field full">
+<label for="tripSummaryInput">行程概览</label>
+<textarea id="tripSummaryInput" placeholder="例如：香港 → 华沙 → 老城 → 肖邦博物馆..."></textarea>
+</div>
+<div class="form-field">
+<label for="tripCenterLatInput">默认中心纬度</label>
+<input id="tripCenterLatInput" placeholder="52.2297" step="0.000001" type="number"/>
+</div>
+<div class="form-field">
+<label for="tripCenterLngInput">默认中心经度</label>
+<input id="tripCenterLngInput" placeholder="21.0122" step="0.000001" type="number"/>
+</div>
+</div>
+<div class="hint">
+        新增整体行程会自动创建 D1。之后你可以继续新增天和活动；页面标题会随行程标题自动变化。
+      </div>
+</div>
+<div class="modal-actions">
+<button onclick="closeTripDialog()" type="button">取消</button>
+<button class="primary" type="submit">保存</button>
+</div>
+</form>
+</dialog>
+<!-- 鸟种预习 -->
+<dialog id="birdPreviewDialog">
+<div class="modal-header">
+<h3 id="birdPreviewTitle">鸟种预习</h3>
+</div>
+<div class="modal-body">
+<div class="hint">
+      图片来源：Wikimedia/Wikipedia；鸟声来源：xeno-canto。系统会优先用学名和英文名检索，中文名作为兜底；大多数情况下不需要 token。
+    </div>
+<div class="bird-preview-grid" id="birdPreviewContent"></div>
+</div>
+<div class="modal-actions">
+<button onclick="closeBirdPreview()" type="button">关闭</button>
+</div>
+</dialog>
+<!-- eBird API 帮助 -->
+<dialog id="ebirdHelpDialog">
+<div class="modal-header">
+<h3>获取 eBird API Token</h3>
+</div>
+<div class="modal-body">
+<p>登录 eBird 后访问：</p>
+<p>
+<a href="https://ebird.org/api/keygen" rel="noopener" target="_blank">
+        https://ebird.org/api/keygen
+      </a>
+</p>
+<p>
+      复制生成的 API Key，粘贴到左侧输入框即可使用 eBird 热点图层。
+    </p>
+<div class="hint">
+      API Key 与你的 eBird 账号绑定，请勿公开分享。
+    </div>
+</div>
+<div class="modal-actions">
+<button onclick="closeEbirdHelp()" type="button">关闭</button>
+</div>
+</dialog>
+<!-- xeno-canto API 帮助 -->
+<dialog id="xcHelpDialog">
+<div class="modal-header">
+<h3>如何获取 xeno-canto API Key</h3>
+</div>
+<div class="modal-body">
+<div class="summary-card" style="box-shadow:none;margin:0 0 12px 0;">
+      xeno-canto API v3 推荐/要求使用个人 API key。旧的 API v2 在某些情况下仍能访问，但浏览器本地 HTML 更容易遇到跨域、重定向或格式变化问题。
+    </div>
+<h4>获取步骤</h4>
+<ol style="line-height:1.7;font-size:14px;">
+<li>打开 xeno-canto：<a href="https://xeno-canto.org/" rel="noopener" target="_blank">https://xeno-canto.org</a></li>
+<li>注册账号并验证邮箱，或登录已有账号。</li>
+<li>进入个人 Account / Profile 页面。</li>
+<li>查找 API key / API v3 key。第三方库文档也说明 API v3 key 可在 Account Page 获得。</li>
+<li>复制 key，粘贴到本页面左侧“xeno-canto 鸟声 API”输入框。</li>
+<li>再点击鸟点卡片里的“鸟种预习”。</li>
+</ol>
+<h4>本页面调用方式</h4>
+<pre style="white-space:pre-wrap;background:#f3f5f1;padding:12px;border-radius:10px;font-size:13px;">GET https://xeno-canto.org/api/3/recordings?query=Butastur%20indicus&amp;key=你的APIkey
+
+优先检索顺序：
+1. 学名，例如 Butastur indicus
+2. 英文名，例如 Gray-faced Buzzard
+3. 中文名兜底</pre>
+<h4>常见问题</h4>
+<ul style="line-height:1.7;font-size:14px;">
+<li><b>网页能搜到，但本页面显示没有鸟声：</b>通常是 API key、CORS、接口版本或查询语法问题，不代表 XC 没有记录。</li>
+<li><b>401 / 403：</b>key 无效、未登录验证、key 复制错误。</li>
+<li><b>无法播放但有链接：</b>点击“打开 xeno-canto 记录”即可在官网播放。</li>
+<li><b>本地 HTML 限制：</b>若浏览器安全策略严格，可以用本地服务器打开，例如 <code>python3 -m http.server</code>。</li>
+</ul>
+</div>
+<div class="modal-actions">
+<button onclick="closeXcHelp()" type="button">关闭</button>
+</div>
+</dialog>
+<!-- 每日 Checklist -->
+<dialog id="checklistDialog">
+<div class="modal-header">
+<h3>每日鸟种 Checklist</h3>
+</div>
+<div class="modal-body">
+<div class="hint">
+      根据每个鸟点活动的“目标鸟种”字段自动汇总；适合作为出发前预习清单。非鸟点活动不会计入。
+    </div>
+<div id="checklistContent"></div>
+</div>
+<div class="modal-actions">
+<button onclick="exportChecklist()" type="button">导出 Checklist JSON</button>
+<button onclick="closeChecklist()" type="button">关闭</button>
+</div>
+</dialog>
+<div class="toast" id="toast"></div>
+<script>
+const STORAGE_KEY = "multi_trip_map_planner_v2";
+
+const taiwanTemplateTrips = [
+  {
+    title: "台湾观鸟 8 天行程",
+    subtitle: "香港出发｜公共交通为主｜大雪山包车｜10月初秋迁季",
+    currency: "CNY",
+    summary: "香港 → 台北植物园/大安森林公园 → 大雪山 23K/35K/43K/49.5K → 台中 → 垦丁龙銮潭/龙磐/社顶/垦丁国家森林游乐区 → 高雄 → 香港。",
+    center: { lat: 23.7, lng: 121.0, zoom: 7 },
+    days: [
+      {
+        day: "D1",
+        title: "香港 → 台北｜台北植物园热身",
+        stay: "住宿：台北车站周边",
+        stops: [
+          { name: "桃园国际机场", type: "airport", time: "中午", lat: 25.0797, lng: 121.2342, birds: "抵达台湾", transport: "桃园机场捷运 → 台北车站，约35–50分钟。", note: "入境后可购买悠游卡。", costMin: 0, costMax: 0 },
+          { name: "台北车站住宿区", type: "hotel", time: "14:00", lat: 25.0478, lng: 121.5170, birds: "住宿与交通枢纽", transport: "机场捷运直达台北车站。", note: "预算：350–600 RMB/晚。", costMin: 350, costMax: 600 },
+          { name: "台北植物园", type: "bird", time: "15:00–18:00", lat: 25.0318, lng: 121.5108, birds: "黑冠麻鹭、五色鸟、白头翁、红耳鹎、绿绣眼", transport: "台北车站 → MRT小南门站 → 步行约10分钟。", note: "城市林地鸟与黑冠麻鹭的重点地点。", costMin: 0, costMax: 50 }
+        ]
+      },
+      {
+        day: "D2",
+        title: "台北城市观鸟｜轻松不赶路",
+        stay: "住宿：台北车站周边",
+        stops: [
+          { name: "大安森林公园", type: "bird", time: "06:00–09:00", lat: 25.0316, lng: 121.5355, birds: "五色鸟、红耳鹎、白头翁、绿绣眼、凤头苍鹰", transport: "MRT至大安森林公园站，出站即到。", note: "清晨鸟活跃，适合拍摄常见台湾城市鸟。", costMin: 20, costMax: 60 },
+          { name: "台北植物园（二刷）", type: "bird", time: "09:30–12:00", lat: 25.0318, lng: 121.5108, birds: "黑冠麻鹭、五色鸟、灰树鹊、绿绣眼", transport: "MRT或出租车从大安森林公园前往。", note: "补拍黑冠麻鹭，下午不再安排高强度观鸟。", costMin: 20, costMax: 120 },
+          { name: "台北车站住宿区", type: "hotel", time: "晚上", lat: 25.0478, lng: 121.5170, birds: "休息与整理记录", transport: "MRT返回台北车站周边。", note: "早点休息，D3上大雪山。", costMin: 350, costMax: 600 }
+        ]
+      },
+      {
+        day: "D3",
+        title: "台北 → 大雪山｜包车上山",
+        stay: "住宿：大雪山宾馆",
+        stops: [
+          { name: "台北车站", type: "transport", time: "07:00", lat: 25.0478, lng: 121.5170, birds: "交通节点", transport: "搭台湾高铁：台北 → 台中，约1小时。", note: "建议提前买票。", costMin: 160, costMax: 220 },
+          { name: "高铁台中站 / 新乌日站", type: "transport", time: "08:10", lat: 24.1117, lng: 120.6150, birds: "高铁转台铁", transport: "高铁台中站步行连通新乌日站，再搭台铁到丰原。", note: "转乘时间预留20–30分钟更稳。", costMin: 10, costMax: 20 },
+          { name: "丰原车站", type: "transport", time: "09:30", lat: 24.2542, lng: 120.7229, birds: "包车接站点", transport: "包车师傅在丰原车站接人。", note: "给司机写明：Fengyuan Railway Station pickup.", costMin: 0, costMax: 0 },
+          { name: "大雪山林道 23K", type: "bird", time: "11:00–12:30", lat: 24.2452, lng: 120.8680, birds: "台湾噪鹛、绣眼画眉、白耳画眉、栗背林鸲", transport: "丰原车站 → 包车上山。", note: "作为上山第一站，节奏不要太赶。", costMin: 400, costMax: 900 },
+          { name: "大雪山 35K / 游客中心区域", type: "bird", time: "13:30–15:00", lat: 24.2530, lng: 120.9480, birds: "黄山雀、台湾鹛、白耳画眉", transport: "包车从23K前往。", note: "大雪山宾馆就在游客中心附近。", costMin: 0, costMax: 0 },
+          { name: "大雪山 43K", type: "bird", time: "15:30–17:00", lat: 24.2745, lng: 120.9850, birds: "黄山雀、台湾鹛、白耳画眉、栗背林鸲", transport: "包车从35K前往。", note: "经典高山鸟点，D4还会重点刷。", costMin: 0, costMax: 0 },
+          { name: "大雪山宾馆", type: "hotel", time: "17:30", lat: 24.2510, lng: 120.9510, birds: "夜宿山顶，方便清晨出鸟", transport: "包车送到宾馆。", note: "预算约650–800 RMB/晚。", costMin: 650, costMax: 800 }
+        ]
+      },
+      {
+        day: "D4",
+        title: "大雪山核心观鸟日｜特有种重点",
+        stay: "住宿：大雪山宾馆",
+        stops: [
+          { name: "大雪山宾馆", type: "hotel", time: "05:30", lat: 24.2510, lng: 120.9510, birds: "清晨出发", transport: "包车在宾馆门口接。", note: "带保暖衣物，10月清晨山上偏冷。", costMin: 650, costMax: 800 },
+          { name: "大雪山 43K", type: "bird", time: "06:00–08:00", lat: 24.2745, lng: 120.9850, birds: "黄山雀、台湾鹛、白耳画眉", transport: "包车从宾馆前往。", note: "清晨活跃度高。", costMin: 400, costMax: 900 },
+          { name: "大雪山 47K", type: "bird", time: "08:00–09:00", lat: 24.2880, lng: 121.0010, birds: "蓝腹鹇、帝雉机会", transport: "包车从43K前往。", note: "遇到鸡形目需要耐心。", costMin: 0, costMax: 0 },
+          { name: "49.5K 神木步道入口", type: "bird", time: "09:00–13:00", lat: 24.3005, lng: 121.0115, birds: "帝雉、蓝腹鹇、台湾鹪鹛", transport: "包车从47K前往。", note: "全程核心鸟点之一，可多留时间。", costMin: 0, costMax: 0 },
+          { name: "天池", type: "bird", time: "14:00–16:00", lat: 24.3000, lng: 121.0175, birds: "台湾蓝鹊、白耳画眉、山地林鸟", transport: "包车前往。", note: "下午轻松补种。", costMin: 0, costMax: 0 },
+          { name: "大雪山宾馆", type: "hotel", time: "16:30", lat: 24.2510, lng: 120.9510, birds: "回宾馆休息", transport: "包车返回。", note: "晚餐建议在园区解决或提前确认。", costMin: 0, costMax: 0 }
+        ]
+      },
+      {
+        day: "D5",
+        title: "大雪山补种 → 台中",
+        stay: "住宿：台中高铁站/乌日附近",
+        stops: [
+          { name: "大雪山 35K / 游客中心区域", type: "bird", time: "06:00–08:00", lat: 24.2530, lng: 120.9480, birds: "黄山雀、台湾鹛、白耳画眉", transport: "从宾馆步行或短程包车。", note: "补D3/D4没看到的种。", costMin: 0, costMax: 0 },
+          { name: "大雪山 43K（二刷）", type: "bird", time: "08:30–11:00", lat: 24.2745, lng: 120.9850, birds: "帝雉机会、台湾鹛、黄山雀", transport: "包车前往。", note: "上午结束后回宾馆收拾。", costMin: 400, costMax: 900 },
+          { name: "大雪山宾馆", type: "hotel", time: "15:00", lat: 24.2510, lng: 120.9510, birds: "退房下山", transport: "包车从宾馆送回丰原车站。", note: "建议15:00左右下山，不赶夜路。", costMin: 0, costMax: 0 },
+          { name: "丰原车站", type: "transport", time: "17:00", lat: 24.2542, lng: 120.7229, birds: "转台铁", transport: "丰原站 → 新乌日站 / 台中高铁站附近住宿。", note: "台中住宿预算约300–450 RMB。", costMin: 10, costMax: 40 },
+          { name: "台中高铁站住宿区", type: "hotel", time: "晚上", lat: 24.1117, lng: 120.6150, birds: "休息中转", transport: "台铁/出租车到住宿。", note: "D6早上南下左营最方便。", costMin: 300, costMax: 450 }
+        ]
+      },
+      {
+        day: "D6",
+        title: "台中 → 垦丁｜龙銮潭水鸟",
+        stay: "住宿：船帆石或鹅銮鼻附近",
+        stops: [
+          { name: "高铁台中站", type: "transport", time: "08:00", lat: 24.1117, lng: 120.6150, birds: "交通节点", transport: "台湾高铁：台中 → 左营，约50分钟。", note: "建议不要太晚出发。", costMin: 110, costMax: 160 },
+          { name: "左营高铁站", type: "transport", time: "09:00", lat: 22.6873, lng: 120.3090, birds: "转垦丁快线", transport: "9189 垦丁快线：左营 → 垦丁，约2小时20分钟。", note: "到垦丁后再转出租车到住宿。", costMin: 70, costMax: 120 },
+          { name: "船帆石住宿区", type: "hotel", time: "12:00", lat: 21.9343, lng: 120.8245, birds: "靠近龙磐与鹅銮鼻", transport: "垦丁快线到垦丁后，出租车到船帆石。", note: "住宿预算约300–500 RMB/晚。", costMin: 300, costMax: 500 },
+          { name: "龙銮潭自然中心", type: "bird", time: "15:00–18:00", lat: 21.9778, lng: 120.7440, birds: "苍鹭、白鹭、水鸟、猛禽机会", transport: "从船帆石/垦丁住宿区打车前往，约15–25分钟。", note: "傍晚适合看水鸟与光线。", costMin: 50, costMax: 150 }
+        ]
+      },
+      {
+        day: "D7",
+        title: "垦丁国家公园｜猛禽迁徙与珊瑚礁森林",
+        stay: "住宿：船帆石或鹅銮鼻附近",
+        stops: [
+          { name: "龙磐公园", type: "bird", time: "06:00–10:00", lat: 21.9466, lng: 120.8539, birds: "灰面鵟鹰、赤腹鹰、凤头蜂鹰", transport: "住宿地 → 出租车，清晨建议预约。", note: "10月初垦丁猛禽迁徙重点。", costMin: 80, costMax: 200 },
+          { name: "风吹砂", type: "bird", time: "10:00–12:00", lat: 21.9525, lng: 120.8678, birds: "猛禽迁徙、鹰流", transport: "从龙磐公园打车或包短程车前往。", note: "与龙磐可连看。", costMin: 30, costMax: 100 },
+          { name: "社顶自然公园", type: "bird", time: "15:00–16:30", lat: 21.9595, lng: 120.8114, birds: "过境雀形目、画眉类、林鸟", transport: "午休后出租车前往。", note: "下午轻松步行。", costMin: 50, costMax: 150 },
+          { name: "垦丁国家森林游乐区", type: "bird", time: "16:30–18:00", lat: 21.9590, lng: 120.8158, birds: "台湾蓝鹊、红嘴黑鹎、白头翁、绿绣眼", transport: "从社顶附近短程出租车或步行/接驳视住宿位置而定。", note: "补珊瑚礁森林生态环境。", costMin: 50, costMax: 150 },
+          { name: "船帆石住宿区", type: "hotel", time: "晚上", lat: 21.9343, lng: 120.8245, birds: "休息", transport: "出租车返回。", note: "若第二天早班回高雄，提前确认车班。", costMin: 300, costMax: 500 }
+        ]
+      },
+      {
+        day: "D8",
+        title: "垦丁 → 高雄 → 香港",
+        stay: "返程",
+        stops: [
+          { name: "船帆石住宿区", type: "hotel", time: "08:00", lat: 21.9343, lng: 120.8245, birds: "退房", transport: "出租车到垦丁快线站点。", note: "预留充足时间返高雄。", costMin: 50, costMax: 150 },
+          { name: "左营高铁站", type: "transport", time: "约11:00", lat: 22.6873, lng: 120.3090, birds: "转高雄机场", transport: "9189 垦丁快线：垦丁 → 左营，约2小时20分钟。", note: "可从左营搭捷运或出租车去高雄机场。", costMin: 70, costMax: 120 },
+          { name: "高雄国际机场", type: "airport", time: "下午", lat: 22.5771, lng: 120.3500, birds: "返程", transport: "左营 → 高雄机场：捷运或出租车。", note: "飞回香港。", costMin: 1200, costMax: 2500 }
+        ]
+      }
+    ]
+  }
+];
+
+const defaultTrips = [];
+
+let trips = loadTrips();
+let currentTripIndex = 0;
+let currentFilter = "ALL";
+let displayCurrency = "";
+let fxCache = {
+  base: "",
+  rates: {},
+  updatedAt: "",
+  source: ""
+};
+let map, markerLayer, routeLayer, ebirdLayer;
+
+const typeColors = {
+  bird: "#2f6f4e",
+  hotel: "#315f88",
+  transport: "#c06a2b",
+  airport: "#7d5bbd"
+};
+
+const typeLabels = {
+  bird: "鸟点",
+  hotel: "住宿",
+  transport: "交通节点",
+  airport: "机场/航班"
+};
+
+const tripSelect = document.getElementById("tripSelect");
+const buttonsEl = document.getElementById("dayButtons");
+const itineraryEl = document.getElementById("itinerary");
+const dialog = document.getElementById("editDialog");
+const dayDialog = document.getElementById("dayDialog");
+const tripDialog = document.getElementById("tripDialog");
+const birdPreviewDialog = document.getElementById("birdPreviewDialog");
+const ebirdHelpDialog = document.getElementById("ebirdHelpDialog");
+const xcHelpDialog = document.getElementById("xcHelpDialog");
+const checklistDialog = document.getElementById("checklistDialog");
+
+function hasTrips() { return trips.length > 0 && trips[currentTripIndex]; }
+
+function currentTrip() {
+  return hasTrips() ? trips[currentTripIndex] : {
+    title: "BirdRoute",
+    subtitle: "观鸟行程规划与野外清单",
+    currency: "CNY",
+    summary: "当前没有载入行程。请先创建新行程，或导入已有 JSON 文件。",
+    center: { lat: 23.7, lng: 121.0, zoom: 3 },
+    days: []
+  };
+}
+
+function currentDays() { return currentTrip().days || []; }
+
+function deepCopy(obj) { return JSON.parse(JSON.stringify(obj)); }
+
+function loadTrips() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch (e) {}
+  return deepCopy(defaultTrips);
+}
+
+function saveTrips() { localStorage.setItem(STORAGE_KEY, JSON.stringify(trips)); }
+
+function showToast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.style.display = "block";
+  setTimeout(() => { el.style.display = "none"; }, 1800);
+}
+
+function escapeHtml(s) {
+  return String(s ?? "")
+    .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+}
+
+function normalizeCurrency(code) {
+  const c = String(code || "").trim().toUpperCase();
+  if (c === "RMB") return "CNY";
+  return c || "CNY";
+}
+
+function money(n) {
+  const num = Number(n);
+  return Number.isFinite(num) ? num : 0;
+}
+
+function activeBaseCurrency() {
+  return normalizeCurrency(currentTrip().currency || "CNY");
+}
+
+function activeDisplayCurrency() {
+  return normalizeCurrency(displayCurrency || activeBaseCurrency());
+}
+
+function canConvert() {
+  const base = activeBaseCurrency();
+  const target = activeDisplayCurrency();
+  if (base === target) return true;
+  return fxCache.base === base && fxCache.rates && Number.isFinite(Number(fxCache.rates[target]));
+}
+
+function convertAmount(amount) {
+  const n = money(amount);
+  const base = activeBaseCurrency();
+  const target = activeDisplayCurrency();
+  if (base === target) return n;
+  if (canConvert()) return n * Number(fxCache.rates[target]);
+  return n;
+}
+
+function formatAmount(amount, currency = activeDisplayCurrency()) {
+  const n = Number(amount);
+  if (!Number.isFinite(n)) return `0 ${currency}`;
+  const digits = Math.abs(n) >= 100 ? 0 : 2;
+  return `${n.toLocaleString(undefined, { maximumFractionDigits: digits })} ${currency}`;
+}
+
+function formatBudgetRange(min, max) {
+  const base = activeBaseCurrency();
+  const target = activeDisplayCurrency();
+  const cmin = convertAmount(min);
+  const cmax = convertAmount(max);
+  const suffix = base !== target && canConvert() ? `（原 ${formatAmount(money(min), base)}–${formatAmount(money(max), base)}）` : "";
+  return `${formatAmount(cmin, target)}–${formatAmount(cmax, target)}${suffix}`;
+}
+
+function budgetTotals() {
+  let min = 0, max = 0;
+  currentDays().forEach(day => {
+    day.stops.forEach(stop => {
+      min += convertAmount(stop.costMin);
+      max += convertAmount(stop.costMax);
+    });
+  });
+  return { min, max };
+}
+
+function renderTripSelect() {
+  tripSelect.innerHTML = "";
+  if (!hasTrips()) {
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = "当前没有行程";
+    option.selected = true;
+    tripSelect.appendChild(option);
+    return;
+  }
+
+  trips.forEach((trip, idx) => {
+    const option = document.createElement("option");
+    option.value = idx;
+    option.textContent = trip.title || `行程 ${idx + 1}`;
+    if (idx === currentTripIndex) option.selected = true;
+    tripSelect.appendChild(option);
+  });
+}
+
+function switchTrip(idx) {
+  if (!Number.isFinite(idx)) return;
+  currentTripIndex = idx;
+  currentFilter = "ALL";
+  clearEbirdHotspots();
+  render("ALL");
+}
+
+function makeIcon(type, day) {
+  const color = typeColors[type] || "#2f6f4e";
+  return L.divIcon({
+    html: `<div style="
+      background:${color}; color:white; width:30px; height:30px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center; border:2px solid white;
+      box-shadow:0 2px 8px rgba(0,0,0,.35); font-size:11px; font-weight:700;">${day}</div>`,
+    className: "",
+    iconSize: [30, 30],
+    iconAnchor: [15, 15]
+  });
+}
+
+function makeEbirdIcon() {
+  return L.divIcon({
+    html: `<div style="
+      background:#1d78b5; width:18px; height:18px; border-radius:50%;
+      border:2px solid white; box-shadow:0 2px 8px rgba(0,0,0,.35);"></div>`,
+    className: "",
+    iconSize: [18, 18],
+    iconAnchor: [9, 9]
+  });
+}
+
+
+function stopMainLabel(stop) {
+  if (!stop) return "内容";
+  if (stop.type === "bird") return "目标鸟种";
+  if (stop.type === "hotel") return "住宿说明";
+  if (stop.type === "transport") return "交通说明";
+  if (stop.type === "airport") return "航班/机场说明";
+  return "内容";
+}
+
+function stopBudgetLabel(stop) {
+  if (!stop) return "预算";
+  if (stop.type === "hotel") return "住宿预算";
+  if (stop.type === "transport") return "交通预算";
+  if (stop.type === "airport") return "航班/机场预算";
+  if (stop.type === "bird") return "鸟点相关费用";
+  return "预算";
+}
+
+function updateTypeHelp() {
+  const type = document.getElementById("typeInput")?.value;
+  const birdsLabel = document.getElementById("birdsLabel");
+  const typeHelp = document.getElementById("typeHelp");
+  if (!birdsLabel || !typeHelp) return;
+
+  if (type === "bird") {
+    birdsLabel.textContent = "目标鸟种";
+    typeHelp.textContent = "鸟点：请重点填写目标鸟种；预算可用于门票、打车、向导费等。";
+  } else if (type === "hotel") {
+    birdsLabel.textContent = "住宿说明";
+    typeHelp.textContent = "住宿节点：请填写住宿预算最低/最高费用，这会计入总预算统计。";
+  } else if (type === "transport") {
+    birdsLabel.textContent = "交通说明";
+    typeHelp.textContent = "交通节点：请填写交通预算最低/最高费用，例如高铁、巴士、包车、出租车。";
+  } else if (type === "airport") {
+    birdsLabel.textContent = "航班/机场说明";
+    typeHelp.textContent = "机场/航班节点：请填写机票或机场交通预算，这会计入总预算统计。";
+  } else {
+    birdsLabel.textContent = "目标鸟种 / 活动内容";
+    typeHelp.textContent = "鸟点：重点填写目标鸟种；住宿/交通/机场：重点填写预算。预算会计入总预算统计。";
+  }
+}
+
+
+function popupHtml(stop, day) {
+  return `
+    <div class="popup-title">${day}｜${escapeHtml(stop.name)}</div>
+    <div class="popup-line"><b>类型：</b>${typeLabels[stop.type] || stop.type}</div>
+    <div class="popup-line"><b>时间：</b>${escapeHtml(stop.time)}</div>
+    <div class="popup-line"><b>交通：</b>${escapeHtml(stop.transport)}</div>
+    <div class="popup-birds"><b>${stopMainLabel(stop)}：</b>${escapeHtml(stop.birds)}</div>
+    <div class="popup-birds">${escapeHtml(stop.note || "")}</div>
+    <div class="popup-line"><b>${stopBudgetLabel(stop)}：</b>${escapeHtml(formatBudgetRange(stop.costMin, stop.costMax))}</div>
+  `;
+}
+
+function renderButtons() {
+  buttonsEl.innerHTML = "";
+  if (!hasTrips()) {
+    const btn = document.createElement("button");
+    btn.textContent = "无行程";
+    btn.className = "active";
+    buttonsEl.appendChild(btn);
+    return;
+  }
+
+  const allBtn = document.createElement("button");
+  allBtn.textContent = "全部";
+  allBtn.className = currentFilter === "ALL" ? "active" : "";
+  allBtn.onclick = () => render("ALL");
+  buttonsEl.appendChild(allBtn);
+
+  currentDays().forEach(day => {
+    const btn = document.createElement("button");
+    btn.textContent = day.day;
+    btn.className = currentFilter === day.day ? "active" : "";
+    btn.onclick = () => render(day.day);
+    buttonsEl.appendChild(btn);
+  });
+}
+
+function renderCards(days) {
+  itineraryEl.innerHTML = "";
+
+  if (!hasTrips()) {
+    itineraryEl.innerHTML = "";
+    return;
+  }
+  const allDays = currentDays();
+
+  days.forEach((day) => {
+    const actualDayIndex = allDays.findIndex(d => d === day);
+    const card = document.createElement("div");
+    card.className = "day-card";
+    card.innerHTML = `
+      <div class="day-card-header">
+        <h3>${escapeHtml(day.day)}｜${escapeHtml(day.title)}</h3>
+        <p>${escapeHtml(day.stay)}</p>
+        <div class="day-header-actions">
+          <button class="small-btn primary" onclick="openAddDialog(${actualDayIndex})">＋ 给这一天新增活动</button>
+          <button class="small-btn" onclick="openDayDialog(${actualDayIndex})">修改这一天</button>
+          <button class="small-btn" onclick="moveDay(${actualDayIndex}, -1)">上移这一天</button>
+          <button class="small-btn" onclick="moveDay(${actualDayIndex}, 1)">下移这一天</button>
+          <button class="small-btn danger" onclick="deleteDay(${actualDayIndex})">删除这一天</button>
+        </div>
+      </div>
+      ${day.stops.map((stop, stopIndex) => `
+        <div class="stop">
+          <div class="stop-top">
+            <h4>${escapeHtml(stop.name)}</h4>
+            <span class="time">${escapeHtml(stop.time)}</span>
+          </div>
+          <div class="meta">${escapeHtml(stop.note || "")}</div>
+          <div class="birds"><b>${stopMainLabel(stop)}：</b>${escapeHtml(stop.birds)}</div>
+          <div class="transport-text"><b>交通：</b>${escapeHtml(stop.transport)}</div>
+          <div class="cost-text"><b>${stopBudgetLabel(stop)}：</b>${escapeHtml(formatBudgetRange(stop.costMin, stop.costMax))}</div>
+          <div class="stop-actions">
+            ${stop.type === "bird" ? `<button class="small-btn blue" onclick="openBirdPreview(${actualDayIndex}, ${stopIndex})">鸟种预习</button>` : ""}
+            <button class="small-btn" onclick="openEditDialog(${actualDayIndex}, ${stopIndex})">修改</button>
+            <button class="small-btn" onclick="moveStop(${actualDayIndex}, ${stopIndex}, -1)">上移</button>
+            <button class="small-btn" onclick="moveStop(${actualDayIndex}, ${stopIndex}, 1)">下移</button>
+            <button class="small-btn danger" onclick="deleteStop(${actualDayIndex}, ${stopIndex})">删除</button>
+          </div>
+        </div>
+      `).join("")}
+    `;
+    itineraryEl.appendChild(card);
+  });
+}
+
+function renderMap(days) {
+  if (!map) return;
+
+  if (!hasTrips()) {
+    markerLayer.clearLayers();
+    routeLayer.clearLayers();
+    map.setView([23.7, 121.0], 3);
+    setTimeout(() => map.invalidateSize(), 100);
+    return;
+  }
+
+  markerLayer.clearLayers();
+  routeLayer.clearLayers();
+
+  const bounds = [];
+  days.forEach(day => {
+    const points = [];
+
+    day.stops.forEach(stop => {
+      const lat = Number(stop.lat);
+      const lng = Number(stop.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+      const marker = L.marker([lat, lng], {
+        icon: makeIcon(stop.type, day.day.replace("D",""))
+      }).bindPopup(popupHtml(stop, day.day));
+
+      marker.addTo(markerLayer);
+      bounds.push([lat, lng]);
+      points.push([lat, lng]);
+    });
+
+    if (points.length > 1) {
+      L.polyline(points, {
+        color: "#2f6f4e",
+        weight: 3,
+        opacity: 0.55,
+        dashArray: "8,8"
+      }).addTo(routeLayer);
+    }
+  });
+
+  if (bounds.length > 0) {
+    map.fitBounds(bounds, { padding: [42, 42], maxZoom: 12 });
+  } else {
+    const c = currentTrip().center || { lat: 23.7, lng: 121, zoom: 7 };
+    map.setView([c.lat, c.lng], c.zoom || 7);
+  }
+
+  setTimeout(() => map.invalidateSize(), 100);
+}
+
+function renderSummary() {
+  const trip = currentTrip();
+  document.title = hasTrips() ? `BirdRoute · ${trip.title || "未命名行程"}` : "BirdRoute · Birding Trip Planner";
+  document.getElementById("pageTitle").textContent = hasTrips() ? `BirdRoute · ${trip.title || "未命名行程"}` : "BirdRoute";
+  document.getElementById("pageSubtitle").textContent = trip.subtitle || "观鸟行程规划与野外清单";
+  document.getElementById("tripSummaryTitle").textContent = trip.title || "路线概览";
+  document.getElementById("tripSummaryText").textContent = trip.summary || "暂无概览。";
+
+  const totals = budgetTotals();
+  const currency = activeDisplayCurrency();
+  document.getElementById("costMin").textContent = formatAmount(totals.min, currency);
+  document.getElementById("costMax").textContent = formatAmount(totals.max, currency);
+  const select = document.getElementById("displayCurrencySelect");
+  if (select) select.value = displayCurrency || "";
+  updateFxStatus();
+}
+
+function render(filter = currentFilter) {
+  document.body.classList.toggle("no-trip", !hasTrips());
+  document.body.classList.toggle("has-trip", hasTrips());
+  currentFilter = filter;
+  const days = filter === "ALL" ? currentDays() : currentDays().filter(d => d.day === filter);
+  renderTripSelect();
+  renderButtons();
+  renderSummary();
+  renderCards(days);
+  renderMap(days);
+}
+
+function populateDaySelect(selectedIndex = 0) {
+  const select = document.getElementById("daySelect");
+  select.innerHTML = "";
+  currentDays().forEach((day, index) => {
+    const option = document.createElement("option");
+    option.value = index;
+    option.textContent = `${day.day}｜${day.title}`;
+    if (index === selectedIndex) option.selected = true;
+    select.appendChild(option);
+  });
+}
+
+function setFormStop(stop = {}) {
+  document.getElementById("timeInput").value = stop.time || "";
+  document.getElementById("nameInput").value = stop.name || "";
+  document.getElementById("typeInput").value = stop.type || "bird";
+  document.getElementById("latInput").value = stop.lat ?? "";
+  document.getElementById("lngInput").value = stop.lng ?? "";
+  document.getElementById("birdsInput").value = stop.birds || "";
+  document.getElementById("transportInput").value = stop.transport || "";
+  document.getElementById("noteInput").value = stop.note || "";
+  document.getElementById("costMinInput").value = stop.costMin ?? "";
+  document.getElementById("costMaxInput").value = stop.costMax ?? "";
+  document.getElementById("geocodeResults").innerHTML = "";
+  updateTypeHelp();
+}
+
+function openAddDialog(dayIndex = null, preset = {}) {
+  if (!hasTrips()) {
+    alert("请先创建或导入一个整体行程。");
+    openTripDialog();
+    return;
+  }
+  if (currentDays().length === 0) {
+    currentDays().push({ day: "D1", title: "新的一天", stay: "住宿：待定", stops: [] });
+  }
+
+  if (dayIndex === null || dayIndex === undefined) {
+    dayIndex = currentFilter !== "ALL" ? currentDays().findIndex(d => d.day === currentFilter) : 0;
+  }
+  if (dayIndex < 0) dayIndex = 0;
+
+  document.getElementById("dialogTitle").textContent = "新增活动";
+  document.getElementById("editDayIndex").value = dayIndex;
+  document.getElementById("editStopIndex").value = "";
+
+  populateDaySelect(dayIndex);
+  setFormStop(preset);
+  dialog.showModal();
+}
+
+function openEditDialog(dayIndex, stopIndex) {
+  const stop = currentDays()[dayIndex].stops[stopIndex];
+
+  document.getElementById("dialogTitle").textContent = "修改活动";
+  document.getElementById("editDayIndex").value = dayIndex;
+  document.getElementById("editStopIndex").value = stopIndex;
+
+  populateDaySelect(dayIndex);
+  setFormStop(stop);
+  dialog.showModal();
+}
+
+function closeDialog() { dialog.close(); }
+
+function saveStopFromDialog() {
+  const oldDayIndex = Number(document.getElementById("editDayIndex").value);
+  const stopIndexRaw = document.getElementById("editStopIndex").value;
+  const stopIndex = stopIndexRaw === "" ? null : Number(stopIndexRaw);
+  const newDayIndex = Number(document.getElementById("daySelect").value);
+
+  const stop = {
+    name: document.getElementById("nameInput").value.trim() || "未命名活动",
+    type: document.getElementById("typeInput").value,
+    time: document.getElementById("timeInput").value.trim() || "待定",
+    lat: Number(document.getElementById("latInput").value),
+    lng: Number(document.getElementById("lngInput").value),
+    birds: document.getElementById("birdsInput").value.trim(),
+    transport: document.getElementById("transportInput").value.trim(),
+    note: document.getElementById("noteInput").value.trim(),
+    costMin: money(document.getElementById("costMinInput").value),
+    costMax: money(document.getElementById("costMaxInput").value)
+  };
+
+  if (!Number.isFinite(stop.lat) || !Number.isFinite(stop.lng)) {
+    alert("请填写有效经纬度，否则地图无法显示该活动。");
+    return;
+  }
+
+  const days = currentDays();
+  if (stopIndex === null) {
+    days[newDayIndex].stops.push(stop);
+  } else {
+    if (oldDayIndex === newDayIndex) {
+      days[oldDayIndex].stops[stopIndex] = stop;
+    } else {
+      days[oldDayIndex].stops.splice(stopIndex, 1);
+      days[newDayIndex].stops.push(stop);
+    }
+  }
+
+  saveTrips();
+  dialog.close();
+  render(currentFilter);
+  showToast("活动已保存");
+}
+
+function deleteStop(dayIndex, stopIndex) {
+  const stop = currentDays()[dayIndex].stops[stopIndex];
+  if (!confirm(`确定删除「${stop.name}」吗？`)) return;
+  currentDays()[dayIndex].stops.splice(stopIndex, 1);
+  saveTrips();
+  render(currentFilter);
+  showToast("已删除活动");
+}
+
+function moveStop(dayIndex, stopIndex, direction) {
+  const stops = currentDays()[dayIndex].stops;
+  const newIndex = stopIndex + direction;
+  if (newIndex < 0 || newIndex >= stops.length) return;
+  [stops[stopIndex], stops[newIndex]] = [stops[newIndex], stops[stopIndex]];
+  saveTrips();
+  render(currentFilter);
+  showToast("活动顺序已调整");
+}
+
+function openDayDialog(dayIndex = null) {
+  if (!hasTrips()) {
+    alert("请先创建或导入一个整体行程。");
+    openTripDialog();
+    return;
+  }
+  document.getElementById("editDayOnlyIndex").value = dayIndex === null || dayIndex === undefined ? "" : dayIndex;
+
+  if (dayIndex === null || dayIndex === undefined) {
+    document.getElementById("dayDialogTitle").textContent = "新增一天";
+    document.getElementById("dayCodeInput").value = `D${currentDays().length + 1}`;
+    document.getElementById("dayTitleInput").value = "";
+    document.getElementById("dayStayInput").value = "";
+  } else {
+    const day = currentDays()[dayIndex];
+    document.getElementById("dayDialogTitle").textContent = "修改这一天";
+    document.getElementById("dayCodeInput").value = day.day || "";
+    document.getElementById("dayTitleInput").value = day.title || "";
+    document.getElementById("dayStayInput").value = day.stay || "";
+  }
+
+  dayDialog.showModal();
+}
+
+function closeDayDialog() { dayDialog.close(); }
+
+function saveDayFromDialog() {
+  const idxRaw = document.getElementById("editDayOnlyIndex").value;
+  const idx = idxRaw === "" ? null : Number(idxRaw);
+  const days = currentDays();
+
+  const day = {
+    day: document.getElementById("dayCodeInput").value.trim() || `D${days.length + 1}`,
+    title: document.getElementById("dayTitleInput").value.trim() || "未命名行程日",
+    stay: document.getElementById("dayStayInput").value.trim() || "住宿：待定",
+    stops: idx === null ? [] : days[idx].stops
+  };
+
+  if (idx === null) {
+    days.push(day);
+    currentFilter = day.day;
+  } else {
+    const oldDayCode = days[idx].day;
+    days[idx] = day;
+    if (currentFilter === oldDayCode) currentFilter = day.day;
+  }
+
+  saveTrips();
+  dayDialog.close();
+  render(currentFilter);
+  showToast("当天行程已保存");
+}
+
+function deleteDay(dayIndex) {
+  const day = currentDays()[dayIndex];
+  if (!confirm(`确定删除「${day.day}｜${day.title}」以及其中 ${day.stops.length} 个活动吗？`)) return;
+  currentDays().splice(dayIndex, 1);
+  saveTrips();
+  if (currentFilter === day.day) currentFilter = "ALL";
+  render(currentFilter);
+  showToast("已删除这一天");
+}
+
+function moveDay(dayIndex, direction) {
+  const days = currentDays();
+  const newIndex = dayIndex + direction;
+  if (newIndex < 0 || newIndex >= days.length) return;
+  [days[dayIndex], days[newIndex]] = [days[newIndex], days[dayIndex]];
+  saveTrips();
+  render(currentFilter);
+  showToast("天顺序已调整");
+}
+
+
+function openTripDialog(tripIndex = null) {
+  document.getElementById("editTripIndex").value = tripIndex === null || tripIndex === undefined ? "" : tripIndex;
+
+  if (tripIndex === null || tripIndex === undefined) {
+    document.getElementById("tripDialogTitle").textContent = "新增整体行程";
+    document.getElementById("tripTitleInput").value = "";
+    document.getElementById("tripSubtitleInput").value = "";
+    document.getElementById("tripCurrencyInput").value = "CNY";
+    document.getElementById("tripSummaryInput").value = "";
+    document.getElementById("tripCenterLatInput").value = "";
+    document.getElementById("tripCenterLngInput").value = "";
+  } else {
+    const trip = trips[tripIndex];
+    document.getElementById("tripDialogTitle").textContent = "修改整体行程";
+    document.getElementById("tripTitleInput").value = trip.title || "";
+    document.getElementById("tripSubtitleInput").value = trip.subtitle || "";
+    document.getElementById("tripCurrencyInput").value = normalizeCurrency(trip.currency || "CNY");
+    document.getElementById("tripSummaryInput").value = trip.summary || "";
+    document.getElementById("tripCenterLatInput").value = trip.center?.lat ?? "";
+    document.getElementById("tripCenterLngInput").value = trip.center?.lng ?? "";
+  }
+
+  tripDialog.showModal();
+}
+
+function closeTripDialog() { tripDialog.close(); }
+
+function saveTripFromDialog() {
+  const idxRaw = document.getElementById("editTripIndex").value;
+  const idx = idxRaw === "" ? null : Number(idxRaw);
+
+  const title = document.getElementById("tripTitleInput").value.trim() || "未命名整体行程";
+  const centerLat = Number(document.getElementById("tripCenterLatInput").value);
+  const centerLng = Number(document.getElementById("tripCenterLngInput").value);
+
+  const trip = {
+    title,
+    subtitle: document.getElementById("tripSubtitleInput").value.trim() || "自定义旅行行程",
+    currency: normalizeCurrency(document.getElementById("tripCurrencyInput").value.trim() || "CNY"),
+    summary: document.getElementById("tripSummaryInput").value.trim() || "暂无概览。",
+    center: {
+      lat: Number.isFinite(centerLat) ? centerLat : 23.7,
+      lng: Number.isFinite(centerLng) ? centerLng : 121.0,
+      zoom: 7
+    },
+    days: idx === null ? [{ day: "D1", title: "第一天", stay: "住宿：待定", stops: [] }] : trips[idx].days
+  };
+
+  if (idx === null) {
+    trips.push(trip);
+    currentTripIndex = trips.length - 1;
+    currentFilter = "ALL";
+  } else {
+    trips[idx] = trip;
+  }
+
+  saveTrips();
+  tripDialog.close();
+  render(currentFilter);
+  showToast("整体行程已保存");
+}
+
+function deleteTrip() {
+  if (!hasTrips()) {
+    alert("当前没有行程。");
+    return;
+  }
+
+  const trip = currentTrip();
+  if (!confirm(`确定删除整体行程「${trip.title}」吗？`)) return;
+
+  trips.splice(currentTripIndex, 1);
+  currentTripIndex = Math.max(0, Math.min(currentTripIndex, trips.length - 1));
+  currentFilter = "ALL";
+  saveTrips();
+  clearEbirdHotspots();
+  render("ALL");
+  showToast("已删除整体行程");
+}
+
+
+function setDisplayCurrency(code) {
+  displayCurrency = normalizeCurrency(code || "");
+  if (!code) displayCurrency = "";
+  saveFxCache();
+  if (!displayCurrency) {
+    render(currentFilter);
+    return;
+  }
+  const base = activeBaseCurrency();
+  if (displayCurrency !== base && !canConvert()) {
+    refreshExchangeRates().finally(() => render(currentFilter));
+  } else {
+    render(currentFilter);
+  }
+}
+
+function updateFxStatus() {
+  const el = document.getElementById("fxStatus");
+  if (!el) return;
+  const base = activeBaseCurrency();
+  const target = activeDisplayCurrency();
+  if (!displayCurrency || base === target) {
+    el.textContent = `汇率状态：使用原币种 ${base}`;
+    return;
+  }
+  if (canConvert()) {
+    const rate = Number(fxCache.rates[target]);
+    const t = fxCache.updatedAt ? new Date(fxCache.updatedAt).toLocaleString() : "未知时间";
+    el.textContent = `汇率状态：1 ${base} = ${rate.toFixed(4)} ${target}｜${t}`;
+  } else {
+    el.textContent = `汇率状态：暂无 ${base} → ${target} 汇率，预算暂按原数值显示`;
+  }
+}
+
+async function refreshExchangeRates() {
+  const base = activeBaseCurrency();
+  const target = activeDisplayCurrency();
+  if (!displayCurrency || base === target) {
+    updateFxStatus();
+    showToast(`当前使用原币种 ${base}`);
+    return;
+  }
+
+  const status = document.getElementById("fxStatus");
+  if (status) status.textContent = `汇率状态：正在查询 ${base} → ${target}...`;
+
+  const symbols = encodeURIComponent(target);
+  const urls = [
+    `https://api.frankfurter.app/latest?from=${encodeURIComponent(base)}&to=${symbols}`,
+    `https://open.er-api.com/v6/latest/${encodeURIComponent(base)}`
+  ];
+
+  let lastError = null;
+
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, { headers: { "Accept": "application/json" } });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      let rates = {};
+      if (data.rates) rates = data.rates;
+      else if (data.conversion_rates) rates = data.conversion_rates;
+
+      const rate = Number(rates[target]);
+      if (!Number.isFinite(rate)) throw new Error(`未返回 ${target} 汇率`);
+
+      fxCache = {
+        base,
+        rates: { ...rates, [base]: 1 },
+        updatedAt: new Date().toISOString(),
+        source: url.includes("frankfurter") ? "Frankfurter" : "open.er-api.com"
+      };
+
+      saveFxCache();
+      updateFxStatus();
+      showToast(`已更新汇率：1 ${base} = ${rate.toFixed(4)} ${target}`);
+      return;
+    } catch (e) {
+      lastError = e;
+    }
+  }
+
+  updateFxStatus();
+  alert("实时汇率查询失败：" + (lastError?.message || "未知错误") + "\\n请检查网络，或稍后再试。");
+}
+
+function saveFxCache() {
+  try {
+    localStorage.setItem(STORAGE_KEY + "_fx", JSON.stringify({ displayCurrency, fxCache }));
+  } catch (e) {}
+}
+
+function loadFxCache() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY + "_fx") || "{}");
+    displayCurrency = saved.displayCurrency || "";
+    fxCache = saved.fxCache || fxCache;
+  } catch (e) {}
+}
+
+async function geocodeIntoForm() {
+  const q = document.getElementById("nameInput").value.trim();
+  const resultsEl = document.getElementById("geocodeResults");
+  resultsEl.innerHTML = "";
+
+  if (!q) {
+    alert("请先填写地点/活动名称。");
+    return;
+  }
+
+  resultsEl.innerHTML = `<div class="hint">查询中...</div>`;
+
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&q=${encodeURIComponent(q)}`;
+    const res = await fetch(url, {
+      headers: { "Accept": "application/json" }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const data = await res.json();
+    resultsEl.innerHTML = "";
+
+    if (!data.length) {
+      resultsEl.innerHTML = `<div class="hint">没有找到结果。可以换成英文名或更完整地址。</div>`;
+      return;
+    }
+
+    data.forEach(item => {
+      const div = document.createElement("div");
+      div.className = "search-result";
+      div.innerHTML = `<b>${escapeHtml(item.display_name)}</b><br><span class="hint">lat ${item.lat}, lng ${item.lon}</span>`;
+      div.onclick = () => {
+        document.getElementById("latInput").value = Number(item.lat).toFixed(6);
+        document.getElementById("lngInput").value = Number(item.lon).toFixed(6);
+        resultsEl.innerHTML = `<div class="hint">已填入坐标：${Number(item.lat).toFixed(6)}, ${Number(item.lon).toFixed(6)}</div>`;
+      };
+      resultsEl.appendChild(div);
+    });
+  } catch (e) {
+    resultsEl.innerHTML = `<div class="hint">查询失败：${escapeHtml(e.message)}。请检查网络或手动填写坐标。</div>`;
+  }
+}
+
+
+function openEbirdHelp() {
+  ebirdHelpDialog.showModal();
+}
+
+function closeEbirdHelp() {
+  ebirdHelpDialog.close();
+}
+
+async function loadEbirdHotspots() {
+  if (!map || !ebirdLayer) return;
+
+  const token = document.getElementById("ebirdTokenInput").value.trim();
+  if (!token) {
+    alert("eBird 官方 API 需要 token。请先填写 eBird API Token。");
+    return;
+  }
+
+  const center = map.getCenter();
+  const url = `https://api.ebird.org/v2/ref/hotspot/geo?lat=${center.lat.toFixed(6)}&lng=${center.lng.toFixed(6)}&fmt=json&dist=50`;
+
+  try {
+    const res = await fetch(url, {
+      headers: { "X-eBirdApiToken": token }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const data = await res.json();
+    ebirdLayer.clearLayers();
+
+    data.forEach(h => {
+      if (!h.lat || !h.lng) return;
+      L.marker([h.lat, h.lng], { icon: makeEbirdIcon() })
+        .bindPopup(`
+          <div class="popup-title">eBird 热点</div>
+          <div class="popup-line"><b>${escapeHtml(h.locName || "Unnamed hotspot")}</b></div>
+          <div class="popup-line">locId: ${escapeHtml(h.locId || "")}</div>
+          <div class="popup-line">坐标：${h.lat}, ${h.lng}</div>
+        `)
+        .addTo(ebirdLayer);
+    });
+
+    showToast(`已加载 ${data.length} 个 eBird 热点`);
+  } catch (e) {
+    alert("eBird 热点加载失败：" + e.message);
+  }
+}
+
+function clearEbirdHotspots() {
+  if (ebirdLayer) ebirdLayer.clearLayers();
+}
+
+function exportCurrentTrip() {
+  if (!hasTrips()) { alert("当前没有可导出的行程。"); return; }
+  const data = {
+    exportedAt: new Date().toISOString(),
+    type: "single-trip",
+    trip: currentTrip()
+  };
+  downloadJson(data, `${safeFileName(currentTrip().title)}.json`);
+  showToast("已导出当前行程");
+}
+
+function exportAllTrips() {
+  if (!trips.length) { alert("当前没有可导出的行程。"); return; }
+  const data = {
+    exportedAt: new Date().toISOString(),
+    type: "multi-trip",
+    trips
+  };
+  downloadJson(data, "all_trips_map_planner.json");
+  showToast("已导出全部行程");
+}
+
+function downloadJson(data, filename) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function safeFileName(name) {
+  return String(name || "trip").replace(/[\\/:*?"<>|]+/g, "_").replace(/\s+/g, "_");
+}
+
+function validateImported(data) {
+  if (Array.isArray(data)) return data;
+  if (data.trips && Array.isArray(data.trips)) return data.trips;
+  if (data.trip) return [data.trip];
+
+  if (data.itinerary && Array.isArray(data.itinerary)) {
+    return [{
+      title: data.title || "导入行程",
+      subtitle: "从旧版 itinerary JSON 导入",
+      currency: "CNY",
+      summary: "旧版行程导入。",
+      center: { lat: 23.7, lng: 121.0, zoom: 7 },
+      days: data.itinerary
+    }];
+  }
+
+  throw new Error("JSON 格式不支持。请导入当前行程/全部行程导出的 JSON。");
+}
+
+function importTrips(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const imported = validateImported(JSON.parse(reader.result));
+      imported.forEach(t => {
+        t.title = t.title || "导入行程";
+        t.subtitle = t.subtitle || "自定义旅行行程";
+        t.currency = normalizeCurrency(t.currency || "CNY");
+        t.summary = t.summary || "暂无概览。";
+        t.center = t.center || { lat: 23.7, lng: 121.0, zoom: 7 };
+        t.days = t.days || [];
+      });
+
+      trips = imported;
+      currentTripIndex = 0;
+      currentFilter = "ALL";
+      saveTrips();
+      clearEbirdHotspots();
+      render("ALL");
+      showToast("导入成功");
+    } catch (e) {
+      alert("导入失败：" + e.message);
+    } finally {
+      event.target.value = "";
+    }
+  };
+  reader.readAsText(file, "utf-8");
+}
+
+function resetAll() {
+  if (!confirm("确定恢复默认数据吗？当前浏览器中保存的所有行程会被覆盖。")) return;
+  trips = deepCopy(defaultTrips);
+  currentTripIndex = 0;
+  currentFilter = "ALL";
+  saveTrips();
+  clearEbirdHotspots();
+  render("ALL");
+  showToast("已恢复默认");
+}
+
+
+
+
+function loadXcToken() {
+  try {
+    const token = localStorage.getItem(STORAGE_KEY + "_xc_token") || "";
+    const input = document.getElementById("xcTokenInput");
+    if (input) input.value = token;
+    return token;
+  } catch (e) {
+    return "";
+  }
+}
+
+function getXcToken() {
+  const input = document.getElementById("xcTokenInput");
+  return (input?.value || "").trim();
+}
+
+function saveXcToken() {
+  try {
+    localStorage.setItem(STORAGE_KEY + "_xc_token", getXcToken());
+  } catch (e) {}
+}
+
+function clearXcToken() {
+  const input = document.getElementById("xcTokenInput");
+  if (input) input.value = "";
+  saveXcToken();
+  showToast("已清除 xeno-canto key");
+}
+
+function openXcHelp() {
+  xcHelpDialog.showModal();
+}
+
+function closeXcHelp() {
+  xcHelpDialog.close();
+}
+
+const birdNameDictionary = {
+  "黑冠麻鹭": { english: "Malayan Night Heron", scientific: "Gorsachius melanolophus" },
+  "五色鸟": { english: "Taiwan Barbet", scientific: "Psilopogon nuchalis" },
+  "台湾拟啄木鸟": { english: "Taiwan Barbet", scientific: "Psilopogon nuchalis" },
+  "白头翁": { english: "Light-vented Bulbul", scientific: "Pycnonotus sinensis" },
+  "红耳鹎": { english: "Red-whiskered Bulbul", scientific: "Pycnonotus jocosus" },
+  "红嘴黑鹎": { english: "Black Bulbul", scientific: "Hypsipetes leucocephalus" },
+  "绿绣眼": { english: "Swinhoe's White-eye", scientific: "Zosterops simplex" },
+  "灰树鹊": { english: "Gray Treepie", scientific: "Dendrocitta formosae" },
+  "凤头苍鹰": { english: "Crested Goshawk", scientific: "Accipiter trivirgatus" },
+  "台湾蓝鹊": { english: "Taiwan Blue Magpie", scientific: "Urocissa caerulea" },
+  "台湾噪鹛": { english: "White-whiskered Laughingthrush", scientific: "Trochalopteron morrisonianum" },
+  "白耳画眉": { english: "White-eared Sibia", scientific: "Heterophasia auricularis" },
+  "绣眼画眉": { english: "Taiwan Yuhina", scientific: "Yuhina brunneiceps" },
+  "台湾鹛": { english: "Steere's Liocichla", scientific: "Liocichla steerii" },
+  "黄山雀": { english: "Flamecrest", scientific: "Regulus goodfellowi" },
+  "栗背林鸲": { english: "Collared Bush Robin", scientific: "Tarsiger johnstoniae" },
+  "台湾山鹪莺": { english: "Taiwan Bush Warbler", scientific: "Locustella alishanensis" },
+  "黄胸薮眉": { english: "Taiwan Fulvetta", scientific: "Fulvetta formosana" },
+  "帝雉": { english: "Mikado Pheasant", scientific: "Syrmaticus mikado" },
+  "蓝腹鹇": { english: "Swinhoe's Pheasant", scientific: "Lophura swinhoii" },
+  "台湾鹪鹛": { english: "Taiwan Wren-babbler", scientific: "Pnoepyga formosana" },
+  "灰面鵟鹰": { english: "Gray-faced Buzzard", scientific: "Butastur indicus" },
+  "灰面鵟鷹": { english: "Gray-faced Buzzard", scientific: "Butastur indicus" },
+  "赤腹鹰": { english: "Chinese Sparrowhawk", scientific: "Accipiter soloensis" },
+  "赤腹鷹": { english: "Chinese Sparrowhawk", scientific: "Accipiter soloensis" },
+  "凤头蜂鹰": { english: "Crested Honey Buzzard", scientific: "Pernis ptilorhynchus" },
+  "東方蜂鷹": { english: "Crested Honey Buzzard", scientific: "Pernis ptilorhynchus" },
+  "苍鹭": { english: "Gray Heron", scientific: "Ardea cinerea" },
+  "蒼鷺": { english: "Gray Heron", scientific: "Ardea cinerea" },
+  "白鹭": { english: "Little Egret", scientific: "Egretta garzetta" },
+  "小白鹭": { english: "Little Egret", scientific: "Egretta garzetta" },
+  "夜鹭": { english: "Black-crowned Night Heron", scientific: "Nycticorax nycticorax" },
+  "黑翅长脚鹬": { english: "Black-winged Stilt", scientific: "Himantopus himantopus" },
+  "黑翅長腳鷸": { english: "Black-winged Stilt", scientific: "Himantopus himantopus" },
+  "鱼鹰": { english: "Osprey", scientific: "Pandion haliaetus" },
+  "黑面琵鹭": { english: "Black-faced Spoonbill", scientific: "Platalea minor" },
+  "黑面琵鷺": { english: "Black-faced Spoonbill", scientific: "Platalea minor" },
+  "大卷尾": { english: "Black Drongo", scientific: "Dicrurus macrocercus" },
+  "珠颈斑鸠": { english: "Spotted Dove", scientific: "Spilopelia chinensis" },
+  "珠頸斑鳩": { english: "Spotted Dove", scientific: "Spilopelia chinensis" },
+  "翠鸟": { english: "Common Kingfisher", scientific: "Alcedo atthis" },
+  "普通翠鸟": { english: "Common Kingfisher", scientific: "Alcedo atthis" }
+};
+
+function normalizeBirdName(raw) {
+  return String(raw || "")
+    .replace(/\（.*?\）|\(.*?\)/g, "")
+    .replace(/机会|高活跃期|迁徙群|过境|重点|補種|补种/g, "")
+    .trim();
+}
+
+function resolveBirdName(raw) {
+  const clean = normalizeBirdName(raw);
+  const mapped = birdNameDictionary[clean];
+
+  if (mapped) {
+    return {
+      original: clean,
+      english: mapped.english,
+      scientific: mapped.scientific,
+      queries: [mapped.scientific, mapped.english, clean].filter(Boolean)
+    };
+  }
+
+  // 如果用户已经填了英文名或学名，就直接作为高优先级 query
+  const looksScientific = /^[A-Z][a-z]+ [a-z-]+/.test(clean);
+  const looksEnglish = /[A-Za-z]/.test(clean);
+
+  return {
+    original: clean,
+    english: looksEnglish && !looksScientific ? clean : "",
+    scientific: looksScientific ? clean : "",
+    queries: looksScientific ? [clean] : looksEnglish ? [clean] : [clean]
+  };
+}
+
+function parseBirdNames(text) {
+  return String(text || "")
+    .split(/[、,，;；\n\/]+/)
+    .map(normalizeBirdName)
+    .filter(Boolean)
+    .filter(s => !["目标", "机会", "水鸟", "林鸟", "猛禽", "过境雀形目", "画眉类", "山地林鸟", "交通节点", "休息", "抵达台湾"].includes(s))
+    .slice(0, 12);
+}
+
+async function openBirdPreview(dayIndex, stopIndex) {
+  const stop = currentDays()[dayIndex].stops[stopIndex];
+  const names = parseBirdNames(stop.birds);
+
+  document.getElementById("birdPreviewTitle").textContent = `鸟种预习｜${stop.name}`;
+  const content = document.getElementById("birdPreviewContent");
+
+  if (!names.length) {
+    content.innerHTML = `<div class="hint">没有从“目标鸟种”字段解析到具体鸟名。请用顿号、逗号或换行分隔鸟种。</div>`;
+    birdPreviewDialog.showModal();
+    return;
+  }
+
+  content.innerHTML = names.map(name => `
+    <div class="bird-preview-card" id="bird-card-${safeDomId(name)}">
+      <div class="bird-preview-card-header">${escapeHtml(name)}</div>
+      <div class="bird-preview-body">
+        <div class="hint">加载图片中...</div>
+        <div class="bird-preview-meta">加载鸟声中...</div>
+      </div>
+    </div>
+  `).join("");
+
+  birdPreviewDialog.showModal();
+
+  for (const name of names) {
+    loadBirdPreviewCard(name);
+  }
+}
+
+function closeBirdPreview() {
+  birdPreviewDialog.close();
+}
+
+function safeDomId(s) {
+  return btoa(unescape(encodeURIComponent(s))).replaceAll("=", "").replaceAll("+", "-").replaceAll("/", "_");
+}
+
+async function loadBirdPreviewCard(name) {
+  const card = document.getElementById(`bird-card-${safeDomId(name)}`);
+  if (!card) return;
+
+  const resolved = resolveBirdName(name);
+  const imagePromise = fetchBirdImageResolved(resolved);
+  const soundPromise = fetchBirdSoundResolved(resolved);
+
+  const [image, sound] = await Promise.allSettled([imagePromise, soundPromise]);
+
+  const imageData = image.status === "fulfilled" ? image.value : null;
+  const soundData = sound.status === "fulfilled" ? sound.value : null;
+
+  const displayNames = [
+    resolved.english ? `<div><b>英文名：</b>${escapeHtml(resolved.english)}</div>` : "",
+    resolved.scientific ? `<div><b>学名：</b><i>${escapeHtml(resolved.scientific)}</i></div>` : ""
+  ].join("");
+
+  const imgHtml = imageData?.url
+    ? `<a href="${escapeHtml(imageData.url)}" target="_blank" rel="noopener" title="打开原图"><img src="${escapeHtml(imageData.url)}" alt="${escapeHtml(name)}"></a>`
+    : `<div class="hint">未找到可用图片</div>`;
+
+  const imgLink = imageData?.page
+    ? `<a class="bird-preview-link" href="${escapeHtml(imageData.page)}" target="_blank" rel="noopener">查看图片来源</a>`
+    : "";
+
+  const soundHtml = soundData?.file
+    ? `
+      <div><b>鸟声：</b>${escapeHtml(soundData.en || resolved.english || name)} ${soundData.type ? "｜" + escapeHtml(soundData.type) : ""}</div>
+      <div class="hint">检索词：${escapeHtml(soundData.queryUsed || "")}｜${escapeHtml(soundData.apiUsed || "")}</div>
+      <audio controls preload="none" src="${escapeHtml(soundData.file)}"></audio>
+      <a class="bird-preview-link" href="${escapeHtml(soundData.url)}" target="_blank" rel="noopener">打开 xeno-canto 记录</a>
+    `
+    : `
+      <div>未能通过 API 直接加载鸟声。可能需要 xeno-canto API key，或浏览器阻止了本地 HTML 的跨域请求。</div>
+      <a class="bird-preview-link" href="https://xeno-canto.org/explore?query=${encodeURIComponent(resolved.scientific || resolved.english || name)}" target="_blank" rel="noopener">在 xeno-canto 搜索</a>
+    `;
+
+  card.querySelector(".bird-preview-body").innerHTML = `
+    <div>
+      ${imgHtml}
+      ${imgLink}
+    </div>
+    <div class="bird-preview-meta">
+      ${displayNames}
+      ${soundHtml}
+      <a class="bird-preview-link" href="https://www.google.com/search?q=${encodeURIComponent((resolved.scientific || resolved.english || name) + " bird")}" target="_blank" rel="noopener">Google 搜索该鸟种</a>
+    </div>
+  `;
+}
+
+async function fetchBirdImageResolved(resolved) {
+  // 优先用英文名/学名检索英文 Wikipedia，再用中文名，最后 Commons
+  const wikiTerms = [
+    resolved.english,
+    resolved.scientific,
+    resolved.original
+  ].filter(Boolean);
+
+  for (const term of wikiTerms) {
+    const wikiUrls = [
+      `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(term)}`,
+      `https://zh.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(term)}`
+    ];
+
+    for (const url of wikiUrls) {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) continue;
+        const data = await res.json();
+        const img = data.thumbnail?.source || data.originalimage?.source;
+        if (img) return { url: img, page: data.content_urls?.desktop?.page || "" };
+      } catch (e) {}
+    }
+  }
+
+  for (const term of resolved.queries) {
+    try {
+      const commonsUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(term + " bird")}&gsrlimit=1&prop=imageinfo&iiprop=url&iiurlwidth=500&format=json&origin=*`;
+      const res = await fetch(commonsUrl);
+      if (!res.ok) continue;
+      const data = await res.json();
+      const pages = data.query?.pages ? Object.values(data.query.pages) : [];
+      const first = pages[0];
+      const info = first?.imageinfo?.[0];
+      if (info?.thumburl || info?.url) {
+        return { url: info.thumburl || info.url, page: info.descriptionurl || "" };
+      }
+    } catch (e) {}
+  }
+
+  return null;
+}
+
+async function fetchBirdSoundResolved(resolved) {
+  // xeno-canto 对学名/英文名支持最好：学名 → 英文名 → 原名
+  const token = getXcToken();
+  const queries = buildXcQueries(resolved);
+
+  // 1) 优先 API v3 + key
+  if (token) {
+    for (const query of queries) {
+      try {
+        const url = `https://xeno-canto.org/api/3/recordings?query=${encodeURIComponent(query)}&key=${encodeURIComponent(token)}`;
+        const data = await fetchJsonWithTimeout(url, 12000);
+        const rec = selectBestXcRecording(data.recordings || data.recs || []);
+        if (rec) return normalizeXcRecording(rec, query, "API v3 + key");
+      } catch (e) {
+        // 继续尝试下一个 query / fallback
+      }
+    }
+  }
+
+  // 2) 无 key 或 v3 失败时，尝试旧 v2 接口
+  for (const query of queries) {
+    try {
+      const url = `https://xeno-canto.org/api/2/recordings?query=${encodeURIComponent(query)}`;
+      const data = await fetchJsonWithTimeout(url, 12000);
+      const rec = selectBestXcRecording(data.recordings || data.recs || []);
+      if (rec) return normalizeXcRecording(rec, query, "API v2 fallback");
+    } catch (e) {
+      // 本地 HTML 可能被 CORS / redirect 阻止
+    }
+  }
+
+  return null;
+}
+
+function buildXcQueries(resolved) {
+  const queries = [];
+  if (resolved.scientific) {
+    queries.push(resolved.scientific);
+    queries.push(`sp:"${resolved.scientific}"`);
+  }
+  if (resolved.english) {
+    queries.push(resolved.english);
+    queries.push(`en:"${resolved.english}"`);
+  }
+  if (resolved.original) queries.push(resolved.original);
+
+  return [...new Set(queries.filter(Boolean))];
+}
+
+async function fetchJsonWithTimeout(url, ms = 10000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), ms);
+  try {
+    const res = await fetch(url, {
+      headers: { "Accept": "application/json" },
+      signal: controller.signal
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } finally {
+    clearTimeout(id);
+  }
+}
+
+function selectBestXcRecording(recordings) {
+  if (!Array.isArray(recordings) || !recordings.length) return null;
+  return recordings.find(r => r.file && (r.q === "A" || r.q === "B")) ||
+         recordings.find(r => r.file) ||
+         recordings[0];
+}
+
+function normalizeXcRecording(rec, queryUsed, apiUsed) {
+  let file = rec.file || rec.fileUrl || "";
+  if (file && file.startsWith("//")) file = "https:" + file;
+  if (file && file.startsWith("http://")) file = file.replace("http://", "https://");
+
+  const id = rec.id || rec.nr || "";
+  let pageUrl = rec.url || (id ? `https://xeno-canto.org/${id}` : "");
+  if (pageUrl && pageUrl.startsWith("//")) pageUrl = "https:" + pageUrl;
+
+  // 有些情况下 API 返回 file 无法直接跨域播放，但页面链接仍可用
+  return {
+    file,
+    url: pageUrl,
+    en: rec.en || rec.english || "",
+    type: rec.type || rec.sono?.type || "",
+    cnt: rec.cnt || "",
+    loc: rec.loc || "",
+    queryUsed,
+    apiUsed
+  };
+}
+
+
+
+function checklistStorageKey() {
+  return STORAGE_KEY + "_checklist_seen_" + safeFileName(currentTrip().title || "trip");
+}
+
+function loadChecklistSeen() {
+  try {
+    return JSON.parse(localStorage.getItem(checklistStorageKey()) || "{}");
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveChecklistSeen(seen) {
+  try {
+    localStorage.setItem(checklistStorageKey(), JSON.stringify(seen));
+  } catch (e) {}
+}
+
+function birdChecklistKey(bird) {
+  return (bird.scientific || bird.english || bird.chinese || "").toLowerCase();
+}
+
+function toggleChecklistSeen(key, checked) {
+  const seen = loadChecklistSeen();
+  seen[key] = Boolean(checked);
+  saveChecklistSeen(seen);
+  showToast(checked ? "已标记为看到" : "已取消看到标记");
+}
+
+function previewChecklistBird(chinese, english, scientific) {
+  const name = chinese || english || scientific;
+  const fakeDay = {
+    day: "预习",
+    title: "Checklist 鸟种预习",
+    stay: "",
+    stops: [{
+      name: name,
+      type: "bird",
+      time: "",
+      lat: 0,
+      lng: 0,
+      birds: [chinese, english, scientific].filter(Boolean).join("、"),
+      transport: "",
+      note: "",
+      costMin: 0,
+      costMax: 0
+    }]
+  };
+
+  document.getElementById("birdPreviewTitle").textContent = `鸟种预习｜${name}`;
+  const content = document.getElementById("birdPreviewContent");
+  const names = [chinese || english || scientific].filter(Boolean);
+  content.innerHTML = names.map(n => `
+    <div class="bird-preview-card" id="bird-card-${safeDomId(n)}">
+      <div class="bird-preview-card-header">${escapeHtml(n)}</div>
+      <div class="bird-preview-body">
+        <div class="hint">加载图片中...</div>
+        <div class="bird-preview-meta">加载鸟声中...</div>
+      </div>
+    </div>
+  `).join("");
+  birdPreviewDialog.showModal();
+  names.forEach(n => loadBirdPreviewCard(n));
+}
+
+function resetChecklistSeen() {
+  if (!confirm("确定清空当前行程的 Checklist 已看到标记吗？")) return;
+  saveChecklistSeen({});
+  openChecklist();
+  showToast("已清空看到标记");
+}
+
+function buildDailyChecklist() {
+  return currentDays().map(day => {
+    const birds = [];
+    day.stops
+      .filter(stop => stop.type === "bird")
+      .forEach(stop => {
+        parseBirdNames(stop.birds).forEach(name => {
+          const resolved = resolveBirdName(name);
+          birds.push({
+            chinese: resolved.original || name,
+            english: resolved.english || "",
+            scientific: resolved.scientific || "",
+            site: stop.name,
+            time: stop.time
+          });
+        });
+      });
+
+    const seen = new Set();
+    const unique = birds.filter(b => {
+      const key = (b.scientific || b.english || b.chinese).toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    return {
+      day: day.day,
+      title: day.title,
+      stay: day.stay,
+      birds: unique
+    };
+  });
+}
+
+function openChecklist() {
+  const checklist = buildDailyChecklist();
+  const seen = loadChecklistSeen();
+  const content = document.getElementById("checklistContent");
+
+  content.innerHTML = `
+    <div class="row" style="margin:10px 0 14px 0;">
+      <button class="warn" onclick="resetChecklistSeen()">清空已看到标记</button>
+      <span class="hint">勾选状态会自动保存在当前浏览器。</span>
+    </div>
+    ${checklist.map(day => {
+      const seenCount = day.birds.filter(b => seen[birdChecklistKey(b)]).length;
+      return `
+        <div class="day-card" style="box-shadow:none;border:1px solid var(--line);">
+          <div class="day-card-header">
+            <h3>${escapeHtml(day.day)}｜${escapeHtml(day.title)}</h3>
+            <p>${escapeHtml(day.stay)}｜${seenCount}/${day.birds.length} 已看到</p>
+          </div>
+          <div class="stop">
+            ${day.birds.length ? `
+              <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                <thead>
+                  <tr>
+                    <th style="text-align:left;border-bottom:1px solid var(--line);padding:6px;">看到</th>
+                    <th style="text-align:left;border-bottom:1px solid var(--line);padding:6px;">中文名 / 预习</th>
+                    <th style="text-align:left;border-bottom:1px solid var(--line);padding:6px;">英文名</th>
+                    <th style="text-align:left;border-bottom:1px solid var(--line);padding:6px;">学名</th>
+                    <th style="text-align:left;border-bottom:1px solid var(--line);padding:6px;">鸟点</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${day.birds.map(b => {
+                    const key = birdChecklistKey(b);
+                    const checked = seen[key] ? "checked" : "";
+                    return `
+                      <tr>
+                        <td style="border-bottom:1px solid var(--line);padding:6px;">
+                          <input type="checkbox" ${checked}
+                                 onchange="toggleChecklistSeen('${escapeHtml(key)}', this.checked)"
+                                 style="width:auto;">
+                        </td>
+                        <td style="border-bottom:1px solid var(--line);padding:6px;">
+                          <a href="#"
+                             onclick="event.preventDefault(); previewChecklistBird('${escapeHtml(b.chinese)}','${escapeHtml(b.english)}','${escapeHtml(b.scientific)}')">
+                             ${escapeHtml(b.chinese)}
+                          </a>
+                        </td>
+                        <td style="border-bottom:1px solid var(--line);padding:6px;">${escapeHtml(b.english || "-")}</td>
+                        <td style="border-bottom:1px solid var(--line);padding:6px;"><i>${escapeHtml(b.scientific || "-")}</i></td>
+                        <td style="border-bottom:1px solid var(--line);padding:6px;">${escapeHtml(b.site)}</td>
+                      </tr>
+                    `;
+                  }).join("")}
+                </tbody>
+              </table>
+            ` : `<div class="hint">这一天没有鸟点目标鸟种。</div>`}
+          </div>
+        </div>
+      `;
+    }).join("")}
+  `;
+
+  checklistDialog.showModal();
+}
+
+function closeChecklist() {
+  checklistDialog.close();
+}
+
+function exportChecklist() {
+  const seen = loadChecklistSeen();
+  const checklist = buildDailyChecklist().map(day => ({
+    ...day,
+    birds: day.birds.map(b => ({
+      ...b,
+      seen: Boolean(seen[birdChecklistKey(b)])
+    }))
+  }));
+
+  const data = {
+    exportedAt: new Date().toISOString(),
+    tripTitle: currentTrip().title,
+    checklist
+  };
+  downloadJson(data, `${safeFileName(currentTrip().title)}_daily_checklist.json`);
+}
+
+function init() {
+  loadFxCache();
+  loadXcToken();
+  if (typeof L === "undefined") {
+    document.getElementById("mapError").style.display = "block";
+    renderTripSelect();
+    renderButtons();
+    renderSummary();
+    renderCards(currentDays());
+    return;
+  }
+
+  const c = currentTrip().center || { lat: 23.7, lng: 121, zoom: 7 };
+  map = L.map("map", {
+    scrollWheelZoom: true,
+    preferCanvas: true
+  }).setView([c.lat, c.lng], c.zoom || 7);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  markerLayer = L.layerGroup().addTo(map);
+  routeLayer = L.layerGroup().addTo(map);
+  ebirdLayer = L.layerGroup().addTo(map);
+
+  map.on("click", (e) => {
+    const dayIndex = currentFilter !== "ALL" ? currentDays().findIndex(d => d.day === currentFilter) : 0;
+    openAddDialog(dayIndex >= 0 ? dayIndex : 0, {
+      name: "地图点击新增点",
+      type: "bird",
+      time: "待定",
+      lat: Number(e.latlng.lat.toFixed(6)),
+      lng: Number(e.latlng.lng.toFixed(6)),
+      birds: "",
+      transport: "",
+      note: "通过点击地图新增。",
+      costMin: 0,
+      costMax: 0
+    });
+  });
+
+  render("ALL");
+  setTimeout(() => map.invalidateSize(), 300);
+  window.addEventListener("resize", () => map.invalidateSize());
+}
+
+window.addEventListener("load", init);
+</script>
+</body></html>
