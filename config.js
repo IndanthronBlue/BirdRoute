@@ -12,6 +12,6 @@
 //    and connects to localApiBase.
 window.BIRDROUTE_CONFIG = {
   apiBase: "https://43.157.57.204.sslip.io",
-  localApiBase: "http://127.0.0.1:5000",
+  localApiBase: "http://127.0.0.1:5001",
   xhsHelperBase: "http://127.0.0.1:5127"
 };

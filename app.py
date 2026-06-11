@@ -11,7 +11,8 @@ import atexit
 import hashlib
 import queue
 import threading
-from datetime import datetime, timezone
+import time
+from datetime import date, datetime, timedelta, timezone
 from html import unescape
 from html.parser import HTMLParser
 from pathlib import Path
@@ -34,6 +35,8 @@ USER_DATA_DIR = DATA_DIR / "users"
 SECRET_FILE = DATA_DIR / ".secret_key"
 SECRETS_KEY_FILE = DATA_DIR / ".secrets_key"
 BIRD_MAPPINGS_FILE = DATA_DIR / "bird_name_mappings.json"
+EBIRD_SPECIES_CACHE_FILE = DATA_DIR / "ebird_species_cache.json"
+GEOCODE_CACHE_FILE = DATA_DIR / "geocode_cache.json"
 SETTINGS_TEMPLATE_FILE = DATA_DIR / "settings_template.json"
 
 USERNAME_RE = re.compile(r"^[A-Za-z0-9_-]{3,32}$")
@@ -51,6 +54,18 @@ TRIP_VISIBILITY_VALUES = {"private", "public"}
 DEFAULT_TRIP_PACE = "休闲"
 AUTH_TOKEN_SALT = "birdroute-auth-token-v1"
 AUTH_TOKEN_MAX_AGE_SECONDS = 14 * 24 * 60 * 60
+EBIRD_REQUEST_MIN_INTERVAL_SECONDS = 1.25
+EBIRD_SPECIES_CACHE_MAX_AGE_DAYS = 30
+GEOCODE_REQUEST_MIN_INTERVAL_SECONDS = 1.1
+GEOCODE_CACHE_MAX_AGE_DAYS = 90
+QUICK_INFO_MAX_ITEMS = 300
+QUICK_INFO_KEY_MAX_CHARS = 120
+QUICK_INFO_VALUE_MAX_CHARS = 2000
+TRIP_BACKUP_KEEP = 30
+_EBIRD_REQUEST_LOCK = threading.Lock()
+_EBIRD_LAST_REQUEST_AT = 0.0
+_GEOCODE_REQUEST_LOCK = threading.Lock()
+_GEOCODE_LAST_REQUEST_AT = 0.0
 
 CONTENT_SECRET_FIELDS = [
     "braveApiKey",
@@ -505,10 +520,10 @@ def lookup_bird_mappings(names: list[Any]) -> tuple[list[dict[str, Any]], list[s
     return resolved, missing
 
 
-def upsert_bird_mappings(entries: list[Any], source: str = "manual", updated_by: str = "") -> list[dict[str, Any]]:
+def upsert_bird_mappings(entries: list[Any], source: str = "manual", updated_by: str = "", limit: int = 40) -> list[dict[str, Any]]:
     mappings = load_bird_mappings()
     saved: list[dict[str, Any]] = []
-    for item in entries[:40]:
+    for item in entries[:max(1, limit)]:
         if not isinstance(item, dict):
             continue
         name = normalize_bird_name(item.get("chinese") or item.get("name") or "")
@@ -523,8 +538,31 @@ def upsert_bird_mappings(entries: list[Any], source: str = "manual", updated_by:
         mappings[normalize_bird_mapping_key(entry["chinese"])] = entry
         saved.append(entry)
     if saved:
-        save_bird_mappings(mappings)
+            save_bird_mappings(mappings)
     return saved
+
+
+def upsert_ebird_species_mappings(species: list[Any], updated_by: str = "", loc_id: str = "") -> list[dict[str, Any]]:
+    entries: list[dict[str, Any]] = []
+    for item in species:
+        if not isinstance(item, dict):
+            continue
+        chinese = normalize_bird_name(item.get("chineseName") or item.get("commonName") or "")
+        english = normalize_space(str(item.get("englishName") or item.get("english") or ""))
+        scientific = normalize_space(str(item.get("scientificName") or item.get("scientific") or ""))
+        if not chinese or not (english or scientific):
+            continue
+        species_code = normalize_space(str(item.get("speciesCode") or ""))
+        entries.append({
+            "chinese": chinese,
+            "english": english,
+            "scientific": scientific,
+            "source": "ebird",
+            "confidence": "high",
+            "notes": f"由 eBird 热点历史记录自动补全。speciesCode: {species_code}" if species_code else "由 eBird 热点历史记录自动补全。",
+            "sourceUrls": [f"https://ebird.org/hotspot/{loc_id}"] if loc_id else ["https://ebird.org/"],
+        })
+    return upsert_bird_mappings(entries, source="ebird", updated_by=updated_by, limit=500)
 
 
 def clean_english_name_candidate(value: str) -> str:
@@ -685,6 +723,10 @@ def user_trips_dir(username: str) -> Path:
     return user_dir(username) / "trips"
 
 
+def user_trip_backups_dir(username: str, trip_id: str) -> Path:
+    return user_trips_dir(username) / "_backups" / safe_trip_id(trip_id)
+
+
 def user_settings_dir(username: str) -> Path:
     return user_dir(username) / "settings"
 
@@ -751,76 +793,33 @@ def normalize_date_only(value: Any) -> str:
     return match.group(1) if match else ""
 
 
-def normalize_datetime_local_value(value: Any) -> str:
-    text = str(value or "").strip()
-    if not text:
-        return ""
-    direct = re.match(r"^(\d{4}-\d{2}-\d{2})[T\s](\d{2}):(\d{2})", text)
-    if direct:
-        return f"{direct.group(1)}T{direct.group(2)}:{direct.group(3)}"
-    return ""
-
-
-def parse_clock_times_from_text(text: Any) -> list[str]:
-    clocks: list[str] = []
-    for hour, minute in re.findall(r"([01]?\d|2[0-3])[:：]([0-5]\d)", str(text or "")):
-        clocks.append(f"{int(hour):02d}:{minute}")
-    return clocks
-
-
-def combine_date_and_clock(date_text: Any, clock_text: Any) -> str:
-    date = normalize_date_only(date_text)
-    clock = str(clock_text or "").strip()
-    return f"{date}T{clock}" if date and re.match(r"^\d{2}:\d{2}$", clock) else ""
+def add_days_to_date(date_text: Any, offset: int) -> str:
+    source = parse_iso_date(date_text)
+    return (source + timedelta(days=offset)).isoformat() if source else ""
 
 
 def schedule_date_from_stop(stop: dict[str, Any], day: dict[str, Any]) -> str:
-    return (
-        normalize_date_only(stop.get("date"))
-        or normalize_date_only(stop.get("startTime"))
-        or normalize_date_only(stop.get("endTime"))
-        or normalize_date_only(day.get("date"))
-    )
-
-
-def schedule_time_label(start_time: Any, end_time: Any) -> str:
-    start = normalize_datetime_local_value(start_time)
-    end = normalize_datetime_local_value(end_time)
-    if start and end:
-        if start[:10] == end[:10]:
-            return f"{start[11:16]}–{end[11:16]}"
-        return f"{start[:10]} {start[11:16]} → {end[:10]} {end[11:16]}"
-    if start:
-        return start.replace("T", " ")
-    if end:
-        return f"至 {end.replace('T', ' ')}"
-    return ""
+    return normalize_date_only(day.get("date")) or normalize_date_only(stop.get("date"))
 
 
 def normalize_trip_stop_schedule(stop: dict[str, Any], day: dict[str, Any]) -> dict[str, Any]:
     time_label = str(stop.get("time") or stop.get("timeLabel") or "").strip()
-    start_time = normalize_datetime_local_value(stop.get("startTime") or stop.get("start") or stop.get("startsAt"))
-    end_time = normalize_datetime_local_value(stop.get("endTime") or stop.get("end") or stop.get("endsAt"))
-    day_date = normalize_date_only(day.get("date"))
-    clocks = parse_clock_times_from_text(time_label)
-
-    if not start_time and day_date and clocks:
-        start_time = combine_date_and_clock(day_date, clocks[0])
-    if not end_time and day_date and len(clocks) > 1:
-        end_time = combine_date_and_clock(day_date, clocks[1])
-
-    stop["startTime"] = start_time
-    stop["endTime"] = end_time
     stop["date"] = schedule_date_from_stop(stop, day)
-    stop["time"] = time_label or schedule_time_label(start_time, end_time) or "待定"
+    stop["time"] = time_label or "待定"
+    for field in ("startTime", "endTime", "start", "end", "startsAt", "endsAt"):
+        stop.pop(field, None)
     return stop
 
 
 def normalize_trip_schedule_fields(trip: dict[str, Any]) -> dict[str, Any]:
+    trip["startDate"] = normalize_date_only(trip.get("startDate") or trip.get("tripStartDate") or trip.get("dateStart"))
+    trip["endDate"] = normalize_date_only(trip.get("endDate") or trip.get("tripEndDate") or trip.get("dateEnd"))
     raw_days = trip.get("days")
     if not isinstance(raw_days, list):
         trip["days"] = []
         return trip
+    if trip["startDate"] and (not trip["endDate"] or trip["endDate"] < trip["startDate"]):
+        trip["endDate"] = add_days_to_date(trip["startDate"], max(0, len(raw_days) - 1))
 
     days: list[dict[str, Any]] = []
     for index, raw_day in enumerate(raw_days):
@@ -828,7 +827,7 @@ def normalize_trip_schedule_fields(trip: dict[str, Any]) -> dict[str, Any]:
             continue
         day = dict(raw_day)
         day["day"] = str(day.get("day") or f"D{index + 1}").strip() or f"D{index + 1}"
-        day["date"] = normalize_date_only(day.get("date") or day.get("dayDate") or day.get("startDate"))
+        day["date"] = add_days_to_date(trip["startDate"], index) or normalize_date_only(day.get("date") or day.get("dayDate"))
 
         raw_stops = day.get("stops")
         stops: list[dict[str, Any]] = []
@@ -837,15 +836,259 @@ def normalize_trip_schedule_fields(trip: dict[str, Any]) -> dict[str, Any]:
                 if not isinstance(raw_stop, dict):
                     continue
                 stop = normalize_trip_stop_schedule(dict(raw_stop), day)
-                if not day["date"] and stop.get("date"):
-                    day["date"] = normalize_date_only(stop.get("date"))
-                    stop = normalize_trip_stop_schedule(stop, day)
                 stops.append(stop)
         day["stops"] = stops
         days.append(day)
 
     trip["days"] = days
     return trip
+
+
+def parse_iso_date(value: Any) -> date | None:
+    text = normalize_date_only(value)
+    if not text:
+        return None
+    try:
+        return date.fromisoformat(text)
+    except ValueError:
+        return None
+
+
+def same_month_day(year: int, source: date) -> date:
+    try:
+        return date(year, source.month, source.day)
+    except ValueError:
+        # Handle Feb 29 by using Feb 28 in non-leap years.
+        return date(year, source.month, 28)
+
+
+def ebird_historic_windows(target_date: date, years: int = 2, day_window: int = 7) -> list[tuple[date, date, int]]:
+    today = datetime.now(timezone.utc).date()
+    windows: list[tuple[date, date, int]] = []
+    year = target_date.year
+    while len(windows) < max(1, years) and year >= 1900:
+        center = same_month_day(year, target_date)
+        if center <= today:
+            start = center - timedelta(days=day_window)
+            end = center + timedelta(days=day_window)
+            end = min(end, today)
+            if end >= start:
+                windows.append((start, end, year))
+        year -= 1
+    return windows
+
+
+def iter_date_range(start: date, end: date):
+    current = start
+    while current <= end:
+        yield current
+        current += timedelta(days=1)
+
+
+def fetch_ebird_json_api(url: str, token: str, timeout: int = 30) -> Any:
+    global _EBIRD_LAST_REQUEST_AT
+    with _EBIRD_REQUEST_LOCK:
+        elapsed = time.monotonic() - _EBIRD_LAST_REQUEST_AT
+        if elapsed < EBIRD_REQUEST_MIN_INTERVAL_SECONDS:
+            time.sleep(EBIRD_REQUEST_MIN_INTERVAL_SECONDS - elapsed)
+        _EBIRD_LAST_REQUEST_AT = time.monotonic()
+    return fetch_json_api(url, headers={"X-eBirdApiToken": token}, timeout=timeout)
+
+
+def ebird_species_cache_key(loc_id: str, target_date: date, years: int, day_window: int) -> str:
+    return f"v2|{loc_id}|{target_date.isoformat()}|years={years}|window={day_window}"
+
+
+def load_ebird_species_cache() -> dict[str, Any]:
+    data = read_json(EBIRD_SPECIES_CACHE_FILE, {})
+    if not isinstance(data, dict):
+        return {}
+    entries = data.get("entries")
+    return entries if isinstance(entries, dict) else {}
+
+
+def save_ebird_species_cache(entries: dict[str, Any]) -> None:
+    atomic_write_json(EBIRD_SPECIES_CACHE_FILE, {
+        "version": 1,
+        "updatedAt": utc_now(),
+        "entries": entries,
+    })
+
+
+def cached_ebird_species_payload(loc_id: str, target_date: date, years: int, day_window: int, allow_stale: bool = False) -> dict[str, Any] | None:
+    key = ebird_species_cache_key(loc_id, target_date, years, day_window)
+    entry = load_ebird_species_cache().get(key)
+    if not isinstance(entry, dict):
+        return None
+    payload = entry.get("payload")
+    if not isinstance(payload, dict):
+        return None
+    cached_at = parse_optional_datetime(entry.get("cachedAt"))
+    if not cached_at:
+        return None
+    age = datetime.now(timezone.utc) - cached_at
+    if not allow_stale and age.days > EBIRD_SPECIES_CACHE_MAX_AGE_DAYS:
+        return None
+    result = json.loads(json.dumps(payload, ensure_ascii=False))
+    result["cacheHit"] = True
+    result["cacheStale"] = age.days > EBIRD_SPECIES_CACHE_MAX_AGE_DAYS
+    return result
+
+
+def store_ebird_species_payload(loc_id: str, target_date: date, years: int, day_window: int, payload: dict[str, Any]) -> None:
+    entries = load_ebird_species_cache()
+    key = ebird_species_cache_key(loc_id, target_date, years, day_window)
+    clean_payload = {k: v for k, v in payload.items() if k not in {"cacheHit", "cacheStale"}}
+    entries[key] = {
+        "cachedAt": utc_now(),
+        "payload": clean_payload,
+    }
+    save_ebird_species_cache(entries)
+
+
+def fetch_ebird_taxonomy_names(token: str, species_codes: list[str], locale: str) -> dict[str, dict[str, Any]]:
+    names: dict[str, dict[str, Any]] = {}
+    clean_codes = []
+    seen_codes: set[str] = set()
+    for raw_code in species_codes:
+        code = str(raw_code or "").strip()
+        if code and code not in seen_codes:
+            seen_codes.add(code)
+            clean_codes.append(code)
+
+    for start in range(0, len(clean_codes), 80):
+        batch = clean_codes[start:start + 80]
+        url = "https://api.ebird.org/v2/ref/taxonomy/ebird?" + urlencode({
+            "fmt": "json",
+            "locale": locale,
+            "species": ",".join(batch),
+        })
+        data = fetch_ebird_json_api(url, token, timeout=30)
+        for item in data if isinstance(data, list) else []:
+            if not isinstance(item, dict):
+                continue
+            code = str(item.get("speciesCode") or "").strip()
+            if code:
+                names[code] = item
+    return names
+
+
+def fetch_ebird_hotspot_species(token: str, loc_id: str, target_date: date, years: int = 2, day_window: int = 7) -> dict[str, Any]:
+    cached = cached_ebird_species_payload(loc_id, target_date, years, day_window)
+    if cached:
+        return cached
+
+    species_by_key: dict[str, dict[str, Any]] = {}
+    windows_payload: list[dict[str, Any]] = []
+    warnings: list[str] = []
+    rate_limited = False
+
+    for start, end, year in ebird_historic_windows(target_date, years, day_window):
+        observations: list[dict[str, Any]] = []
+        active_days = 0
+        window_rate_limited = False
+        for query_date in iter_date_range(start, end):
+            url = f"https://api.ebird.org/v2/data/obs/{quote(loc_id, safe='')}/historic/{query_date.year}/{query_date.month}/{query_date.day}?" + urlencode({
+                "fmt": "json",
+                "rank": "mrec",
+                "detail": "full",
+                "sppLocale": "zh_SIM",
+                "includeProvisional": "false",
+            })
+            try:
+                data = fetch_ebird_json_api(url, token, timeout=30)
+            except HTTPError as exc:
+                if exc.code == 429:
+                    rate_limited = True
+                    window_rate_limited = True
+                    warnings.append("eBird 请求过于频繁，已停止继续查询并返回已取得的部分结果。请稍后再试，或直接使用缓存结果。")
+                    break
+                raise
+            except Exception as exc:
+                warnings.append(f"{query_date.isoformat()} 查询失败：{exc}")
+                continue
+            day_observations = data if isinstance(data, list) else []
+            if day_observations:
+                active_days += 1
+                observations.extend(day_observations)
+
+        windows_payload.append({
+            "year": year,
+            "startDate": start.isoformat(),
+            "endDate": end.isoformat(),
+            "activeDays": active_days,
+            "observationCount": len(observations),
+            "partial": window_rate_limited,
+        })
+        for obs in observations:
+            if not isinstance(obs, dict):
+                continue
+            common = str(obs.get("comName") or "").strip()
+            scientific = str(obs.get("sciName") or "").strip()
+            code = str(obs.get("speciesCode") or "").strip()
+            if not common and not scientific:
+                continue
+            key = (code or scientific or common).casefold()
+            existing = species_by_key.get(key)
+            obs_date = str(obs.get("obsDt") or "").strip()
+            if existing:
+                if obs_date and obs_date not in existing["observationDates"]:
+                    existing["observationDates"].append(obs_date)
+                existing["observationCount"] += 1
+                continue
+            species_by_key[key] = {
+                "commonName": common,
+                "scientificName": scientific,
+                "speciesCode": code,
+                "observationDates": [obs_date] if obs_date else [],
+                "observationCount": 1,
+            }
+        if rate_limited:
+            break
+
+    species = sorted(
+        species_by_key.values(),
+        key=lambda item: ((item.get("commonName") or item.get("scientificName") or "").casefold())
+    )
+    for item in species:
+        item["observationDates"] = sorted(item["observationDates"])[:12]
+    species_codes = [str(item.get("speciesCode") or "").strip() for item in species if item.get("speciesCode")]
+    taxonomy_warnings: list[str] = list(warnings)
+    try:
+        english_taxonomy = fetch_ebird_taxonomy_names(token, species_codes, "en") if species_codes else {}
+    except Exception as exc:
+        english_taxonomy = {}
+        taxonomy_warnings.append(f"eBird 英文名补全失败：{exc}")
+    try:
+        chinese_taxonomy = fetch_ebird_taxonomy_names(token, species_codes, "zh_SIM") if species_codes else {}
+    except Exception as exc:
+        chinese_taxonomy = {}
+        taxonomy_warnings.append(f"eBird 中文名补全失败：{exc}")
+    for item in species:
+        code = str(item.get("speciesCode") or "").strip()
+        english = normalize_space(str(english_taxonomy.get(code, {}).get("comName") or ""))
+        chinese = normalize_bird_name(chinese_taxonomy.get(code, {}).get("comName") or item.get("commonName") or "")
+        scientific = normalize_space(str(english_taxonomy.get(code, {}).get("sciName") or chinese_taxonomy.get(code, {}).get("sciName") or item.get("scientificName") or ""))
+        item["chineseName"] = chinese
+        item["englishName"] = english
+        item["scientificName"] = scientific
+        item["commonName"] = chinese or english or scientific
+    payload = {
+        "species": species,
+        "windows": windows_payload,
+        "warnings": taxonomy_warnings,
+        "partial": rate_limited,
+    }
+    if rate_limited and not species:
+        stale = cached_ebird_species_payload(loc_id, target_date, years, day_window, allow_stale=True)
+        if stale:
+            stale_warnings = list(stale.get("warnings") or [])
+            stale_warnings.append("eBird 当前限流，已返回本地旧缓存。")
+            stale["warnings"] = stale_warnings
+            return stale
+    if not rate_limited:
+        store_ebird_species_payload(loc_id, target_date, years, day_window, payload)
+    return payload
 
 
 def iter_trip_stops(trip: dict[str, Any]):
@@ -905,6 +1148,7 @@ def trip_content_fingerprint(trip: dict[str, Any]) -> str:
         "tripPace": trip.get("tripPace", DEFAULT_TRIP_PACE),
         "center": trip.get("center") if isinstance(trip.get("center"), dict) else {},
         "days": trip.get("days") if isinstance(trip.get("days"), list) else [],
+        "quickInfo": normalize_quick_info_items(trip.get("quickInfo")),
     }
     raw = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
@@ -966,6 +1210,11 @@ def ensure_trip_shape(trip: Any) -> dict[str, Any]:
     normalized["center"] = center
 
     normalize_trip_schedule_fields(normalized)
+    normalized["quickInfo"] = normalize_quick_info_items(normalized.get("quickInfo"))
+    if normalized["quickInfo"]:
+        normalized["quickInfoUpdatedAt"] = str(normalized.get("quickInfoUpdatedAt") or utc_now())
+    else:
+        normalized.pop("quickInfoUpdatedAt", None)
     normalized["primaryLocation"] = derive_trip_primary_location(normalized)
     normalized["tripPace"] = normalize_trip_tag(normalized.get("tripPace"), 24) or DEFAULT_TRIP_PACE
     normalized["birdTags"] = extract_trip_bird_tags(normalized)
@@ -1015,6 +1264,46 @@ def get_user_trip(username: str, trip_id: str) -> dict[str, Any] | None:
     path = user_trips_dir(username) / f"{safe_trip_id(trip_id)}.json"
     trip = read_json(path, None)
     return normalize_trip_schedule_fields(dict(trip)) if isinstance(trip, dict) else None
+
+
+def backup_user_trip(username: str, trip_id: str, reason: str = "update") -> dict[str, Any] | None:
+    safe_id = safe_trip_id(trip_id)
+    path = user_trips_dir(username) / f"{safe_id}.json"
+    if not path.exists():
+        return None
+    trip = read_json(path, None)
+    if not isinstance(trip, dict):
+        return None
+
+    backup_dir = user_trip_backups_dir(username, safe_id)
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+    backup_path = backup_dir / f"{stamp}.json"
+    payload = {
+        "version": 1,
+        "backupOf": safe_id,
+        "backedUpAt": utc_now(),
+        "reason": normalize_space(str(reason or "update"))[:80],
+        "trip": trip,
+    }
+    atomic_write_json(backup_path, payload)
+
+    backups = sorted(
+        backup_dir.glob("*.json"),
+        key=lambda item: item.stat().st_mtime,
+        reverse=True,
+    )
+    for old_path in backups[TRIP_BACKUP_KEEP:]:
+        try:
+            old_path.unlink()
+        except OSError:
+            pass
+
+    return {
+        "backupOf": safe_id,
+        "backedUpAt": payload["backedUpAt"],
+        "reason": payload["reason"],
+        "path": str(backup_path.relative_to(user_dir(username))).replace("\\", "/"),
+    }
 
 
 def save_user_trip(username: str, trip: dict[str, Any]) -> dict[str, Any]:
@@ -1699,6 +1988,153 @@ def fetch_json_api(url: str, headers: dict[str, str] | None = None, payload: Any
     req = Request(url, data=data, headers=request_headers, method=method)
     with urlopen(req, timeout=timeout) as res:
         return json.loads(res.read().decode("utf-8"))
+
+
+def geocode_cache_key(query: str, limit: int) -> str:
+    normalized = normalize_space(query).casefold()
+    raw = f"nominatim|zh-CN|limit={limit}|{normalized}"
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
+def load_geocode_cache() -> dict[str, Any]:
+    data = read_json(GEOCODE_CACHE_FILE, {})
+    if not isinstance(data, dict):
+        return {}
+    entries = data.get("entries")
+    return entries if isinstance(entries, dict) else {}
+
+
+def save_geocode_cache(entries: dict[str, Any]) -> None:
+    atomic_write_json(GEOCODE_CACHE_FILE, {
+        "version": 1,
+        "updatedAt": utc_now(),
+        "provider": "nominatim",
+        "entries": entries,
+    })
+
+
+def geocode_cache_entry_age_days(entry: dict[str, Any]) -> int | None:
+    cached_at = str(entry.get("cachedAt") or "").strip()
+    if not cached_at:
+        return None
+    try:
+        parsed = datetime.fromisoformat(cached_at.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return (datetime.now(timezone.utc) - parsed.astimezone(timezone.utc)).days
+
+
+def cached_geocode_payload(query: str, limit: int, allow_stale: bool = False) -> dict[str, Any] | None:
+    key = geocode_cache_key(query, limit)
+    entry = load_geocode_cache().get(key)
+    if not isinstance(entry, dict):
+        return None
+    age_days = geocode_cache_entry_age_days(entry)
+    if age_days is None:
+        return None
+    if not allow_stale and age_days > GEOCODE_CACHE_MAX_AGE_DAYS:
+        return None
+    results = entry.get("results")
+    if not isinstance(results, list):
+        return None
+    return {
+        "results": results,
+        "cacheHit": True,
+        "cacheStale": age_days > GEOCODE_CACHE_MAX_AGE_DAYS,
+        "cachedAt": entry.get("cachedAt"),
+        "provider": "nominatim",
+    }
+
+
+def store_geocode_payload(query: str, limit: int, results: list[dict[str, Any]]) -> None:
+    entries = load_geocode_cache()
+    entries[geocode_cache_key(query, limit)] = {
+        "query": normalize_space(query),
+        "limit": limit,
+        "cachedAt": utc_now(),
+        "results": results,
+    }
+    save_geocode_cache(entries)
+
+
+def throttle_geocode_request() -> None:
+    global _GEOCODE_LAST_REQUEST_AT
+    with _GEOCODE_REQUEST_LOCK:
+        elapsed = time.monotonic() - _GEOCODE_LAST_REQUEST_AT
+        if elapsed < GEOCODE_REQUEST_MIN_INTERVAL_SECONDS:
+            time.sleep(GEOCODE_REQUEST_MIN_INTERVAL_SECONDS - elapsed)
+        _GEOCODE_LAST_REQUEST_AT = time.monotonic()
+
+
+def normalize_geocode_result(item: Any) -> dict[str, Any] | None:
+    if not isinstance(item, dict):
+        return None
+    try:
+        lat = float(item.get("lat"))
+        lon = float(item.get("lon"))
+    except (TypeError, ValueError):
+        return None
+    display_name = normalize_space(str(item.get("display_name") or item.get("name") or ""))
+    if not display_name:
+        return None
+    return {
+        "display_name": display_name,
+        "lat": f"{lat:.7f}",
+        "lon": f"{lon:.7f}",
+        "class": normalize_space(str(item.get("class") or "")),
+        "type": normalize_space(str(item.get("type") or "")),
+        "importance": item.get("importance"),
+        "boundingbox": item.get("boundingbox") if isinstance(item.get("boundingbox"), list) else [],
+        "source": "nominatim",
+    }
+
+
+def fetch_geocode_results(query: str, limit: int = 5) -> dict[str, Any]:
+    normalized_query = normalize_space(query)
+    limit = max(1, min(limit, 10))
+    cached = cached_geocode_payload(normalized_query, limit)
+    if cached:
+        return cached
+
+    params = {
+        "format": "jsonv2",
+        "limit": str(limit),
+        "q": normalized_query,
+        "addressdetails": "1",
+        "namedetails": "1",
+        "accept-language": "zh-CN,zh;q=0.9,en;q=0.8",
+    }
+    url = "https://nominatim.openstreetmap.org/search?" + urlencode(params)
+    headers = {
+        "Accept": "application/json",
+        "User-Agent": "BirdRoute/1.0 geocoding proxy",
+        "Referer": "https://github.com/IndanthronBlue/BirdRoute",
+    }
+
+    try:
+        throttle_geocode_request()
+        data = fetch_json_api(url, headers=headers, timeout=20)
+    except HTTPError as exc:
+        stale = cached_geocode_payload(normalized_query, limit, allow_stale=True)
+        if stale:
+            stale["warnings"] = [f"Nominatim 返回 HTTP {exc.code}，已使用本地旧缓存。"]
+            return stale
+        raise
+
+    results = [
+        normalized
+        for normalized in (normalize_geocode_result(item) for item in (data if isinstance(data, list) else []))
+        if normalized
+    ][:limit]
+    store_geocode_payload(normalized_query, limit, results)
+    return {
+        "results": results,
+        "cacheHit": False,
+        "cacheStale": False,
+        "provider": "nominatim",
+    }
 
 
 def query_param(name: str, value: str, note: str = "", enabled: bool = True) -> dict[str, Any]:
@@ -3207,6 +3643,71 @@ def save_api_credentials(username: str, payload: dict[str, Any]) -> dict[str, An
     return load_api_credentials(username, include_secrets=True)
 
 
+def normalize_quick_info_items(value: Any) -> list[dict[str, Any]]:
+    if isinstance(value, dict):
+        value = value.get("items")
+    if not isinstance(value, list):
+        return []
+
+    items: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    now = utc_now()
+    for raw in value:
+        if not isinstance(raw, dict):
+            continue
+        key = normalize_space(str(raw.get("key") or raw.get("name") or ""))
+        info_value = str(raw.get("value") or raw.get("url") or raw.get("text") or "").strip()
+        if not key or not info_value:
+            continue
+
+        item_id = safe_record_id(raw.get("id") or uuid.uuid4().hex)
+        while item_id in seen_ids:
+            item_id = safe_record_id(uuid.uuid4().hex)
+        seen_ids.add(item_id)
+
+        items.append({
+            "id": item_id,
+            "key": key[:QUICK_INFO_KEY_MAX_CHARS],
+            "value": info_value[:QUICK_INFO_VALUE_MAX_CHARS],
+            "createdAt": str(raw.get("createdAt") or now)[:80],
+            "updatedAt": str(raw.get("updatedAt") or now)[:80],
+        })
+        if len(items) >= QUICK_INFO_MAX_ITEMS:
+            break
+    return items
+
+
+def save_trip_quick_info(username: str, trip_id: str, payload: dict[str, Any]) -> dict[str, Any] | None:
+    trip = get_user_trip(username, trip_id)
+    if not trip:
+        return None
+    existing_items = normalize_quick_info_items(trip.get("quickInfo"))
+    existing_by_id = {item["id"]: item for item in existing_items if item.get("id")}
+    now = utc_now()
+    items = []
+    for item in normalize_quick_info_items(payload.get("items") if isinstance(payload, dict) else []):
+        previous = existing_by_id.get(item["id"], {})
+        item["createdAt"] = previous.get("createdAt") or item.get("createdAt") or now
+        item["updatedAt"] = now
+        items.append(item)
+
+    trip["quickInfo"] = items
+    trip["quickInfoUpdatedAt"] = now if items else ""
+    saved = save_user_trip(username, trip)
+    return {
+        "updatedAt": saved.get("quickInfoUpdatedAt", ""),
+        "items": saved.get("quickInfo") or [],
+        "trip": saved,
+    }
+
+
+def trip_quick_info_payload(trip: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "updatedAt": str(trip.get("quickInfoUpdatedAt") or ""),
+        "items": normalize_quick_info_items(trip.get("quickInfo")),
+    }
+
+
 def clear_all_api_secrets(username: str) -> dict[str, Any]:
     llm = load_llm_settings(username, include_key=True)
     llm.pop("apiKey", None)
@@ -3633,6 +4134,10 @@ def create_app() -> Flask:
     def frontend_config():
         return send_from_directory(BASE_DIR, "config.js")
 
+    @app.get("/assets/<path:filename>")
+    def frontend_assets(filename: str):
+        return send_from_directory(BASE_DIR / "assets", filename)
+
     @app.get("/api/health")
     def health():
         return jsonify({"ok": True, "service": "BirdRoute backend", "time": utc_now()})
@@ -3743,10 +4248,14 @@ def create_app() -> Flask:
             return api_error("trip must be an object")
         trip["id"] = safe_trip_id(trip_id)
         try:
+            backup_info = backup_user_trip(username, trip_id, str(payload.get("backupReason") or "trip_update")) if payload.get("backupPrevious") else None
             saved = save_user_trip(username, trip)
         except ValueError as exc:
             return api_error(str(exc))
-        return jsonify({"ok": True, "trip": saved})
+        response = {"ok": True, "trip": saved}
+        if backup_info:
+            response["backup"] = backup_info
+        return jsonify(response)
 
     @app.delete("/api/trips/<trip_id>")
     def trip_delete(trip_id: str):
@@ -3757,6 +4266,29 @@ def create_app() -> Flask:
         if not deleted:
             return api_error("行程不存在。", 404)
         return jsonify({"ok": True})
+
+    @app.get("/api/trips/<trip_id>/quick-info")
+    def trip_quick_info_show(trip_id: str):
+        username = require_login()
+        if not username:
+            return api_error("请先登录。", 401)
+        trip = get_user_trip(username, trip_id)
+        if not trip:
+            return api_error("行程不存在。", 404)
+        return jsonify({"ok": True, **trip_quick_info_payload(trip)})
+
+    @app.put("/api/trips/<trip_id>/quick-info")
+    def trip_quick_info_update(trip_id: str):
+        username = require_login()
+        if not username:
+            return api_error("请先登录。", 401)
+        payload = request.get_json(silent=True) or {}
+        if not isinstance(payload, dict):
+            return api_error("payload must be an object")
+        data = save_trip_quick_info(username, trip_id, payload)
+        if not data:
+            return api_error("行程不存在。", 404)
+        return jsonify({"ok": True, **data})
 
     @app.get("/api/public-trips/search")
     def public_trips_search():
@@ -3966,6 +4498,31 @@ def create_app() -> Flask:
             return api_error(str(exc), 400)
         return jsonify({"ok": True, "method": "llm", "mappings": mappings})
 
+    @app.get("/api/geocode/search")
+    def geocode_search():
+        query = normalize_space(str(request.args.get("q") or ""))
+        if not query:
+            return api_error("请提供地点关键词 q。")
+        if len(query) > 200:
+            return api_error("地点关键词过长，请缩短后再查询。")
+        try:
+            limit = int(float(request.args.get("limit", "5")))
+        except ValueError:
+            limit = 5
+        limit = max(1, min(limit, 10))
+        try:
+            payload = fetch_geocode_results(query, limit)
+        except HTTPError as exc:
+            return api_error(f"坐标查询服务返回 HTTP {exc.code}，请稍后再试。", 502)
+        except Exception as exc:
+            return api_error(f"坐标查询失败：{exc}", 502)
+        return jsonify({
+            "ok": True,
+            "query": query,
+            "limit": limit,
+            **payload,
+        })
+
     @app.get("/api/ebird/hotspots")
     def ebird_hotspots():
         username = require_login()
@@ -4024,6 +4581,53 @@ def create_app() -> Flask:
                 "error": str(exc),
             })
         return jsonify({"ok": True, "hasToken": True, "valid": True})
+
+    @app.get("/api/ebird/hotspot-species")
+    def ebird_hotspot_species():
+        username = require_login()
+        if not username:
+            return api_error("请先登录。", 401)
+        credentials = load_api_credentials(username, include_secrets=True)
+        token = str(credentials.get("ebirdToken") or "").strip()
+        if not token:
+            return api_error("请先在账号 API 设置里保存 eBird API Token。", 400)
+
+        loc_id = str(request.args.get("locId") or "").strip()
+        if not re.match(r"^L\d+$", loc_id):
+            return api_error("locId 参数格式不正确。")
+
+        target_date = parse_iso_date(request.args.get("date") or "")
+        if not target_date:
+            return api_error("请提供活动日期 date=YYYY-MM-DD。")
+
+        try:
+            years = int(float(request.args.get("years", "2")))
+        except ValueError:
+            years = 2
+        try:
+            day_window = int(float(request.args.get("window", "7")))
+        except ValueError:
+            day_window = 7
+        years = max(1, min(years, 5))
+        day_window = max(0, min(day_window, 14))
+
+        try:
+            payload = fetch_ebird_hotspot_species(token, loc_id, target_date, years, day_window)
+        except Exception as exc:
+            return api_error(f"eBird 热点鸟种查询失败：{exc}", 502)
+        saved_mappings = upsert_ebird_species_mappings(payload.get("species") or [], username, loc_id)
+
+        return jsonify({
+            "ok": True,
+            "locId": loc_id,
+            "targetDate": target_date.isoformat(),
+            "years": years,
+            "window": day_window,
+            "locale": "zh_SIM",
+            "mappings": saved_mappings,
+            "mappingsSaved": len(saved_mappings),
+            **payload,
+        })
 
     @app.get("/api/xeno-canto/recordings")
     def xeno_canto_recordings():
