@@ -449,6 +449,20 @@ label {
   margin-bottom: 5px;
 }
 
+.trip-default-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.trip-default-row input {
+  width: auto;
+  margin: 0;
+}
+
 .modal-actions {
   padding: 14px 18px;
   border-top: 1px solid var(--line);

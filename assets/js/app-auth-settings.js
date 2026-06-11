@@ -206,6 +206,7 @@ function enterApp(mode) {
 function clearTripRuntimeState() {
   trips = [];
   currentTripIndex = 0;
+  defaultTripId = "";
   currentFilter = "ALL";
   try {
     localStorage.removeItem(STORAGE_KEY);
@@ -327,7 +328,10 @@ async function loadTripsFromBackend() {
   const data = await apiFetch("/api/trips");
   trips = Array.isArray(data.trips) ? data.trips : [];
   ensureTripRecordIds();
-  currentTripIndex = 0;
+  defaultTripId = normalizeTripReferenceId(data.defaultTripId || "");
+  ensureDefaultTripIdValid();
+  const defaultIndex = defaultTripId ? trips.findIndex(trip => trip.id === defaultTripId) : -1;
+  currentTripIndex = defaultIndex >= 0 ? defaultIndex : 0;
   currentFilter = "ALL";
   persistLocalTripsOnly();
   clearEbirdHotspots();
@@ -388,13 +392,18 @@ async function syncTripsToBackend() {
 
   try {
     const activeTripId = currentTrip()?.id || "";
+    ensureDefaultTripIdValid();
     const data = await apiFetch("/api/trips", {
       method: "PUT",
-      body: { trips }
+      body: { trips, defaultTripId }
     });
     if (Array.isArray(data.trips)) {
       trips = data.trips;
       ensureTripRecordIds();
+      if (Object.prototype.hasOwnProperty.call(data, "defaultTripId")) {
+        defaultTripId = normalizeTripReferenceId(data.defaultTripId || "");
+      }
+      ensureDefaultTripIdValid();
       const nextIndex = trips.findIndex(trip => trip.id === activeTripId);
       if (nextIndex >= 0) currentTripIndex = nextIndex;
       persistLocalTripsOnly();
@@ -428,10 +437,14 @@ async function saveCurrentTripToBackend() {
   try {
     const data = await apiFetch(`/api/trips/${encodeURIComponent(trip.id)}`, {
       method: "PUT",
-      body: { trip }
+      body: { trip, defaultTripId, setDefaultTrip: defaultTripId === trip.id }
     });
     if (data.trip) {
       trips[currentTripIndex] = data.trip;
+      if (Object.prototype.hasOwnProperty.call(data, "defaultTripId")) {
+        defaultTripId = normalizeTripReferenceId(data.defaultTripId || "");
+      }
+      ensureDefaultTripIdValid();
       persistLocalTripsOnly();
       render(currentFilter);
     }

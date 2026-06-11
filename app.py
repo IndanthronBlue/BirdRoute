@@ -731,8 +731,17 @@ def user_settings_dir(username: str) -> Path:
     return user_dir(username) / "settings"
 
 
+def user_preferences_file(username: str) -> Path:
+    return user_settings_dir(username) / "preferences.json"
+
+
 def user_research_dir(username: str) -> Path:
     return user_dir(username) / "research"
+
+
+def normalize_trip_reference_id(value: Any) -> str:
+    text = str(value or "").strip()
+    return text if re.match(r"^[A-Za-z0-9_-]{6,80}$", text) else ""
 
 
 def safe_trip_id(value: Any) -> str:
@@ -1313,6 +1322,42 @@ def save_user_trip(username: str, trip: dict[str, Any]) -> dict[str, Any]:
     return normalized
 
 
+def load_user_preferences(username: str) -> dict[str, Any]:
+    data = read_json(user_preferences_file(username), {})
+    return data if isinstance(data, dict) else {}
+
+
+def save_user_preferences(username: str, preferences: dict[str, Any]) -> None:
+    payload = dict(preferences)
+    payload["updatedAt"] = utc_now()
+    atomic_write_json(user_preferences_file(username), payload)
+
+
+def get_user_default_trip_id(username: str) -> str:
+    preferences = load_user_preferences(username)
+    trip_id = normalize_trip_reference_id(preferences.get("defaultTripId"))
+    if trip_id and (user_trips_dir(username) / f"{trip_id}.json").exists():
+        return trip_id
+    if trip_id:
+        preferences.pop("defaultTripId", None)
+        save_user_preferences(username, preferences)
+    return ""
+
+
+def set_user_default_trip_id(username: str, trip_id: Any) -> str:
+    normalized_id = normalize_trip_reference_id(trip_id)
+    if normalized_id and not (user_trips_dir(username) / f"{normalized_id}.json").exists():
+        raise ValueError("默认行程不存在。")
+
+    preferences = load_user_preferences(username)
+    if normalized_id:
+        preferences["defaultTripId"] = normalized_id
+    else:
+        preferences.pop("defaultTripId", None)
+    save_user_preferences(username, preferences)
+    return normalized_id
+
+
 def replace_user_trips(username: str, trips: Any) -> list[dict[str, Any]]:
     if not isinstance(trips, list):
         raise ValueError("trips must be an array")
@@ -1333,14 +1378,21 @@ def replace_user_trips(username: str, trips: Any) -> list[dict[str, Any]]:
         if path.stem not in seen_ids:
             path.unlink()
 
+    current_default_trip_id = get_user_default_trip_id(username)
+    if current_default_trip_id and current_default_trip_id not in seen_ids:
+        set_user_default_trip_id(username, "")
+
     return saved
 
 
 def delete_user_trip(username: str, trip_id: str) -> bool:
+    normalized_id = normalize_trip_reference_id(trip_id)
     path = user_trips_dir(username) / f"{safe_trip_id(trip_id)}.json"
     if not path.exists():
         return False
     path.unlink()
+    if normalized_id and get_user_default_trip_id(username) == normalized_id:
+        set_user_default_trip_id(username, "")
     return True
 
 
@@ -4198,7 +4250,11 @@ def create_app() -> Flask:
         username = require_login()
         if not username:
             return api_error("请先登录。", 401)
-        return jsonify({"ok": True, "trips": list_user_trips(username)})
+        return jsonify({
+            "ok": True,
+            "trips": list_user_trips(username),
+            "defaultTripId": get_user_default_trip_id(username),
+        })
 
     @app.put("/api/trips")
     def trips_replace():
@@ -4209,9 +4265,14 @@ def create_app() -> Flask:
         payload = request.get_json(silent=True) or {}
         try:
             saved = replace_user_trips(username, payload.get("trips", []))
+            default_trip_id = (
+                set_user_default_trip_id(username, payload.get("defaultTripId"))
+                if "defaultTripId" in payload
+                else get_user_default_trip_id(username)
+            )
         except ValueError as exc:
             return api_error(str(exc))
-        return jsonify({"ok": True, "trips": saved})
+        return jsonify({"ok": True, "trips": saved, "defaultTripId": default_trip_id})
 
     @app.post("/api/trips")
     def trip_create():
@@ -4222,9 +4283,14 @@ def create_app() -> Flask:
         payload = request.get_json(silent=True) or {}
         try:
             trip = save_user_trip(username, payload.get("trip", payload))
+            default_trip_id = (
+                set_user_default_trip_id(username, payload.get("defaultTripId"))
+                if "defaultTripId" in payload
+                else set_user_default_trip_id(username, trip["id"]) if payload.get("setDefaultTrip") else get_user_default_trip_id(username)
+            )
         except ValueError as exc:
             return api_error(str(exc))
-        return jsonify({"ok": True, "trip": trip}), 201
+        return jsonify({"ok": True, "trip": trip, "defaultTripId": default_trip_id}), 201
 
     @app.get("/api/trips/<trip_id>")
     def trip_show(trip_id: str):
@@ -4250,9 +4316,14 @@ def create_app() -> Flask:
         try:
             backup_info = backup_user_trip(username, trip_id, str(payload.get("backupReason") or "trip_update")) if payload.get("backupPrevious") else None
             saved = save_user_trip(username, trip)
+            default_trip_id = (
+                set_user_default_trip_id(username, payload.get("defaultTripId"))
+                if "defaultTripId" in payload
+                else set_user_default_trip_id(username, saved["id"]) if payload.get("setDefaultTrip") else get_user_default_trip_id(username)
+            )
         except ValueError as exc:
             return api_error(str(exc))
-        response = {"ok": True, "trip": saved}
+        response = {"ok": True, "trip": saved, "defaultTripId": default_trip_id}
         if backup_info:
             response["backup"] = backup_info
         return jsonify(response)
@@ -4265,7 +4336,7 @@ def create_app() -> Flask:
         deleted = delete_user_trip(username, trip_id)
         if not deleted:
             return api_error("行程不存在。", 404)
-        return jsonify({"ok": True})
+        return jsonify({"ok": True, "defaultTripId": get_user_default_trip_id(username)})
 
     @app.get("/api/trips/<trip_id>/quick-info")
     def trip_quick_info_show(trip_id: str):

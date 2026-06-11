@@ -175,7 +175,8 @@ function renderTripSelect() {
   trips.forEach((trip, idx) => {
     const option = document.createElement("option");
     option.value = idx;
-    option.textContent = trip.title || `行程 ${idx + 1}`;
+    const isDefaultTrip = Boolean(defaultTripId && trip.id === defaultTripId);
+    option.textContent = `${trip.title || `行程 ${idx + 1}`}${isDefaultTrip ? "（默认）" : ""}`;
     if (idx === currentTripIndex) option.selected = true;
     tripSelect.appendChild(option);
   });
@@ -1053,6 +1054,27 @@ function moveDay(dayIndex, direction) {
 }
 
 
+function setTripDefaultDialogState(trip = null) {
+  const input = document.getElementById("tripDefaultInput");
+  const hint = document.getElementById("tripDefaultHint");
+  if (!input || !hint) return;
+
+  const canSaveDefault = sessionMode === "account" && Boolean(currentUser);
+  const tripId = trip?.id || "";
+  input.disabled = !canSaveDefault;
+  input.checked = Boolean(canSaveDefault && tripId && defaultTripId === tripId);
+  if (!canSaveDefault) {
+    hint.textContent = "登录账号后可以保存默认行程；游客模式不会持久化这个设置。";
+  } else if (tripId && defaultTripId === tripId) {
+    hint.textContent = "当前行程已经是默认行程；取消勾选并保存可清除默认行程。";
+  } else {
+    hint.textContent = tripId
+      ? "勾选并保存后，下次登录会默认打开这个行程。"
+      : "勾选并保存后，新建行程会成为下次登录默认打开的行程。";
+  }
+}
+
+
 function openTripDialog(tripIndex = null) {
   document.getElementById("editTripIndex").value = tripIndex === null || tripIndex === undefined ? "" : tripIndex;
 
@@ -1070,6 +1092,7 @@ function openTripDialog(tripIndex = null) {
     document.getElementById("tripSummaryInput").value = "";
     document.getElementById("tripCenterLatInput").value = "";
     document.getElementById("tripCenterLngInput").value = "";
+    setTripDefaultDialogState(null);
   } else {
     const trip = trips[tripIndex];
     document.getElementById("tripDialogTitle").textContent = "修改整体行程";
@@ -1087,6 +1110,7 @@ function openTripDialog(tripIndex = null) {
     document.getElementById("tripSummaryInput").value = trip.summary || "";
     document.getElementById("tripCenterLatInput").value = trip.center?.lat ?? "";
     document.getElementById("tripCenterLngInput").value = trip.center?.lng ?? "";
+    setTripDefaultDialogState(trip);
   }
 
   tripDialog.showModal();
@@ -1109,6 +1133,8 @@ function saveTripFromDialog() {
   }
   let visibility = normalizeTripVisibility(document.getElementById("tripVisibilityInput").value);
   const existingTrip = idx === null ? null : trips[idx];
+  const defaultInput = document.getElementById("tripDefaultInput");
+  const canSaveDefault = sessionMode === "account" && Boolean(currentUser);
   if (visibility === "public" && existingTrip?.copiedFromPublic && !existingTrip.copyModified) {
     alert("这是从公开行程导入的副本。请先对行程内容进行修改并保存后，再设置为公开检索。");
     visibility = "private";
@@ -1143,6 +1169,14 @@ function saveTripFromDialog() {
   };
   prepareTripForSave(trip);
 
+  if (canSaveDefault && defaultInput) {
+    if (defaultInput.checked) {
+      defaultTripId = trip.id;
+    } else if (defaultTripId === trip.id) {
+      defaultTripId = "";
+    }
+  }
+
   if (idx === null) {
     trips.push(trip);
     currentTripIndex = trips.length - 1;
@@ -1150,8 +1184,12 @@ function saveTripFromDialog() {
   } else {
     trips[idx] = trip;
   }
+  ensureDefaultTripIdValid();
 
   saveTrips();
+  if (sessionMode === "account" && currentUser) {
+    flushScheduledBackendSync().catch(e => updateAccountStatus(`同步失败：${e.message}`));
+  }
   tripDialog.close();
   render(currentFilter);
   showToast("整体行程已保存");
@@ -1217,6 +1255,7 @@ async function deleteTrip() {
 
   const removeIndex = tripId ? trips.findIndex(item => item.id === tripId) : currentTripIndex;
   trips.splice(removeIndex >= 0 ? removeIndex : currentTripIndex, 1);
+  if (tripId && defaultTripId === tripId) defaultTripId = "";
   currentTripIndex = Math.max(0, Math.min(currentTripIndex, trips.length - 1));
   currentFilter = "ALL";
   persistLocalTripsOnly();

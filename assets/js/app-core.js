@@ -146,6 +146,7 @@ const defaultTrips = [];
 
 let trips = loadTrips();
 let currentTripIndex = 0;
+let defaultTripId = "";
 let currentFilter = "ALL";
 let displayCurrency = "";
 let fxCache = {
@@ -500,6 +501,19 @@ function loadTrips() {
 function makeClientId(prefix = "trip") {
   const random = Math.random().toString(36).slice(2, 10);
   return `${prefix}_${Date.now().toString(36)}_${random}`;
+}
+
+function normalizeTripReferenceId(value) {
+  const text = String(value || "").trim();
+  return /^[A-Za-z0-9_-]{6,80}$/.test(text) ? text : "";
+}
+
+function ensureDefaultTripIdValid() {
+  defaultTripId = normalizeTripReferenceId(defaultTripId);
+  if (defaultTripId && !trips.some(trip => trip.id === defaultTripId)) {
+    defaultTripId = "";
+  }
+  return defaultTripId;
 }
 
 function ensureTripRecordIds() {
