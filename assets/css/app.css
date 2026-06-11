@@ -1190,11 +1190,11 @@ label {
   flex-wrap: wrap;
 }
 
-body.no-trip .app-panel {
+body.no-trip aside > .app-panel {
   display: none;
 }
 
-body.no-trip .app-panel.always-panel {
+body.no-trip aside > .app-panel.always-panel {
   display: block;
 }
 
