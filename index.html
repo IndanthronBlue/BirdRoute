@@ -2651,6 +2651,7 @@ async function xhsHelperFetch(path, options = {}) {
   try {
     res = await fetch(XHS_HELPER_BASE + path, {
       mode: "cors",
+      targetAddressSpace: "loopback",
       ...options,
       headers,
       body
