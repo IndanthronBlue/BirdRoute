@@ -4,6 +4,7 @@ import json
 import os
 import re
 import secrets
+import sqlite3
 import tempfile
 import uuid
 import base64
@@ -12,6 +13,7 @@ import hashlib
 import queue
 import threading
 import time
+from contextlib import contextmanager
 from datetime import date, datetime, timedelta, timezone
 from html import unescape
 from html.parser import HTMLParser
@@ -30,6 +32,7 @@ from cryptography.fernet import Fernet, InvalidToken
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "backend_data"
+SQLITE_DB_FILE = DATA_DIR / "birdroute.sqlite"
 USERS_FILE = DATA_DIR / "users.json"
 USER_DATA_DIR = DATA_DIR / "users"
 SECRET_FILE = DATA_DIR / ".secret_key"
@@ -66,6 +69,7 @@ _EBIRD_REQUEST_LOCK = threading.Lock()
 _EBIRD_LAST_REQUEST_AT = 0.0
 _GEOCODE_REQUEST_LOCK = threading.Lock()
 _GEOCODE_LAST_REQUEST_AT = 0.0
+_SQLITE_READY = False
 
 CONTENT_SECRET_FIELDS = [
     "braveApiKey",
@@ -172,6 +176,7 @@ def ensure_dirs() -> None:
         atomic_write_json(USERS_FILE, {})
     ensure_bird_mappings()
     ensure_settings_template()
+    ensure_sqlite()
 
 
 def load_secret_key() -> str:
@@ -365,6 +370,421 @@ def atomic_write_json(path: Path, data: Any) -> None:
             os.unlink(tmp_name)
 
 
+def sqlite_json_dumps(data: Any) -> str:
+    return json.dumps(data, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def sqlite_json_loads(raw: Any, default: Any) -> Any:
+    if raw is None:
+        return default
+    try:
+        return json.loads(str(raw))
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return default
+
+
+def sqlite_connect() -> sqlite3.Connection:
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(str(SQLITE_DB_FILE), timeout=30)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA journal_mode = WAL")
+    return conn
+
+
+@contextmanager
+def sqlite_db():
+    conn = sqlite_connect()
+    try:
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+def ensure_sqlite_schema(conn: sqlite3.Connection) -> None:
+    conn.executescript(
+        """
+        CREATE TABLE IF NOT EXISTS meta (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS users (
+            username TEXT PRIMARY KEY,
+            password_hash TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS trips (
+            username TEXT NOT NULL,
+            trip_id TEXT NOT NULL,
+            title TEXT NOT NULL DEFAULT '',
+            subtitle TEXT NOT NULL DEFAULT '',
+            summary TEXT NOT NULL DEFAULT '',
+            visibility TEXT NOT NULL DEFAULT 'private',
+            primary_location TEXT NOT NULL DEFAULT '',
+            trip_pace TEXT NOT NULL DEFAULT '',
+            start_date TEXT NOT NULL DEFAULT '',
+            end_date TEXT NOT NULL DEFAULT '',
+            bird_tags_json TEXT NOT NULL DEFAULT '[]',
+            location_tags_json TEXT NOT NULL DEFAULT '[]',
+            sort_order INTEGER NOT NULL DEFAULT 999999,
+            created_at TEXT NOT NULL DEFAULT '',
+            updated_at TEXT NOT NULL DEFAULT '',
+            trip_json TEXT NOT NULL,
+            PRIMARY KEY (username, trip_id)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_trips_user_sort
+            ON trips(username, sort_order, title, updated_at);
+        CREATE INDEX IF NOT EXISTS idx_trips_public
+            ON trips(visibility, updated_at);
+
+        CREATE TABLE IF NOT EXISTS user_preferences (
+            username TEXT PRIMARY KEY,
+            default_trip_id TEXT NOT NULL DEFAULT '',
+            updated_at TEXT NOT NULL DEFAULT ''
+        );
+
+        CREATE TABLE IF NOT EXISTS bird_name_mappings (
+            mapping_key TEXT PRIMARY KEY,
+            chinese TEXT NOT NULL,
+            english TEXT NOT NULL DEFAULT '',
+            scientific TEXT NOT NULL DEFAULT '',
+            original_name TEXT NOT NULL DEFAULT '',
+            name_language TEXT NOT NULL DEFAULT '',
+            source TEXT NOT NULL DEFAULT '',
+            confidence TEXT NOT NULL DEFAULT '',
+            notes TEXT NOT NULL DEFAULT '',
+            payload_json TEXT NOT NULL,
+            updated_at TEXT NOT NULL DEFAULT ''
+        );
+
+        CREATE TABLE IF NOT EXISTS cache_entries (
+            namespace TEXT NOT NULL,
+            cache_key TEXT NOT NULL,
+            payload_json TEXT NOT NULL,
+            updated_at TEXT NOT NULL DEFAULT '',
+            PRIMARY KEY (namespace, cache_key)
+        );
+
+        CREATE TABLE IF NOT EXISTS user_settings (
+            username TEXT NOT NULL,
+            kind TEXT NOT NULL,
+            payload_json TEXT NOT NULL,
+            updated_at TEXT NOT NULL DEFAULT '',
+            PRIMARY KEY (username, kind)
+        );
+        """
+    )
+
+
+def sqlite_get_meta(conn: sqlite3.Connection, key: str) -> str:
+    row = conn.execute("SELECT value FROM meta WHERE key = ?", (key,)).fetchone()
+    return str(row["value"]) if row else ""
+
+
+def sqlite_set_meta(conn: sqlite3.Connection, key: str, value: str) -> None:
+    conn.execute(
+        """
+        INSERT INTO meta(key, value)
+        VALUES(?, ?)
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value
+        """,
+        (key, value),
+    )
+
+
+def trip_sort_order_value(trip: dict[str, Any], fallback: int = 999_999) -> int:
+    try:
+        return int(trip.get("sortOrder"))
+    except (TypeError, ValueError):
+        return fallback
+
+
+def sqlite_upsert_trip_row(conn: sqlite3.Connection, username: str, trip: dict[str, Any], sort_order: int | None = None) -> None:
+    trip_id = safe_trip_id(trip.get("id"))
+    bird_tags = trip.get("birdTags") if isinstance(trip.get("birdTags"), list) else []
+    location_tags = trip.get("locationTags") if isinstance(trip.get("locationTags"), list) else []
+    conn.execute(
+        """
+        INSERT INTO trips(
+            username, trip_id, title, subtitle, summary, visibility,
+            primary_location, trip_pace, start_date, end_date,
+            bird_tags_json, location_tags_json, sort_order,
+            created_at, updated_at, trip_json
+        )
+        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(username, trip_id) DO UPDATE SET
+            title = excluded.title,
+            subtitle = excluded.subtitle,
+            summary = excluded.summary,
+            visibility = excluded.visibility,
+            primary_location = excluded.primary_location,
+            trip_pace = excluded.trip_pace,
+            start_date = excluded.start_date,
+            end_date = excluded.end_date,
+            bird_tags_json = excluded.bird_tags_json,
+            location_tags_json = excluded.location_tags_json,
+            sort_order = excluded.sort_order,
+            created_at = excluded.created_at,
+            updated_at = excluded.updated_at,
+            trip_json = excluded.trip_json
+        """,
+        (
+            username,
+            trip_id,
+            str(trip.get("title") or ""),
+            str(trip.get("subtitle") or ""),
+            str(trip.get("summary") or ""),
+            normalize_trip_visibility(trip.get("visibility")),
+            str(trip.get("primaryLocation") or ""),
+            str(trip.get("tripPace") or DEFAULT_TRIP_PACE),
+            str(trip.get("startDate") or ""),
+            str(trip.get("endDate") or ""),
+            sqlite_json_dumps(bird_tags),
+            sqlite_json_dumps(location_tags),
+            trip_sort_order_value(trip, sort_order if sort_order is not None else 999_999),
+            str(trip.get("createdAt") or ""),
+            str(trip.get("updatedAt") or ""),
+            sqlite_json_dumps(trip),
+        ),
+    )
+
+
+def sqlite_trip_from_row(row: sqlite3.Row | None) -> dict[str, Any] | None:
+    if not row:
+        return None
+    trip = sqlite_json_loads(row["trip_json"], None)
+    if not isinstance(trip, dict):
+        return None
+    if not trip.get("id"):
+        trip["id"] = row["trip_id"]
+    return normalize_trip_schedule_fields(dict(trip))
+
+
+def sqlite_upsert_user_setting_row(conn: sqlite3.Connection, username: str, kind: str, payload: dict[str, Any]) -> None:
+    conn.execute(
+        """
+        INSERT INTO user_settings(username, kind, payload_json, updated_at)
+        VALUES(?, ?, ?, ?)
+        ON CONFLICT(username, kind) DO UPDATE SET
+            payload_json = excluded.payload_json,
+            updated_at = excluded.updated_at
+        """,
+        (username, kind, sqlite_json_dumps(payload), str(payload.get("updatedAt") or utc_now())),
+    )
+
+
+def sqlite_insert_cache_entries(conn: sqlite3.Connection, namespace: str, entries: dict[str, Any]) -> None:
+    now = utc_now()
+    for cache_key, payload in entries.items():
+        conn.execute(
+            """
+            INSERT INTO cache_entries(namespace, cache_key, payload_json, updated_at)
+            VALUES(?, ?, ?, ?)
+            ON CONFLICT(namespace, cache_key) DO UPDATE SET
+                payload_json = excluded.payload_json,
+                updated_at = excluded.updated_at
+            """,
+            (namespace, str(cache_key), sqlite_json_dumps(payload), now),
+        )
+
+
+def sqlite_upsert_bird_mapping_row(conn: sqlite3.Connection, mapping_key: str, entry: dict[str, Any]) -> None:
+    conn.execute(
+        """
+        INSERT INTO bird_name_mappings(
+            mapping_key, chinese, english, scientific, original_name,
+            name_language, source, confidence, notes, payload_json, updated_at
+        )
+        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(mapping_key) DO UPDATE SET
+            chinese = excluded.chinese,
+            english = excluded.english,
+            scientific = excluded.scientific,
+            original_name = excluded.original_name,
+            name_language = excluded.name_language,
+            source = excluded.source,
+            confidence = excluded.confidence,
+            notes = excluded.notes,
+            payload_json = excluded.payload_json,
+            updated_at = excluded.updated_at
+        """,
+        (
+            mapping_key,
+            str(entry.get("chinese") or ""),
+            str(entry.get("english") or ""),
+            str(entry.get("scientific") or ""),
+            str(entry.get("originalName") or ""),
+            str(entry.get("nameLanguage") or ""),
+            str(entry.get("source") or ""),
+            str(entry.get("confidence") or ""),
+            str(entry.get("notes") or ""),
+            sqlite_json_dumps(entry),
+            str(entry.get("updatedAt") or utc_now()),
+        ),
+    )
+
+
+def migrate_json_to_sqlite(conn: sqlite3.Connection) -> None:
+    users = read_json(USERS_FILE, {})
+    if isinstance(users, dict):
+        for username_key, record in users.items():
+            record = record if isinstance(record, dict) else {}
+            username = normalize_username(str(record.get("username") or username_key))
+            password_hash = str(record.get("passwordHash") or record.get("password_hash") or "")
+            if validate_username(username) and password_hash:
+                conn.execute(
+                    """
+                    INSERT INTO users(username, password_hash, created_at)
+                    VALUES(?, ?, ?)
+                    ON CONFLICT(username) DO UPDATE SET
+                        password_hash = excluded.password_hash,
+                        created_at = COALESCE(NULLIF(users.created_at, ''), excluded.created_at)
+                    """,
+                    (username, password_hash, str(record.get("createdAt") or record.get("created_at") or utc_now())),
+                )
+
+    saved_mappings = read_json(BIRD_MAPPINGS_FILE, {})
+    raw_mappings: Any = saved_mappings.get("mappings") if isinstance(saved_mappings, dict) else {}
+    if not isinstance(raw_mappings, dict):
+        raw_mappings = saved_mappings if isinstance(saved_mappings, dict) else {}
+    for chinese, value in DEFAULT_BIRD_NAME_MAPPINGS.items():
+        entry = normalize_bird_mapping_entry(chinese, {**value, "chinese": chinese, "source": "seed"}, "seed")
+        if entry:
+            sqlite_upsert_bird_mapping_row(conn, normalize_bird_mapping_key(chinese), entry)
+    for name, value in raw_mappings.items():
+        entry = normalize_bird_mapping_entry(str(name), value)
+        if entry:
+            sqlite_upsert_bird_mapping_row(conn, normalize_bird_mapping_key(entry["chinese"]), entry)
+
+    ebird_cache = read_json(EBIRD_SPECIES_CACHE_FILE, {})
+    ebird_entries = ebird_cache.get("entries") if isinstance(ebird_cache, dict) else {}
+    if isinstance(ebird_entries, dict):
+        sqlite_insert_cache_entries(conn, "ebird_species", ebird_entries)
+
+    geocode_cache = read_json(GEOCODE_CACHE_FILE, {})
+    geocode_entries = geocode_cache.get("entries") if isinstance(geocode_cache, dict) else {}
+    if isinstance(geocode_entries, dict):
+        sqlite_insert_cache_entries(conn, "geocode", geocode_entries)
+
+    if not USER_DATA_DIR.exists():
+        return
+
+    for user_path in sorted(USER_DATA_DIR.iterdir()):
+        if not user_path.is_dir():
+            continue
+        username = normalize_username(user_path.name)
+        if not validate_username(username):
+            continue
+
+        settings_dir = user_path / "settings"
+        for kind, filename in (
+            ("content_sources", "content_sources.json"),
+            ("api_credentials", "api_credentials.json"),
+            ("llm", "llm.json"),
+        ):
+            payload = read_json(settings_dir / filename, None)
+            if isinstance(payload, dict):
+                sqlite_upsert_user_setting_row(conn, username, kind, payload)
+
+        preferences = read_json(settings_dir / "preferences.json", {})
+        default_trip_id = ""
+        if isinstance(preferences, dict):
+            default_trip_id = normalize_trip_reference_id(preferences.get("defaultTripId"))
+            if default_trip_id:
+                conn.execute(
+                    """
+                    INSERT INTO user_preferences(username, default_trip_id, updated_at)
+                    VALUES(?, ?, ?)
+                    ON CONFLICT(username) DO UPDATE SET
+                        default_trip_id = excluded.default_trip_id,
+                        updated_at = excluded.updated_at
+                    """,
+                    (username, default_trip_id, str(preferences.get("updatedAt") or utc_now())),
+                )
+
+        trips_dir = user_path / "trips"
+        if not trips_dir.exists():
+            continue
+        for index, path in enumerate(sorted(trips_dir.glob("*.json"))):
+            raw = read_json(path, None)
+            if not isinstance(raw, dict):
+                continue
+            trip_payload = dict(raw)
+            if not trip_payload.get("id"):
+                trip_payload["id"] = path.stem
+            previous_updated_at = str(trip_payload.get("updatedAt") or "")
+            try:
+                trip = ensure_trip_shape(trip_payload)
+            except ValueError:
+                continue
+            if previous_updated_at:
+                trip["updatedAt"] = previous_updated_at
+            if "sortOrder" not in trip:
+                trip["sortOrder"] = index
+            sqlite_upsert_trip_row(conn, username, trip, index)
+
+
+def ensure_sqlite() -> None:
+    global _SQLITE_READY
+    if _SQLITE_READY:
+        return
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    USER_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    with sqlite_db() as conn:
+        ensure_sqlite_schema(conn)
+        if sqlite_get_meta(conn, "json_migrated_v1") != "1":
+            migrate_json_to_sqlite(conn)
+            sqlite_set_meta(conn, "json_migrated_v1", "1")
+        sqlite_set_meta(conn, "schema_version", "1")
+    _SQLITE_READY = True
+
+
+def sqlite_load_cache_entries(namespace: str) -> dict[str, Any]:
+    ensure_sqlite()
+    with sqlite_db() as conn:
+        rows = conn.execute(
+            "SELECT cache_key, payload_json FROM cache_entries WHERE namespace = ?",
+            (namespace,),
+        ).fetchall()
+    entries: dict[str, Any] = {}
+    for row in rows:
+        entries[str(row["cache_key"])] = sqlite_json_loads(row["payload_json"], {})
+    return entries
+
+
+def sqlite_save_cache_entries(namespace: str, entries: dict[str, Any]) -> None:
+    ensure_sqlite()
+    with sqlite_db() as conn:
+        conn.execute("DELETE FROM cache_entries WHERE namespace = ?", (namespace,))
+        sqlite_insert_cache_entries(conn, namespace, entries)
+
+
+def load_user_setting_payload(username: str, kind: str, default: Any = None) -> Any:
+    ensure_sqlite()
+    with sqlite_db() as conn:
+        row = conn.execute(
+            "SELECT payload_json FROM user_settings WHERE username = ? AND kind = ?",
+            (normalize_username(username), kind),
+        ).fetchone()
+    if not row:
+        return {} if default is None else default
+    payload = sqlite_json_loads(row["payload_json"], default if default is not None else {})
+    return payload if isinstance(payload, dict) else ({} if default is None else default)
+
+
+def save_user_setting_payload(username: str, kind: str, payload: dict[str, Any]) -> None:
+    ensure_sqlite()
+    with sqlite_db() as conn:
+        sqlite_upsert_user_setting_row(conn, normalize_username(username), kind, payload)
+
+
 def normalize_bird_name(raw: Any) -> str:
     text = str(raw or "")
     text = re.sub(r"\（.*?\）|\(.*?\)", "", text)
@@ -445,6 +865,8 @@ def normalize_bird_mapping_entry(name: str, value: Any, source: str = "manual") 
         "chinese": chinese,
         "english": english,
         "scientific": scientific,
+        "originalName": normalize_bird_name(value.get("originalName") or name),
+        "nameLanguage": detect_bird_name_language(value.get("originalName") or name),
         "source": normalize_space(str(value.get("source") or source or "manual"))[:80],
         "confidence": normalize_space(str(value.get("confidence") or ""))[:40],
         "notes": normalize_space(str(value.get("notes") or ""))[:500],
@@ -468,27 +890,32 @@ def ensure_bird_mappings() -> None:
 
 
 def load_bird_mappings() -> dict[str, dict[str, Any]]:
-    ensure_bird_mappings()
-    saved = read_json(BIRD_MAPPINGS_FILE, {})
-    raw_mappings: Any = saved.get("mappings") if isinstance(saved, dict) else {}
-    if not isinstance(raw_mappings, dict):
-        raw_mappings = saved if isinstance(saved, dict) else {}
-
+    ensure_sqlite()
     merged: dict[str, dict[str, Any]] = {}
     for chinese, value in DEFAULT_BIRD_NAME_MAPPINGS.items():
         entry = normalize_bird_mapping_entry(chinese, {**value, "chinese": chinese, "source": "seed"}, "seed")
         if entry:
             merged[normalize_bird_mapping_key(chinese)] = entry
-    for name, value in raw_mappings.items():
-        entry = normalize_bird_mapping_entry(str(name), value)
-        if entry:
-            merged[normalize_bird_mapping_key(entry["chinese"])] = entry
+    with sqlite_db() as conn:
+        rows = conn.execute("SELECT mapping_key, payload_json FROM bird_name_mappings ORDER BY chinese").fetchall()
+    for row in rows:
+        payload = sqlite_json_loads(row["payload_json"], {})
+        entry = normalize_bird_mapping_entry(str(payload.get("chinese") or row["mapping_key"]), payload)
+        if not entry:
+            continue
+        merged[normalize_bird_mapping_key(entry["chinese"])] = entry
     return merged
 
 
 def save_bird_mappings(mappings: dict[str, dict[str, Any]]) -> None:
-    ordered = {entry["chinese"]: entry for entry in sorted(mappings.values(), key=lambda item: str(item.get("chinese") or ""))}
-    atomic_write_json(BIRD_MAPPINGS_FILE, {"version": 1, "updatedAt": utc_now(), "mappings": ordered})
+    ensure_sqlite()
+    ordered = [entry for entry in sorted(mappings.values(), key=lambda item: str(item.get("chinese") or ""))]
+    with sqlite_db() as conn:
+        conn.execute("DELETE FROM bird_name_mappings")
+        for entry in ordered:
+            normalized = normalize_bird_mapping_entry(str(entry.get("chinese") or ""), entry)
+            if normalized:
+                sqlite_upsert_bird_mapping_row(conn, normalize_bird_mapping_key(normalized["chinese"]), normalized)
 
 
 def lookup_bird_mappings(names: list[Any]) -> tuple[list[dict[str, Any]], list[str]]:
@@ -706,13 +1133,32 @@ def validate_username(username: str) -> bool:
 
 
 def users_db() -> dict[str, Any]:
-    ensure_dirs()
-    data = read_json(USERS_FILE, {})
-    return data if isinstance(data, dict) else {}
+    ensure_sqlite()
+    with sqlite_db() as conn:
+        rows = conn.execute("SELECT username, password_hash, created_at FROM users ORDER BY username").fetchall()
+    return {
+        row["username"]: {
+            "username": row["username"],
+            "passwordHash": row["password_hash"],
+            "createdAt": row["created_at"],
+        }
+        for row in rows
+    }
 
 
 def save_users_db(data: dict[str, Any]) -> None:
-    atomic_write_json(USERS_FILE, data)
+    ensure_sqlite()
+    with sqlite_db() as conn:
+        conn.execute("DELETE FROM users")
+        for username_key, record in data.items():
+            record = record if isinstance(record, dict) else {}
+            username = normalize_username(str(record.get("username") or username_key))
+            password_hash = str(record.get("passwordHash") or record.get("password_hash") or "")
+            if validate_username(username) and password_hash:
+                conn.execute(
+                    "INSERT INTO users(username, password_hash, created_at) VALUES(?, ?, ?)",
+                    (username, password_hash, str(record.get("createdAt") or record.get("created_at") or utc_now())),
+                )
 
 
 def user_dir(username: str) -> Path:
@@ -909,19 +1355,11 @@ def ebird_species_cache_key(loc_id: str, target_date: date, years: int, day_wind
 
 
 def load_ebird_species_cache() -> dict[str, Any]:
-    data = read_json(EBIRD_SPECIES_CACHE_FILE, {})
-    if not isinstance(data, dict):
-        return {}
-    entries = data.get("entries")
-    return entries if isinstance(entries, dict) else {}
+    return sqlite_load_cache_entries("ebird_species")
 
 
 def save_ebird_species_cache(entries: dict[str, Any]) -> None:
-    atomic_write_json(EBIRD_SPECIES_CACHE_FILE, {
-        "version": 1,
-        "updatedAt": utc_now(),
-        "entries": entries,
-    })
+    sqlite_save_cache_entries("ebird_species", entries)
 
 
 def cached_ebird_species_payload(loc_id: str, target_date: date, years: int, day_window: int, allow_stale: bool = False) -> dict[str, Any] | None:
@@ -1249,38 +1687,41 @@ def ensure_trip_shape(trip: Any) -> dict[str, Any]:
 
 
 def list_user_trips(username: str) -> list[dict[str, Any]]:
-    trips_dir = user_trips_dir(username)
-    trips_dir.mkdir(parents=True, exist_ok=True)
+    ensure_sqlite()
+    with sqlite_db() as conn:
+        rows = conn.execute(
+            """
+            SELECT trip_id, trip_json
+            FROM trips
+            WHERE username = ?
+            ORDER BY sort_order, title, updated_at
+            """,
+            (normalize_username(username),),
+        ).fetchall()
     trips: list[dict[str, Any]] = []
-    for path in sorted(trips_dir.glob("*.json")):
-        trip = read_json(path, None)
-        if isinstance(trip, dict):
-            if not trip.get("id"):
-                trip["id"] = path.stem
-            trips.append(normalize_trip_schedule_fields(dict(trip)))
-    def sort_key(trip: dict[str, Any]):
-        try:
-            order = int(trip.get("sortOrder"))
-        except (TypeError, ValueError):
-            order = 999_999
-        return (order, str(trip.get("title") or ""), str(trip.get("updatedAt") or ""))
-
-    trips.sort(key=sort_key)
+    for row in rows:
+        trip = sqlite_trip_from_row(row)
+        if trip:
+            trips.append(trip)
     return trips
 
 
 def get_user_trip(username: str, trip_id: str) -> dict[str, Any] | None:
-    path = user_trips_dir(username) / f"{safe_trip_id(trip_id)}.json"
-    trip = read_json(path, None)
-    return normalize_trip_schedule_fields(dict(trip)) if isinstance(trip, dict) else None
+    normalized_id = normalize_trip_reference_id(trip_id)
+    if not normalized_id:
+        return None
+    ensure_sqlite()
+    with sqlite_db() as conn:
+        row = conn.execute(
+            "SELECT trip_id, trip_json FROM trips WHERE username = ? AND trip_id = ?",
+            (normalize_username(username), normalized_id),
+        ).fetchone()
+    return sqlite_trip_from_row(row)
 
 
 def backup_user_trip(username: str, trip_id: str, reason: str = "update") -> dict[str, Any] | None:
     safe_id = safe_trip_id(trip_id)
-    path = user_trips_dir(username) / f"{safe_id}.json"
-    if not path.exists():
-        return None
-    trip = read_json(path, None)
+    trip = get_user_trip(username, safe_id)
     if not isinstance(trip, dict):
         return None
 
@@ -1317,26 +1758,50 @@ def backup_user_trip(username: str, trip_id: str, reason: str = "update") -> dic
 
 def save_user_trip(username: str, trip: dict[str, Any]) -> dict[str, Any]:
     normalized = ensure_trip_shape(trip)
-    path = user_trips_dir(username) / f"{normalized['id']}.json"
-    atomic_write_json(path, normalized)
+    user_trips_dir(username).mkdir(parents=True, exist_ok=True)
+    ensure_sqlite()
+    with sqlite_db() as conn:
+        sqlite_upsert_trip_row(conn, normalize_username(username), normalized)
     return normalized
 
 
 def load_user_preferences(username: str) -> dict[str, Any]:
-    data = read_json(user_preferences_file(username), {})
-    return data if isinstance(data, dict) else {}
+    ensure_sqlite()
+    with sqlite_db() as conn:
+        row = conn.execute(
+            "SELECT default_trip_id, updated_at FROM user_preferences WHERE username = ?",
+            (normalize_username(username),),
+        ).fetchone()
+    if not row:
+        return {}
+    payload: dict[str, Any] = {"updatedAt": row["updated_at"]}
+    if row["default_trip_id"]:
+        payload["defaultTripId"] = row["default_trip_id"]
+    return payload
 
 
 def save_user_preferences(username: str, preferences: dict[str, Any]) -> None:
     payload = dict(preferences)
     payload["updatedAt"] = utc_now()
-    atomic_write_json(user_preferences_file(username), payload)
+    default_trip_id = normalize_trip_reference_id(payload.get("defaultTripId"))
+    ensure_sqlite()
+    with sqlite_db() as conn:
+        conn.execute(
+            """
+            INSERT INTO user_preferences(username, default_trip_id, updated_at)
+            VALUES(?, ?, ?)
+            ON CONFLICT(username) DO UPDATE SET
+                default_trip_id = excluded.default_trip_id,
+                updated_at = excluded.updated_at
+            """,
+            (normalize_username(username), default_trip_id, payload["updatedAt"]),
+        )
 
 
 def get_user_default_trip_id(username: str) -> str:
     preferences = load_user_preferences(username)
     trip_id = normalize_trip_reference_id(preferences.get("defaultTripId"))
-    if trip_id and (user_trips_dir(username) / f"{trip_id}.json").exists():
+    if trip_id and get_user_trip(username, trip_id):
         return trip_id
     if trip_id:
         preferences.pop("defaultTripId", None)
@@ -1346,7 +1811,7 @@ def get_user_default_trip_id(username: str) -> str:
 
 def set_user_default_trip_id(username: str, trip_id: Any) -> str:
     normalized_id = normalize_trip_reference_id(trip_id)
-    if normalized_id and not (user_trips_dir(username) / f"{normalized_id}.json").exists():
+    if normalized_id and not get_user_trip(username, normalized_id):
         raise ValueError("默认行程不存在。")
 
     preferences = load_user_preferences(username)
@@ -1362,21 +1827,28 @@ def replace_user_trips(username: str, trips: Any) -> list[dict[str, Any]]:
     if not isinstance(trips, list):
         raise ValueError("trips must be an array")
 
-    trips_dir = user_trips_dir(username)
-    trips_dir.mkdir(parents=True, exist_ok=True)
+    user_trips_dir(username).mkdir(parents=True, exist_ok=True)
+    ensure_sqlite()
 
     saved: list[dict[str, Any]] = []
     seen_ids: set[str] = set()
-    for index, trip in enumerate(trips):
-        normalized = ensure_trip_shape(trip)
-        normalized["sortOrder"] = index
-        normalized = save_user_trip(username, normalized)
-        saved.append(normalized)
-        seen_ids.add(normalized["id"])
+    clean_username = normalize_username(username)
+    with sqlite_db() as conn:
+        for index, trip in enumerate(trips):
+            normalized = ensure_trip_shape(trip)
+            normalized["sortOrder"] = index
+            sqlite_upsert_trip_row(conn, clean_username, normalized, index)
+            saved.append(normalized)
+            seen_ids.add(normalized["id"])
 
-    for path in trips_dir.glob("*.json"):
-        if path.stem not in seen_ids:
-            path.unlink()
+        if seen_ids:
+            placeholders = ",".join("?" for _ in seen_ids)
+            conn.execute(
+                f"DELETE FROM trips WHERE username = ? AND trip_id NOT IN ({placeholders})",
+                (clean_username, *sorted(seen_ids)),
+            )
+        else:
+            conn.execute("DELETE FROM trips WHERE username = ?", (clean_username,))
 
     current_default_trip_id = get_user_default_trip_id(username)
     if current_default_trip_id and current_default_trip_id not in seen_ids:
@@ -1387,39 +1859,43 @@ def replace_user_trips(username: str, trips: Any) -> list[dict[str, Any]]:
 
 def delete_user_trip(username: str, trip_id: str) -> bool:
     normalized_id = normalize_trip_reference_id(trip_id)
-    path = user_trips_dir(username) / f"{safe_trip_id(trip_id)}.json"
-    if not path.exists():
+    if not normalized_id:
         return False
-    path.unlink()
+    ensure_sqlite()
+    with sqlite_db() as conn:
+        cursor = conn.execute(
+            "DELETE FROM trips WHERE username = ? AND trip_id = ?",
+            (normalize_username(username), normalized_id),
+        )
+        deleted = cursor.rowcount > 0
+    if not deleted:
+        return False
     if normalized_id and get_user_default_trip_id(username) == normalized_id:
         set_user_default_trip_id(username, "")
     return True
 
 
 def iter_public_trip_records(viewer: str = ""):
-    ensure_dirs()
-    if not USER_DATA_DIR.exists():
-        return
-    for user_path in sorted(USER_DATA_DIR.iterdir()):
-        if not user_path.is_dir():
+    ensure_sqlite()
+    with sqlite_db() as conn:
+        rows = conn.execute(
+            """
+            SELECT username, trip_id, trip_json
+            FROM trips
+            WHERE visibility = 'public'
+            ORDER BY updated_at DESC
+            """
+        ).fetchall()
+    for row in rows:
+        owner = row["username"]
+        trip = sqlite_trip_from_row(row)
+        if not trip:
             continue
-        owner = user_path.name
-        trips_dir = user_path / "trips"
-        if not trips_dir.exists():
+        if trip.get("visibility") != "public":
             continue
-        for path in sorted(trips_dir.glob("*.json")):
-            raw = read_json(path, None)
-            if not isinstance(raw, dict):
-                continue
-            try:
-                trip = ensure_trip_shape(raw)
-            except ValueError:
-                continue
-            if trip.get("visibility") != "public":
-                continue
-            if trip.get("copiedFromPublic") and not trip.get("copyModified"):
-                continue
-            yield owner, trip, public_trip_card(owner, trip, viewer)
+        if trip.get("copiedFromPublic") and not trip.get("copyModified"):
+            continue
+        yield owner, trip, public_trip_card(owner, trip, viewer)
 
 
 def search_public_trips(query: str, viewer: str, limit: int = 30) -> list[dict[str, Any]]:
@@ -2049,20 +2525,11 @@ def geocode_cache_key(query: str, limit: int) -> str:
 
 
 def load_geocode_cache() -> dict[str, Any]:
-    data = read_json(GEOCODE_CACHE_FILE, {})
-    if not isinstance(data, dict):
-        return {}
-    entries = data.get("entries")
-    return entries if isinstance(entries, dict) else {}
+    return sqlite_load_cache_entries("geocode")
 
 
 def save_geocode_cache(entries: dict[str, Any]) -> None:
-    atomic_write_json(GEOCODE_CACHE_FILE, {
-        "version": 1,
-        "updatedAt": utc_now(),
-        "provider": "nominatim",
-        "entries": entries,
-    })
+    sqlite_save_cache_entries("geocode", entries)
 
 
 def geocode_cache_entry_age_days(entry: dict[str, Any]) -> int | None:
@@ -3472,7 +3939,7 @@ def template_llm_settings() -> dict[str, Any]:
 def load_content_source_settings(username: str, include_secrets: bool = False) -> dict[str, Any]:
     template_defaults = template_content_source_settings()
     settings = template_defaults
-    saved = read_json(content_source_settings_path(username), {})
+    saved = load_user_setting_payload(username, "content_sources", {})
     if isinstance(saved, dict):
         settings.update(saved)
         for section in ("defaultSources", "wechat", "xiaohongshu"):
@@ -3510,7 +3977,7 @@ def load_content_source_settings(username: str, include_secrets: bool = False) -
     )
     settings = decrypt_secret_fields(settings, CONTENT_SECRET_FIELDS)
     if has_plaintext_secret(saved, CONTENT_SECRET_FIELDS):
-        atomic_write_json(content_source_settings_path(username), encrypt_secret_fields(settings, CONTENT_SECRET_FIELDS))
+        save_user_setting_payload(username, "content_sources", encrypt_secret_fields(settings, CONTENT_SECRET_FIELDS))
 
     for field in CONTENT_SECRET_FIELDS:
         settings["has" + field[:1].upper() + field[1:]] = secret_value_present(settings.get(field))
@@ -3591,7 +4058,7 @@ def save_content_source_settings(username: str, payload: dict[str, Any]) -> dict
             settings.pop(settings_key, None)
 
     settings["updatedAt"] = utc_now()
-    atomic_write_json(content_source_settings_path(username), encrypt_secret_fields(settings, CONTENT_SECRET_FIELDS))
+    save_user_setting_payload(username, "content_sources", encrypt_secret_fields(settings, CONTENT_SECRET_FIELDS))
     return load_content_source_settings(username, include_secrets=True)
 
 
@@ -3648,11 +4115,11 @@ def api_credentials_path(username: str) -> Path:
 
 
 def load_api_credentials(username: str, include_secrets: bool = False) -> dict[str, Any]:
-    saved = read_json(api_credentials_path(username), {})
+    saved = load_user_setting_payload(username, "api_credentials", {})
     settings = saved if isinstance(saved, dict) else {}
     settings = decrypt_secret_fields(settings, API_CREDENTIAL_SECRET_FIELDS)
     if has_plaintext_secret(saved, API_CREDENTIAL_SECRET_FIELDS):
-        atomic_write_json(api_credentials_path(username), encrypt_secret_fields(settings, API_CREDENTIAL_SECRET_FIELDS))
+        save_user_setting_payload(username, "api_credentials", encrypt_secret_fields(settings, API_CREDENTIAL_SECRET_FIELDS))
     result = {
         "hasEbirdToken": secret_value_present(settings.get("ebirdToken")),
         "hasXcToken": secret_value_present(settings.get("xcToken")),
@@ -3665,7 +4132,7 @@ def load_api_credentials(username: str, include_secrets: bool = False) -> dict[s
 
 
 def save_api_credentials(username: str, payload: dict[str, Any]) -> dict[str, Any]:
-    saved = read_json(api_credentials_path(username), {})
+    saved = load_user_setting_payload(username, "api_credentials", {})
     settings = decrypt_secret_fields(saved if isinstance(saved, dict) else {}, API_CREDENTIAL_SECRET_FIELDS)
 
     if "ebirdToken" in payload:
@@ -3691,7 +4158,7 @@ def save_api_credentials(username: str, payload: dict[str, Any]) -> dict[str, An
         settings.pop("xcToken", None)
 
     settings["updatedAt"] = utc_now()
-    atomic_write_json(api_credentials_path(username), encrypt_secret_fields(settings, API_CREDENTIAL_SECRET_FIELDS))
+    save_user_setting_payload(username, "api_credentials", encrypt_secret_fields(settings, API_CREDENTIAL_SECRET_FIELDS))
     return load_api_credentials(username, include_secrets=True)
 
 
@@ -3763,7 +4230,7 @@ def trip_quick_info_payload(trip: dict[str, Any]) -> dict[str, Any]:
 def clear_all_api_secrets(username: str) -> dict[str, Any]:
     llm = load_llm_settings(username, include_key=True)
     llm.pop("apiKey", None)
-    atomic_write_json(llm_settings_path(username), encrypt_secret_fields(llm, LLM_SECRET_FIELDS))
+    save_user_setting_payload(username, "llm", encrypt_secret_fields(llm, LLM_SECRET_FIELDS))
 
     content = load_content_source_settings(username, include_secrets=True)
     for key in (
@@ -3778,9 +4245,9 @@ def clear_all_api_secrets(username: str) -> dict[str, Any]:
         "xhsThirdPartyApiKey",
     ):
         content.pop(key, None)
-    atomic_write_json(content_source_settings_path(username), encrypt_secret_fields(content, CONTENT_SECRET_FIELDS))
+    save_user_setting_payload(username, "content_sources", encrypt_secret_fields(content, CONTENT_SECRET_FIELDS))
 
-    atomic_write_json(api_credentials_path(username), {"updatedAt": utc_now()})
+    save_user_setting_payload(username, "api_credentials", {"updatedAt": utc_now()})
     return {
         "llm": public_llm_settings(load_llm_settings(username, include_key=True)),
         "contentSources": public_content_source_settings(load_content_source_settings(username, include_secrets=True)),
@@ -3795,16 +4262,16 @@ def llm_settings_path(username: str) -> Path:
 def load_llm_settings(username: str, include_key: bool = False) -> dict[str, Any]:
     template_defaults = template_llm_settings()
     settings = dict(template_defaults)
-    saved = read_json(llm_settings_path(username), {})
+    saved = load_user_setting_payload(username, "llm", {})
     if isinstance(saved, dict):
         settings.update(saved)
         if "candidateFilterEnabled" not in saved:
-            legacy_content = read_json(content_source_settings_path(username), {})
+            legacy_content = load_user_setting_payload(username, "content_sources", {})
             if isinstance(legacy_content, dict) and "llmCandidateFilter" in legacy_content:
                 settings["candidateFilterEnabled"] = bool(legacy_content.get("llmCandidateFilter"))
     settings = decrypt_secret_fields(settings, LLM_SECRET_FIELDS)
     if has_plaintext_secret(saved, LLM_SECRET_FIELDS):
-        atomic_write_json(llm_settings_path(username), encrypt_secret_fields(settings, LLM_SECRET_FIELDS))
+        save_user_setting_payload(username, "llm", encrypt_secret_fields(settings, LLM_SECRET_FIELDS))
     settings["promptTemplate"] = normalize_research_prompt_template(str(settings.get("promptTemplate") or ""))
     settings["candidateFilterEnabled"] = bool(settings.get("candidateFilterEnabled"))
     settings["candidateFilterPrompt"] = normalize_llm_candidate_filter_prompt(str(settings.get("candidateFilterPrompt") or ""))
@@ -3847,7 +4314,7 @@ def save_llm_settings(username: str, payload: dict[str, Any]) -> dict[str, Any]:
     if not settings.get("model"):
         settings["model"] = template_defaults.get("model") or "deepseek-chat"
     settings["updatedAt"] = utc_now()
-    atomic_write_json(llm_settings_path(username), encrypt_secret_fields(settings, LLM_SECRET_FIELDS))
+    save_user_setting_payload(username, "llm", encrypt_secret_fields(settings, LLM_SECRET_FIELDS))
     return load_llm_settings(username, include_key=True)
 
 
